@@ -36,15 +36,9 @@ Initialize this repository with a README”；
 
 进入创建好的仓库Mshrimp.github.io，点击右侧的“Settings”，向下拉找到Github Pages，会看到网站是：https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。
 
-1
+![test](Hexo-Github搭建个人博客/Image.png)
 
-![Image.png](Image.png)
-
-2
-
-![Image.png](/blog_picture/Image.png)
-
-![ad5850fd40156674554f05e37b319a2c.png](en-resource://database/12799:1)
+![Image2](Hexo-Github搭建个人博客/Image2.png)
 
 ##### 配置git仓库
 
@@ -105,9 +99,11 @@ ssh-rsa
 
 在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；
 
-![712b7aed7453f28c2a9706189e9c92df.png](en-resource://database/12805:1)
+![Image4](Hexo-Github搭建个人博客/Image4.png)
 
-![54d41403c70e03ace3ae34b82fe9d685.png](en-resource://database/12807:1)
+![Image5](Hexo-Github搭建个人博客/Image5.png)
+
+
 
 使用“ssh -T git@github.com”命令，测试添加ssh是否成功；
 ```
@@ -138,7 +134,7 @@ v10.16.0
 
 1. 先创建一个hexo操作的文件目录
 
-![324c96432ba366ac459fedc4044c425e.png](en-resource://database/12801:1)
+![Image1](Hexo-Github搭建个人博客/Image1.png)
 
 如果使用的是Linux系统，可以直接在命令行中输入命令操作，如果是windows系统，用管理员权限打开“命令提示符”，使用命令在电脑上安装hexo；或者，在hexo目录上右键，选择“Git Bash Here”，用git bash工具打开hexo目录，在git bash中使用命令操作；
 
@@ -242,7 +238,8 @@ $ hexo s #server 启动服务器。
 ```
 在浏览器地址栏输入“http://localhost:4000/”打开页面，是一个空的博客网页；
 
-![3968af60664224be9f4a7c9825e72e2f.png](en-resource://database/12803:1)
+![Image3](Hexo-Github搭建个人博客/Image3.JPG)
+
 
 
 #### 将git库和hexo链接起来
