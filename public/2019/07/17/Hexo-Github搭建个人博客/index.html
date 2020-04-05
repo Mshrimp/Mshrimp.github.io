@@ -8,12 +8,12 @@
   <link rel="dns-prefetch" href="http://mshrimp.github.io">
   <title>Hexo+Github搭建个人博客 | Mshrimp blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="简介首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。">
+  <meta name="description" content="1. 简介首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Hexo+Github搭建个人博客">
 <meta property="og:url" content="http://mshrimp.github.io/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/index.html">
 <meta property="og:site_name" content="Mshrimp blog">
-<meta property="og:description" content="简介首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。">
+<meta property="og:description" content="1. 简介首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。">
 <meta property="og:image" content="http://mshrimp.github.io/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image.png">
 <meta property="og:image" content="http://mshrimp.github.io/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image2.png">
 <meta property="og:image" content="http://mshrimp.github.io/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image4.png">
@@ -21,8 +21,9 @@
 <meta property="og:image" content="http://mshrimp.github.io/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image1.png">
 <meta property="og:image" content="http://mshrimp.github.io/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image3.JPG">
 <meta property="article:published_time" content="2019-07-17T12:24:52.000Z">
-<meta property="article:modified_time" content="2020-04-05T14:30:06.196Z">
+<meta property="article:modified_time" content="2020-04-05T15:21:29.831Z">
 <meta property="article:author" content="micro虾米">
+<meta property="article:tag" content="Hexo Github 博客">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://mshrimp.github.io/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image.png">
   
@@ -184,19 +185,34 @@
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。</p>
+        <h3 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h3><p>首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。</p>
 <a id="more"></a>
 
+<h4 id="环境简介"><a href="#环境简介" class="headerlink" title="环境简介"></a>环境简介</h4><p>本地电脑环境：</p>
+<blockquote>
+<p>windows10</p>
+</blockquote>
+<p>搭建博客需要安装的软件：</p>
+<blockquote>
+<p>git<br>node.js<br>hexo</p>
+</blockquote>
+<p>安装搭建博客需要的工具：git和node.js；通过一下命令查询：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ git --version</span><br><span class="line">git version 2.22.0.windows.1</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ node -v</span><br><span class="line">v10.16.0</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ npm config set registry https:&#x2F;&#x2F;registry.npm.taobao.org</span><br></pre></td></tr></table></figure>
 
 
-<h3 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h3><p>windows10<br>git</p>
-<p>$ git –version<br>git version 2.22.0.windows.1</p>
-<p>$ node -v<br>v10.16.0</p>
-<h4 id="创建Github仓库"><a href="#创建Github仓库" class="headerlink" title="创建Github仓库"></a>创建Github仓库</h4><p>打开GitHub，点击“New repository”，创建一个新仓库，用来专门存放博客日志信息；仓库名要按照格式：账户名.github.io，比如：Mshrimp.github.io；否则，后边的操作会出现问题；创建仓库时勾选上“<br>Initialize this repository with a README”；</p>
+
+<p>默认已经注册有Github帐号；</p>
+<p>Hexo软件还未安装，下文会简单讲述Hexo软件的安装；</p>
+<p>[TOC]</p>
+<h3 id="2-Github仓库创建和配置"><a href="#2-Github仓库创建和配置" class="headerlink" title="2. Github仓库创建和配置"></a>2. Github仓库创建和配置</h3><h4 id="2-1-创建Git仓库"><a href="#2-1-创建Git仓库" class="headerlink" title="2.1 创建Git仓库"></a>2.1 创建Git仓库</h4><p>打开GitHub，点击“New repository”，创建一个新仓库，用来专门存放博客日志信息；仓库名要按照格式：账户名.github.io，比如：Mshrimp.github.io；否则，后边的操作会出现问题；创建仓库时勾选上“<br>Initialize this repository with a README”；</p>
 <p>进入创建好的仓库Mshrimp.github.io，点击右侧的“Settings”，向下拉找到Github Pages，会看到网站是：<a href="https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。">https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。</a></p>
-<p><img src="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image.png" alt="test"></p>
+<p><img src="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image.png" alt="Image"></p>
 <p><img src="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image2.png" alt="Image2"></p>
-<h5 id="配置git仓库"><a href="#配置git仓库" class="headerlink" title="配置git仓库"></a>配置git仓库</h5><p>如果是第一次使用git，就需要先配置git环境，否则可以跳过；</p>
+<h4 id="2-2-配置git仓库"><a href="#2-2-配置git仓库" class="headerlink" title="2.2 配置git仓库"></a>2.2 配置git仓库</h4><p>如果是第一次使用git，就需要先配置git环境，否则可以跳过；</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ git config --global user.name &quot;Mshrimp&quot;</span><br><span class="line">$ git config --global user.email &quot;******@outlook.com&quot;</span><br></pre></td></tr></table></figure>
 
 <p>在没有配置git环境之前，~/.ssh是不存在的</p>
@@ -210,30 +226,23 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ cd ~&#x2F;.ssh</span><br><span class="line">$ ls</span><br><span class="line">id_rsa  id_rsa.pub</span><br><span class="line">$ cat id_rsa.pub</span><br><span class="line">ssh-rsa </span><br><span class="line">......</span><br></pre></td></tr></table></figure>
 
 
-<h5 id="把本地生成的公钥添加到github中"><a href="#把本地生成的公钥添加到github中" class="headerlink" title="把本地生成的公钥添加到github中"></a>把本地生成的公钥添加到github中</h5><p>在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；</p>
+<h4 id="2-3-把本地公钥添加到github中"><a href="#2-3-把本地公钥添加到github中" class="headerlink" title="2.3 把本地公钥添加到github中"></a>2.3 把本地公钥添加到github中</h4><p>在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；</p>
 <p><img src="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image4.png" alt="Image4"></p>
 <p><img src="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image5.png" alt="Image5"></p>
 <p>使用“ssh -T <a href="mailto:git@github.com">git@github.com</a>”命令，测试添加ssh是否成功；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">$ ssh -T git@github.com</span><br><span class="line"></span><br><span class="line">The authenticity of host &#39;github.com (13.229.188.59)&#39; can&#39;t be established.</span><br><span class="line">RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.</span><br><span class="line">Are you sure you want to continue connecting (yes&#x2F;no&#x2F;[fingerprint])? yes</span><br><span class="line">Warning: Permanently added &#39;github.com,13.229.188.59&#39; (RSA) to the list of known hosts.</span><br><span class="line">Hi Mshrimp! You&#39;ve successfully authenticated, but GitHub does not provide shell access.</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ssh -T git@github.com</span><br><span class="line">......</span><br><span class="line">Hi Mshrimp! You&#39;ve successfully authenticated, but GitHub does not provide shell access.</span><br></pre></td></tr></table></figure>
 
-<h3 id="准备环境"><a href="#准备环境" class="headerlink" title="准备环境"></a>准备环境</h3><p>安装搭建博客需要的工具：git和node.js；通过一下命令查询：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ git --version</span><br><span class="line">git version 2.22.0.windows.1</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ node -v</span><br><span class="line">v10.16.0</span><br></pre></td></tr></table></figure>
 
-<h3 id="安装Hexo"><a href="#安装Hexo" class="headerlink" title="安装Hexo"></a>安装Hexo</h3><ol>
-<li>先创建一个hexo操作的文件目录</li>
-</ol>
+<h3 id="3-Node安装"><a href="#3-Node安装" class="headerlink" title="3. Node安装"></a>3. Node安装</h3><h3 id="4-Hexo安装及配置"><a href="#4-Hexo安装及配置" class="headerlink" title="4. Hexo安装及配置"></a>4. Hexo安装及配置</h3><p>先创建一个hexo操作的文件目录</p>
 <p><img src="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image1.png" alt="Image1"></p>
 <p>如果使用的是Linux系统，可以直接在命令行中输入命令操作，如果是windows系统，用管理员权限打开“命令提示符”，使用命令在电脑上安装hexo；或者，在hexo目录上右键，选择“Git Bash Here”，用git bash工具打开hexo目录，在git bash中使用命令操作；</p>
-<p>安装hexo</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ npm install hexo -g</span><br><span class="line"></span><br><span class="line">C:\Users\Kevin-TP\AppData\Roaming\npm\hexo -&gt; </span><br><span class="line">C:\Users\Kevin-TP\AppData\Roaming\npm\node_modules\hexo\bin\hexo</span><br><span class="line">npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 </span><br><span class="line">(node_modules\hexo\node_modules\fsevents):</span><br><span class="line">npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for </span><br><span class="line">fsevents@2.1.2: wanted &#123;&quot;os&quot;:&quot;darwin&quot;,&quot;arch&quot;:&quot;any&quot;&#125; (current: </span><br><span class="line">&#123;&quot;os&quot;:&quot;win32&quot;,&quot;arch&quot;:&quot;x64&quot;&#125;)</span><br><span class="line">npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.11 </span><br><span class="line">(node_modules\hexo\node_modules\nunjucks\node_modules\fsevents):</span><br><span class="line">npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for </span><br><span class="line">fsevents@1.2.11: wanted &#123;&quot;os&quot;:&quot;darwin&quot;,&quot;arch&quot;:&quot;any&quot;&#125; (current: </span><br><span class="line">&#123;&quot;os&quot;:&quot;win32&quot;,&quot;arch&quot;:&quot;x64&quot;&#125;)</span><br><span class="line"></span><br><span class="line">+ hexo@4.2.0</span><br><span class="line">added 36 packages from 40 contributors, removed 30 packages, updated 58 packages </span><br><span class="line">and moved 5 packages in 19.178s</span><br></pre></td></tr></table></figure>
+<h4 id="4-1-安装hexo"><a href="#4-1-安装hexo" class="headerlink" title="4.1 安装hexo"></a>4.1 安装hexo</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ npm install hexo -g</span><br><span class="line"></span><br><span class="line">C:\Users\Kevin-TP\AppData\Roaming\npm\hexo -&gt; </span><br><span class="line">C:\Users\Kevin-TP\AppData\Roaming\npm\node_modules\hexo\bin\hexo</span><br><span class="line">npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@2.1.2 </span><br><span class="line">(node_modules\hexo\node_modules\fsevents):</span><br><span class="line">npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for </span><br><span class="line">fsevents@2.1.2: wanted &#123;&quot;os&quot;:&quot;darwin&quot;,&quot;arch&quot;:&quot;any&quot;&#125; (current: </span><br><span class="line">&#123;&quot;os&quot;:&quot;win32&quot;,&quot;arch&quot;:&quot;x64&quot;&#125;)</span><br><span class="line">npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.11 </span><br><span class="line">(node_modules\hexo\node_modules\nunjucks\node_modules\fsevents):</span><br><span class="line">npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for </span><br><span class="line">fsevents@1.2.11: wanted &#123;&quot;os&quot;:&quot;darwin&quot;,&quot;arch&quot;:&quot;any&quot;&#125; (current: </span><br><span class="line">&#123;&quot;os&quot;:&quot;win32&quot;,&quot;arch&quot;:&quot;x64&quot;&#125;)</span><br><span class="line"></span><br><span class="line">+ hexo@4.2.0</span><br><span class="line">added 36 packages from 40 contributors, removed 30 packages, updated 58 packages </span><br><span class="line">and moved 5 packages in 19.178s</span><br></pre></td></tr></table></figure>
 
 <p>检查hexo是否安装成功</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">$ hexo -v</span><br><span class="line">hexo-cli: 2.0.0</span><br><span class="line">os: Windows_NT 10.0.18362 win32 x64</span><br><span class="line">http_parser: 2.8.0</span><br><span class="line">node: 10.16.0</span><br><span class="line">v8: 6.8.275.32-node.52</span><br><span class="line">uv: 1.28.0</span><br><span class="line">zlib: 1.2.11</span><br><span class="line">brotli: 1.0.7</span><br><span class="line">ares: 1.15.0</span><br><span class="line">modules: 64</span><br><span class="line">nghttp2: 1.34.0</span><br><span class="line">napi: 4</span><br><span class="line">openssl: 1.1.1b</span><br><span class="line">icu: 64.2</span><br><span class="line">unicode: 12.1</span><br><span class="line">cldr: 35.1</span><br><span class="line">tz: 2019a</span><br></pre></td></tr></table></figure>
 
-<p>初始化hexo文件夹</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">$ hexo init</span><br><span class="line">INFO  Cloning hexo-starter https:&#x2F;&#x2F;github.com&#x2F;hexojs&#x2F;hexo-starter.git</span><br><span class="line">Cloning into &#39;G:\hexo_git&#39;...</span><br><span class="line">remote: Enumerating objects: 9, done.</span><br><span class="line">remote: Counting objects: 100% (9&#x2F;9), done.</span><br><span class="line">remote: Compressing objects: 100% (7&#x2F;7), done.</span><br><span class="line">remote: Total 77 (delta 4), reused 5 (delta 2), pack-reused 68</span><br><span class="line">Unpacking objects: 100% (77&#x2F;77), done.</span><br><span class="line">Submodule &#39;themes&#x2F;landscape&#39; (https:&#x2F;&#x2F;github.com&#x2F;hexojs&#x2F;hexo-theme-landscape.git) registered for path &#39;themes&#x2F;landscape&#39;</span><br><span class="line">Cloning into &#39;G:&#x2F;hexo_git&#x2F;themes&#x2F;landscape&#39;...</span><br><span class="line">remote: Enumerating objects: 33, done.</span><br><span class="line">remote: Counting objects: 100% (33&#x2F;33), done.</span><br><span class="line">remote: Compressing objects: 100% (29&#x2F;29), done.</span><br><span class="line">remote: Total 929 (delta 12), reused 15 (delta 3), pack-reused 896</span><br><span class="line">Receiving objects: 100% (929&#x2F;929), 2.56 MiB | 9.00 KiB&#x2F;s, done.</span><br><span class="line">Resolving deltas: 100% (492&#x2F;492), done.</span><br><span class="line">Submodule path &#39;themes&#x2F;landscape&#39;: checked out &#39;73a23c51f8487cfcd7c6deec96ccc7543960d350&#39;</span><br><span class="line">INFO  Install dependencies</span><br><span class="line">npm WARN deprecated core-js@1.2.7: core-js@&lt;2.6.8 is no longer maintained. Please, upgrade to core-js@3 or at least to actual version of core-js@2.</span><br><span class="line">npm notice created a lockfile as package-lock.json. You should commit this file.</span><br><span class="line">npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.9 (node_modules\fsevents):</span><br><span class="line">npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.9: wanted &#123;&quot;os&quot;:&quot;darwin&quot;,&quot;arch&quot;:&quot;any&quot;&#125; (current: &#123;&quot;os&quot;:&quot;win32&quot;,&quot;arch&quot;:&quot;x64&quot;&#125;)</span><br><span class="line"></span><br><span class="line">added 340 packages from 500 contributors and audited 6879 packages in 29.578s</span><br><span class="line">found 0 vulnerabilities</span><br><span class="line"></span><br><span class="line">INFO  Start blogging with Hexo!</span><br></pre></td></tr></table></figure>
+<h4 id="4-2-初始化hexo文件夹"><a href="#4-2-初始化hexo文件夹" class="headerlink" title="4.2 初始化hexo文件夹"></a>4.2 初始化hexo文件夹</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">$ hexo init</span><br><span class="line">INFO  Cloning hexo-starter https:&#x2F;&#x2F;github.com&#x2F;hexojs&#x2F;hexo-starter.git</span><br><span class="line">Cloning into &#39;G:\hexo_git&#39;...</span><br><span class="line">remote: Enumerating objects: 9, done.</span><br><span class="line">remote: Counting objects: 100% (9&#x2F;9), done.</span><br><span class="line">remote: Compressing objects: 100% (7&#x2F;7), done.</span><br><span class="line">remote: Total 77 (delta 4), reused 5 (delta 2), pack-reused 68</span><br><span class="line">Unpacking objects: 100% (77&#x2F;77), done.</span><br><span class="line">Submodule &#39;themes&#x2F;landscape&#39; (https:&#x2F;&#x2F;github.com&#x2F;hexojs&#x2F;hexo-theme-landscape.git) registered for path &#39;themes&#x2F;landscape&#39;</span><br><span class="line">Cloning into &#39;G:&#x2F;hexo_git&#x2F;themes&#x2F;landscape&#39;...</span><br><span class="line">remote: Enumerating objects: 33, done.</span><br><span class="line">remote: Counting objects: 100% (33&#x2F;33), done.</span><br><span class="line">remote: Compressing objects: 100% (29&#x2F;29), done.</span><br><span class="line">remote: Total 929 (delta 12), reused 15 (delta 3), pack-reused 896</span><br><span class="line">Receiving objects: 100% (929&#x2F;929), 2.56 MiB | 9.00 KiB&#x2F;s, done.</span><br><span class="line">Resolving deltas: 100% (492&#x2F;492), done.</span><br><span class="line">Submodule path &#39;themes&#x2F;landscape&#39;: checked out &#39;73a23c51f8487cfcd7c6deec96ccc7543960d350&#39;</span><br><span class="line">INFO  Install dependencies</span><br><span class="line">npm WARN deprecated core-js@1.2.7: core-js@&lt;2.6.8 is no longer maintained. Please, upgrade to core-js@3 or at least to actual version of core-js@2.</span><br><span class="line">npm notice created a lockfile as package-lock.json. You should commit this file.</span><br><span class="line">npm WARN optional SKIPPING OPTIONAL DEPENDENCY: fsevents@1.2.9 (node_modules\fsevents):</span><br><span class="line">npm WARN notsup SKIPPING OPTIONAL DEPENDENCY: Unsupported platform for fsevents@1.2.9: wanted &#123;&quot;os&quot;:&quot;darwin&quot;,&quot;arch&quot;:&quot;any&quot;&#125; (current: &#123;&quot;os&quot;:&quot;win32&quot;,&quot;arch&quot;:&quot;x64&quot;&#125;)</span><br><span class="line"></span><br><span class="line">added 340 packages from 500 contributors and audited 6879 packages in 29.578s</span><br><span class="line">found 0 vulnerabilities</span><br><span class="line"></span><br><span class="line">INFO  Start blogging with Hexo!</span><br></pre></td></tr></table></figure>
 
 <p>看到“Start blogging with Hexo！”打印，说明初始化完成；</p>
 <p>输入npm install，安装所需要的组件</p>
@@ -243,11 +252,10 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ ls</span><br><span class="line">_config.yml  node_modules&#x2F;  package.json  package-lock.json  scaffolds&#x2F;  source&#x2F;  themes&#x2F;</span><br></pre></td></tr></table></figure>
 
 <p>到此，hexo环境安装完成。</p>
-<p>hexo操作：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ hexo g #generate 生成静态文件</span><br><span class="line">$ hexo s #server 启动服务器。</span><br><span class="line">&#x2F;&#x2F; 默认情况下，访问网址为： [http:&#x2F;&#x2F;localhost:4000&#x2F;]</span><br></pre></td></tr></table></figure>
+<h4 id="4-3-Hexo操作"><a href="#4-3-Hexo操作" class="headerlink" title="4.3 Hexo操作"></a>4.3 Hexo操作</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ hexo g #generate 生成静态文件</span><br><span class="line">$ hexo s #server 启动服务器。</span><br><span class="line">&#x2F;&#x2F; 默认情况下，访问网址为： [http:&#x2F;&#x2F;localhost:4000&#x2F;]</span><br></pre></td></tr></table></figure>
 <p>在浏览器地址栏输入“<a href="http://localhost:4000/”打开页面，是一个空的博客网页；" target="_blank" rel="noopener">http://localhost:4000/”打开页面，是一个空的博客网页；</a></p>
 <p><img src="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image3.JPG" alt="Image3"></p>
-<h4 id="将git库和hexo链接起来"><a href="#将git库和hexo链接起来" class="headerlink" title="将git库和hexo链接起来"></a>将git库和hexo链接起来</h4><p>配置Deployment</p>
+<h4 id="4-4-将git库和hexo链接起来"><a href="#4-4-将git库和hexo链接起来" class="headerlink" title="4.4 将git库和hexo链接起来"></a>4.4 将git库和hexo链接起来</h4><p>配置Deployment</p>
 <p>在hexo文件夹中，找到_config.yml文件，修改repository值（在末尾），repository值是github项目里的ssh；</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repository: git@github.com:Mshrimp&#x2F;Mshrimp.github.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
 
@@ -260,7 +268,7 @@
 
 
 <p>至此，一个空的博客已经搭建完成，下一步，添加博客文章；</p>
-<h3 id="创建博客文章"><a href="#创建博客文章" class="headerlink" title="创建博客文章"></a>创建博客文章</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new [layout] &lt;title&gt; #新建文章</span><br></pre></td></tr></table></figure>
+<h3 id="5-创建博客文章"><a href="#5-创建博客文章" class="headerlink" title="5. 创建博客文章"></a>5. 创建博客文章</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new [layout] &lt;title&gt; #新建文章</span><br></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&#x2F;&#x2F; 创建博客：hello-world</span><br><span class="line">$ hexo new post hello-world</span><br><span class="line">INFO  Created: G:\hexo\source\_posts\hello-world.md</span><br></pre></td></tr></table></figure>
 <p>创建成功后，会在source/_posts/目录生成hello-world.md文件； </p>
 <p>使用编辑器，编辑好hello-world.md文件的内容后，开始在博客中展示；</p>
@@ -283,16 +291,21 @@
 
 <p>提交之后的博客文件，就可以通过浏览器打开git库名称：mshrimp.github.io来打开了，支持外网访问；</p>
 <p>至此，一篇博客文件已经生成；</p>
-<p>Kevin-TP@DESKTOP-KKMK19B MINGW64 ~<br>$ node -v<br>v10.16.0</p>
-<p>Kevin-TP@DESKTOP-KKMK19B MINGW64 ~<br>$ npm config set registry <a href="https://registry.npm.taobao.org" target="_blank" rel="noopener">https://registry.npm.taobao.org</a></p>
-<h4 id="生成静态文件"><a href="#生成静态文件" class="headerlink" title="生成静态文件"></a>生成静态文件</h4><p>Kevin-TP@DESKTOP-KKMK19B MINGW64 /g/hexo_git<br>$ git clone <a href="https://github.com/litten/hexo-theme-yilia.git" target="_blank" rel="noopener">https://github.com/litten/hexo-theme-yilia.git</a> themes/yilia<br>Cloning into ‘themes/yilia’…<br>remote: Enumerating objects: 1, done.<br>remote: Counting objects: 100% (1/1), done.<br>remote: Total 2037 (delta 0), reused 0 (delta 0), pack-reused 2036<br>Receiving objects: 100% (2037/2037), 10.52 MiB | 38.00 KiB/s, done.<br>Resolving deltas: 100% (1093/1093), done.</p>
-<h4 id="hexo常用命令"><a href="#hexo常用命令" class="headerlink" title="hexo常用命令"></a>hexo常用命令</h4><p>hexo的命令很简单，以下几个是很常用的hexo命令，这些命令需要在当前blog目录下执行</p>
+<h4 id="Hexo常用命令"><a href="#Hexo常用命令" class="headerlink" title="Hexo常用命令"></a>Hexo常用命令</h4><p>hexo的命令很简单，以下几个是很常用的hexo命令，这些命令需要在当前blog目录下执行</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">hexo new [layout] &lt;title&gt; #新建文章</span><br></pre></td></tr></table></figure>
 <p>新建文章时可以指定文章的布局(layout)，默认为post，可以通过修改_config.yml中的default_layout: post来指定默认布局；这样创建的文章都会以md格式保存在source/_post目录中；</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">hexo g #generate 生成静态文件</span><br><span class="line">hexo s #server 启动服务器。在本地预览效果，默认情况下，访问网址为：http:&#x2F;&#x2F;localhost:4000&#x2F;</span><br><span class="line">hexo d #deploy 部署网站同步到github。部署网站前，需要预先生成静态文件</span><br><span class="line">hexo clean #clean 清除缓存文件 (db.json) 和已生成的静态文件 (public)。</span><br></pre></td></tr></table></figure>
 
 
-<h4 id="更换主题"><a href="#更换主题" class="headerlink" title="更换主题"></a>更换主题</h4><h4 id="参考文章："><a href="#参考文章：" class="headerlink" title="参考文章："></a>参考文章：</h4><p><a href="https://www.jianshu.com/p/1bcad7700c46" target="_blank" rel="noopener">https://www.jianshu.com/p/1bcad7700c46</a></p>
+
+<h3 id="6-更换主题"><a href="#6-更换主题" class="headerlink" title="6. 更换主题"></a>6. 更换主题</h3><p>不喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先Github中将yilia主题的源码下载到博客目录的themes目录下；</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># git clone https:&#x2F;&#x2F;github.com&#x2F;litten&#x2F;hexo-theme-yilia.git themes&#x2F;yilia</span><br></pre></td></tr></table></figure>
+
+<p>在博客根目录下，修改_config.yml文件的themes：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">themes: yilia</span><br></pre></td></tr></table></figure>
+
+<p>这个主题中的一些配置，可以根据需要自行修改，配置文件为themes/yilia/_config.yml；</p>
+<h3 id="7-参考文章"><a href="#7-参考文章" class="headerlink" title="7. 参考文章"></a>7. 参考文章</h3><p><a href="https://www.jianshu.com/p/1bcad7700c46" target="_blank" rel="noopener">https://www.jianshu.com/p/1bcad7700c46</a></p>
 <p><a href="https://segmentfault.com/a/1190000017986794" target="_blank" rel="noopener">https://segmentfault.com/a/1190000017986794</a></p>
 
       
@@ -302,6 +315,17 @@
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Hexo Github 博客</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
 
       
@@ -501,6 +525,10 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
             <input type="checkbox" q-on="click:toggleTag(e)" q-attr="checked:showTags">
           </label>
           <ul class="article-tag-list" q-show="showTags">
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Hexo Github 博客</a>
+              </li>
             
             <div class="clearfix"></div>
           </ul>

@@ -1,46 +1,70 @@
 ---
 title: Hexo+Github搭建个人博客
 date: 2019-07-17 20:24:52
-tags:
+tags: Hexo Github 博客
 ---
 
 
 
-### 简介
+### 1. 简介
 
 首次通过Hexo和Github搭建自己的博客，尝试成功，从别人那里借来个yilia主题，看着挺漂亮，索性直接当我的主题用了，虽然还不会太多的配置操作，先把自己搭建博客过程中的主要操作记录下来。
 
 <!--more-->
 
+#### 环境简介
+
+本地电脑环境：
+
+> windows10
 
 
-### 环境
 
-windows10
-git
+搭建博客需要安装的软件：
 
+> git
+> node.js
+> hexo
+
+安装搭建博客需要的工具：git和node.js；通过一下命令查询：
+
+```
 $ git --version
 git version 2.22.0.windows.1
+```
 
+```
 $ node -v
 v10.16.0
+```
+
+```
+$ npm config set registry https://registry.npm.taobao.org
+```
 
 
 
-#### 创建Github仓库
+默认已经注册有Github帐号；
+
+Hexo软件还未安装，下文会简单讲述Hexo软件的安装；
+
+[TOC]
+
+
+### 2. Github仓库创建和配置
+
+#### 2.1 创建Git仓库
 
 打开GitHub，点击“New repository”，创建一个新仓库，用来专门存放博客日志信息；仓库名要按照格式：账户名.github.io，比如：Mshrimp.github.io；否则，后边的操作会出现问题；创建仓库时勾选上“
 Initialize this repository with a README”；
 
-
-
 进入创建好的仓库Mshrimp.github.io，点击右侧的“Settings”，向下拉找到Github Pages，会看到网站是：https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。
 
-![test](Hexo-Github搭建个人博客/Image.png)
+![Image](Hexo-Github搭建个人博客/Image.png)
 
 ![Image2](Hexo-Github搭建个人博客/Image2.png)
 
-##### 配置git仓库
+#### 2.2 配置git仓库
 
 如果是第一次使用git，就需要先配置git环境，否则可以跳过；
 ```
@@ -95,7 +119,7 @@ ssh-rsa
 ```
 
 
-##### 把本地生成的公钥添加到github中
+#### 2.3 把本地公钥添加到github中
 
 在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；
 
@@ -108,37 +132,25 @@ ssh-rsa
 使用“ssh -T git@github.com”命令，测试添加ssh是否成功；
 ```
 $ ssh -T git@github.com
-
-The authenticity of host 'github.com (13.229.188.59)' can't be established.
-RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.
-Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
-Warning: Permanently added 'github.com,13.229.188.59' (RSA) to the list of known hosts.
+......
 Hi Mshrimp! You've successfully authenticated, but GitHub does not provide shell access.
 ```
 
-### 准备环境
 
-安装搭建博客需要的工具：git和node.js；通过一下命令查询：
 
-```
-$ git --version
-git version 2.22.0.windows.1
-```
+### 3. Node安装
 
-```
-$ node -v
-v10.16.0
-```
 
-### 安装Hexo
 
-1. 先创建一个hexo操作的文件目录
+### 4. Hexo安装及配置
+
+先创建一个hexo操作的文件目录
 
 ![Image1](Hexo-Github搭建个人博客/Image1.png)
 
 如果使用的是Linux系统，可以直接在命令行中输入命令操作，如果是windows系统，用管理员权限打开“命令提示符”，使用命令在电脑上安装hexo；或者，在hexo目录上右键，选择“Git Bash Here”，用git bash工具打开hexo目录，在git bash中使用命令操作；
 
-安装hexo
+#### 4.1 安装hexo
 
 ```
 $ npm install hexo -g
@@ -183,7 +195,8 @@ cldr: 35.1
 tz: 2019a
 ```
 
-初始化hexo文件夹
+#### 4.2 初始化hexo文件夹
+
 ```
 $ hexo init
 INFO  Cloning hexo-starter https://github.com/hexojs/hexo-starter.git
@@ -229,7 +242,7 @@ _config.yml  node_modules/  package.json  package-lock.json  scaffolds/  source/
 
 到此，hexo环境安装完成。
 
-hexo操作：
+#### 4.3 Hexo操作
 
 ```
 $ hexo g #generate 生成静态文件
@@ -242,7 +255,7 @@ $ hexo s #server 启动服务器。
 
 
 
-#### 将git库和hexo链接起来
+#### 4.4 将git库和hexo链接起来
 
 
 
@@ -277,7 +290,7 @@ $ hexo deploy
 
 至此，一个空的博客已经搭建完成，下一步，添加博客文章；
 
-### 创建博客文章
+### 5. 创建博客文章
 
 ```
 $ hexo new [layout] <title> #新建文章
@@ -353,35 +366,8 @@ INFO  Deleted public folder.
 
 
 
-Kevin-TP@DESKTOP-KKMK19B MINGW64 ~
-$ node -v
-v10.16.0
 
-Kevin-TP@DESKTOP-KKMK19B MINGW64 ~
-$ npm config set registry https://registry.npm.taobao.org
-
-
-
-
-
-#### 生成静态文件
-
-
-
-
-
-
-Kevin-TP@DESKTOP-KKMK19B MINGW64 /g/hexo_git
-$ git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia
-Cloning into 'themes/yilia'...
-remote: Enumerating objects: 1, done.
-remote: Counting objects: 100% (1/1), done.
-remote: Total 2037 (delta 0), reused 0 (delta 0), pack-reused 2036
-Receiving objects: 100% (2037/2037), 10.52 MiB | 38.00 KiB/s, done.
-Resolving deltas: 100% (1093/1093), done.
-
-
-#### hexo常用命令
+#### Hexo常用命令
 
 hexo的命令很简单，以下几个是很常用的hexo命令，这些命令需要在当前blog目录下执行
 
@@ -398,16 +384,27 @@ hexo clean #clean 清除缓存文件 (db.json) 和已生成的静态文件 (publ
 ```
 
 
-#### 更换主题
+
+### 6. 更换主题
+
+不喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先Github中将yilia主题的源码下载到博客目录的themes目录下；
+
+```
+# git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia
+```
+
+在博客根目录下，修改_config.yml文件的themes：
+
+```
+themes: yilia
+```
+
+这个主题中的一些配置，可以根据需要自行修改，配置文件为themes/yilia/_config.yml；
 
 
 
 
-
-
-
-
-#### 参考文章：
+### 7. 参考文章
 
 https://www.jianshu.com/p/1bcad7700c46
 

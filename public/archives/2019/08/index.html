@@ -6,16 +6,12 @@
   <meta name="renderer" content="webkit">
   <meta http-equiv="X-UA-Compatible" content="IE=edge" >
   <link rel="dns-prefetch" href="http://mshrimp.github.io">
-  <title>Qemu搭建ARM vexpress开发环境(一) | Mshrimp blog</title>
+  <title>Archives: 2019/8 | Mshrimp blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-  <meta name="description" content="标签： Qemu ARM Linux  嵌入式软件开发依赖于嵌入式硬件设备，比如：开发板、外部模块设备等，但是如果只是想学习、研究Linux内核，想学习Linux内核的架构，工作模式，需要修改一些代码，重新编译并烧写到开发板中进行验证，这样未必有些复杂，并且为此专门购买各种开发版，浪费资金，开会演示效果还需要携带一大串的板子和电线，不胜其烦。然而Qemu的使用可以避免频繁在开发板上烧写版本，如果进">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Qemu搭建ARM vexpress开发环境(一)">
-<meta property="og:url" content="http://mshrimp.github.io/2019/07/30/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83-%E4%B8%80/index.html">
+  <meta property="og:type" content="website">
+<meta property="og:title" content="Mshrimp blog">
+<meta property="og:url" content="http://mshrimp.github.io/archives/2019/08/index.html">
 <meta property="og:site_name" content="Mshrimp blog">
-<meta property="og:description" content="标签： Qemu ARM Linux  嵌入式软件开发依赖于嵌入式硬件设备，比如：开发板、外部模块设备等，但是如果只是想学习、研究Linux内核，想学习Linux内核的架构，工作模式，需要修改一些代码，重新编译并烧写到开发板中进行验证，这样未必有些复杂，并且为此专门购买各种开发版，浪费资金，开会演示效果还需要携带一大串的板子和电线，不胜其烦。然而Qemu的使用可以避免频繁在开发板上烧写版本，如果进">
-<meta property="article:published_time" content="2019-07-30T13:37:50.000Z">
-<meta property="article:modified_time" content="2020-04-05T14:30:06.196Z">
 <meta property="article:author" content="micro虾米">
 <meta name="twitter:card" content="summary">
   
@@ -157,237 +153,60 @@
             <canvas data-colors="#eaeaea" data-sectionHeight="100" data-contentId="js-content" id="myCanvas1" class="anm-canvas"></canvas>
           </div>
           <div id="js-content" class="content-ll">
-            <article id="post-Qemu搭建ARM-vexpress开发环境-一" class="article article-type-post " itemscope itemprop="blogPost">
-  <div class="article-inner">
-    
-      <header class="article-header">
-        
+            
   
-    <h1 class="article-title" itemprop="name">
-      Qemu搭建ARM vexpress开发环境(一)
+  
+    
+    
+      
+      
+      <section class="archives-wrap">
+        <div class="archive-year-wrap">
+          <a href="/archives/2019" class="archive-year">2019</a>
+        </div>
+        <div class="archives">
+    
+    <article class="archive-article archive-type-post">
+  <div class="archive-article-inner">
+    <header class="archive-article-header">
+      	<div class="article-meta">
+	      	<a href="/2019/08/05/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" class="archive-article-date">
+  	<time datetime="2019-08-05T15:26:48.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-05</time>
+</a>
+        </div>
+    	 
+  
+    <h1 itemprop="name">
+      <a class="archive-article-title" href="/2019/08/05/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">Ubuntu+Hexo+Github搭建个人博客</a>
     </h1>
   
 
-        
-        <a href="/2019/07/30/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83-%E4%B8%80/" class="archive-article-date">
-  	<time datetime="2019-07-30T13:37:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-30</time>
-</a>
-        
-      </header>
-    
-    <div class="article-entry" itemprop="articleBody">
-      
-        <p>标签： Qemu ARM Linux</p>
-<hr>
-<p>嵌入式软件开发依赖于嵌入式硬件设备，比如：开发板、外部模块设备等，但是如果只是想学习、研究Linux内核，想学习Linux内核的架构，工作模式，需要修改一些代码，重新编译并烧写到开发板中进行验证，这样未必有些复杂，并且为此专门购买各种开发版，浪费资金，开会演示效果还需要携带一大串的板子和电线，不胜其烦。然而Qemu的使用可以避免频繁在开发板上烧写版本，如果进行的调试工作与外设无关，仅仅是内核方面的调试，Qemu模拟ARM开发环境完全可以完美地胜任。</p>
-<a id="more"></a>
+        <div class="article-info info-on-right">
+          
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Hexo Github 博客</a>
+        		</li>
+      		
+		</ul>
+	</div>
 
-<p>下面简单介绍下我的Qemu开发环境搭建过程</p>
-<h2 id="1-环境"><a href="#1-环境" class="headerlink" title="1. 环境"></a>1. 环境</h2><p>由于在开发过程中也需要Windows系统下的一些工具，双系统环境切换操作系统时必须重启，于是放弃了以前搭建的双系统环境，而采用在PC的Windows10系统下通过VirtualBox虚拟机安装Xubuntu系统进行开发，避免了双系统开发中需要不断重启切换PC系统的问题。Xubuntu系统和Ubuntu系统大同小异，只是桌面封装更加简洁。</p>
-<h3 id="1-1-所使用环境"><a href="#1-1-所使用环境" class="headerlink" title="1.1 所使用环境"></a>1.1 所使用环境</h3><p>PC系统：Windows10<br>虚拟机：VirtualBox-5.18<br>虚拟机系统：Xubuntu<br>模拟的开发板：vexpress</p>
-<h3 id="1-2-搭建环境时使用的工具"><a href="#1-2-搭建环境时使用的工具" class="headerlink" title="1.2 搭建环境时使用的工具"></a>1.2 搭建环境时使用的工具</h3><p>Qemu-2.7<br>linux-4.4.157(Linux Kernel)<br>u-boot-2017.05<br>busybox-1.29.3<br>arm-linux-gnueabi-</p>
-<h2 id="2-安装交叉编译工具"><a href="#2-安装交叉编译工具" class="headerlink" title="2. 安装交叉编译工具"></a>2. 安装交叉编译工具</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># sudo apt install gcc-arm-linux-gnueabi</span><br></pre></td></tr></table></figure>
+          
 
-<h2 id="3-安装Qemu工具"><a href="#3-安装Qemu工具" class="headerlink" title="3. 安装Qemu工具"></a>3. 安装Qemu工具</h2><p>有两种方法可以在Linux环境下安装Qemu工具，第一种直接使用XUbuntu系统的apt工具安装，但是这种方法安装的Qemu系统版本不是最新的，如果需要安装最新版本的Qemu工具，就需要通过Git工具下载源码，切换到最新分支再去编译安装了。具体操作如下所述</p>
-<h3 id="3-1-快速安装Qemu："><a href="#3-1-快速安装Qemu：" class="headerlink" title="3.1 快速安装Qemu："></a>3.1 快速安装Qemu：</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># sudo apt install qemu</span><br></pre></td></tr></table></figure>
-
-<h3 id="3-2-下载Qemu源码编译安装"><a href="#3-2-下载Qemu源码编译安装" class="headerlink" title="3.2 下载Qemu源码编译安装"></a>3.2 下载Qemu源码编译安装</h3><p>从Git服务器下载Qemu代码，记着在下载之前选择并切换需要的源码分支：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># git clone git:&#x2F;&#x2F;git.qemu-project.org&#x2F;qemu.git</span><br></pre></td></tr></table></figure>
-<p>编译并安装Qemu：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># .&#x2F;configure --target-list&#x3D;arm-softmmu --audio-drv-list&#x3D;</span><br><span class="line"># make</span><br><span class="line"># make install</span><br></pre></td></tr></table></figure>
-
-<h3 id="3-3-查看Qemu版本"><a href="#3-3-查看Qemu版本" class="headerlink" title="3.3 查看Qemu版本"></a>3.3 查看Qemu版本</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># qemu-system-arm --version</span><br><span class="line">QEMU emulator version 2.7.1 (v2.7.1-dirty), Copyright (c) 2003-2016 Fabrice Bellard and the QEMU Project developers</span><br></pre></td></tr></table></figure>
-<h3 id="3-4-查看Qemu支持的开发板"><a href="#3-4-查看Qemu支持的开发板" class="headerlink" title="3.4 查看Qemu支持的开发板"></a>3.4 查看Qemu支持的开发板</h3><p>Qemu工具支持大量开发板的虚拟，现存的大部分常用开发板都能很好地支持。通过下面的命令操作可以看到当前版本的Qemu工具支持的开发板列表：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># qemu-system-arm -M help</span><br></pre></td></tr></table></figure>
-
-<h3 id="3-5-运行Qemu"><a href="#3-5-运行Qemu" class="headerlink" title="3.5 运行Qemu"></a>3.5 运行Qemu</h3><p>该操作目前还不能运行，因为还没有编译内核，如果手边有编译好的别的版本的zImage文件，可以通过下面命令尝试运行看下效果。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"># qemu-system-arm -M vexpress-a9 -m 512M -kernel .&#x2F;zImage -dtb .&#x2F;vexpress-v2p-ca9.dtb -nographic -append &quot;console&#x3D;ttyAMA0&quot;</span><br><span class="line">    -M          指定开发板</span><br><span class="line">    -m          指定内存大小</span><br><span class="line">    -kernel     指定内核文件</span><br><span class="line">    -dtb        指定dtb文件</span><br><span class="line">    -nographic  指定不需要图形界面</span><br><span class="line">    -append     指定扩展显示界面，串口或者LCD</span><br></pre></td></tr></table></figure>
-
-<h2 id="4-配置并编译Linux内核"><a href="#4-配置并编译Linux内核" class="headerlink" title="4. 配置并编译Linux内核"></a>4. 配置并编译Linux内核</h2><h3 id="4-1-下载Linux内核"><a href="#4-1-下载Linux内核" class="headerlink" title="4.1 下载Linux内核"></a>4.1 下载Linux内核</h3><p>通过众所周知的内核下载网站<a href="http://www.kernel.org下载需要的内核版本，这里我下载的是相对来说最新的长期支持的内核版本linux-4.4.157。" target="_blank" rel="noopener">www.kernel.org下载需要的内核版本，这里我下载的是相对来说最新的长期支持的内核版本linux-4.4.157。</a></p>
-<h3 id="4-2-解压Linux内核"><a href="#4-2-解压Linux内核" class="headerlink" title="4.2 解压Linux内核"></a>4.2 解压Linux内核</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># tar -xvf linux-4.4.157.tar.xz</span><br></pre></td></tr></table></figure>
-
-<h3 id="4-3-编译Linux内核"><a href="#4-3-编译Linux内核" class="headerlink" title="4.3 编译Linux内核"></a>4.3 编译Linux内核</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># make vexpress_defconfig</span><br><span class="line"># make zImage -j4</span><br><span class="line"># make modules -j4    &#x2F;&#x2F; 编译驱动模块</span><br><span class="line"># make dtbs</span><br></pre></td></tr></table></figure>
-<p>得到编译文件：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">arch&#x2F;arm&#x2F;boot&#x2F;zImage</span><br><span class="line">arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;*.dtb</span><br></pre></td></tr></table></figure>
-
-<h3 id="4-4-Qemu启动命令"><a href="#4-4-Qemu启动命令" class="headerlink" title="4.4 Qemu启动命令"></a>4.4 Qemu启动命令</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># qemu-system-arm -M vexpress-a9 -m 512M -kernel kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;zImage -dtb kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;vexpress-v2p-ca9.dtb -nographic -append &quot;console&#x3D;ttyAMA0&quot;</span><br></pre></td></tr></table></figure>
-<p>Qemu的启动命令需要带好几个参数，完成启动命令比较长，每次都输入很可能会出现错误，为了使用方便，可以将该命令放到shell脚本中执行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"># cat boot.sh</span><br><span class="line">#! &#x2F;bin&#x2F;sh</span><br><span class="line">qemu-system-arm \</span><br><span class="line">        -M vexpress-a9  \</span><br><span class="line">        -m 512M \</span><br><span class="line">        -kernel kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;zImage   \   </span><br><span class="line">        -dtb kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;vexpress-v2p-ca9.dtb    \   </span><br><span class="line">        -nographic  \</span><br><span class="line">        -append &quot;console&#x3D;ttyAMA0&quot;</span><br></pre></td></tr></table></figure>
-
-<p>启动日志<br>内核成功启动，内核的启动打印信息非常多，为避免累赘，前半部分的启动日志省略。启动最后出错是因为没有挂载根文件系统。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">input: ImExPS&#x2F;2 Generic Explorer Mouse as &#x2F;devices&#x2F;platform&#x2F;smb&#x2F;smb:motherboard&#x2F;smb:motherboard:iofpga@7,00000000&#x2F;10007000.kmi&#x2F;serio1&#x2F;input&#x2F;input2</span><br><span class="line">VFS: Cannot open root device &quot;(null)&quot; or unknown-block(0,0): error -6</span><br><span class="line">Please append a correct &quot;root&#x3D;&quot; boot option; here are the available partitions:</span><br><span class="line">1f00          131072 mtdblock0  (driver?)</span><br><span class="line">1f01           32768 mtdblock1  (driver?)</span><br><span class="line">b300           32768 mmcblk0  driver: mmcblk</span><br><span class="line">Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)</span><br><span class="line">CPU: 0 PID: 1 Comm: swapper&#x2F;0 Not tainted 4.4.157 #1</span><br><span class="line">Hardware name: ARM-Versatile Express</span><br><span class="line">[&lt;80016420&gt;] (unwind_backtrace) from [&lt;80012e80&gt;] (show_stack+0x10&#x2F;0x14)</span><br><span class="line">[&lt;80012e80&gt;] (show_stack) from [&lt;802478f8&gt;] (dump_stack+0x84&#x2F;0x98)</span><br><span class="line">[&lt;802478f8&gt;] (dump_stack) from [&lt;800a7d7c&gt;] (panic+0x9c&#x2F;0x1f4)</span><br><span class="line">[&lt;800a7d7c&gt;] (panic) from [&lt;806302d4&gt;] (mount_block_root+0x1c8&#x2F;0x268)</span><br><span class="line">[&lt;806302d4&gt;] (mount_block_root) from [&lt;80630498&gt;] (mount_root+0x124&#x2F;0x12c)</span><br><span class="line">[&lt;80630498&gt;] (mount_root) from [&lt;806305f0&gt;] (prepare_namespace+0x150&#x2F;0x198)</span><br><span class="line">[&lt;806305f0&gt;] (prepare_namespace) from [&lt;8062fedc&gt;] (kernel_init_freeable+0x250&#x2F;0x260)</span><br><span class="line">[&lt;8062fedc&gt;] (kernel_init_freeable) from [&lt;804a99f0&gt;] (kernel_init+0x8&#x2F;0xe8)</span><br><span class="line">[&lt;804a99f0&gt;] (kernel_init) from [&lt;8000f490&gt;] (ret_from_fork+0x14&#x2F;0x24)</span><br><span class="line">---[ end Kernel panic - not syncing: VFS: Unable to mount root fs on unknown-block(0,0)</span><br></pre></td></tr></table></figure>
-
-
-
-<h2 id="5-制作根文件系统"><a href="#5-制作根文件系统" class="headerlink" title="5. 制作根文件系统"></a>5. 制作根文件系统</h2><p>使用busybox制作简易的根文件系统</p>
-<h3 id="5-1-下载busybox工具"><a href="#5-1-下载busybox工具" class="headerlink" title="5.1 下载busybox工具"></a>5.1 下载busybox工具</h3><p>从<a href="https://busybox.net/downloads/下载最新的busybox。" target="_blank" rel="noopener">https://busybox.net/downloads/下载最新的busybox。</a></p>
-<h3 id="5-2-解压busybox"><a href="#5-2-解压busybox" class="headerlink" title="5.2 解压busybox"></a>5.2 解压busybox</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># tar -xvf busybox-1.29.3.tar.bz2</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-3-配置并编译busybox"><a href="#5-3-配置并编译busybox" class="headerlink" title="5.3 配置并编译busybox"></a>5.3 配置并编译busybox</h3><p>修改Makefile:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ARCH &#x3D; arm</span><br><span class="line">CROSS_COMPILE &#x3D; arm-linux-gnueabi-</span><br></pre></td></tr></table></figure>
-<p>编译选择使用glibc动态库，因为静态库可能会出现一些未知的问题</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># make menuconfig</span><br><span class="line">Settings  ---&gt;</span><br><span class="line">    Build Options  ---&gt;</span><br><span class="line">        [ ] Build static binary (no shared libs)</span><br></pre></td></tr></table></figure>
-
-
-<p>编译并安装：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># make</span><br><span class="line"># make install</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-4-制作简易根文件系统"><a href="#5-4-制作简易根文件系统" class="headerlink" title="5.4 制作简易根文件系统"></a>5.4 制作简易根文件系统</h3><p>制作一个简易的根文件系统，该文件系统包含的功能极其简陋，仅为了验证Qemu启动Linux内核后挂载跟文件系统的过程。以后会根据具体需要进一步完善该文件系统。</p>
-<h4 id="1-编译并安装busybox"><a href="#1-编译并安装busybox" class="headerlink" title="1) 编译并安装busybox"></a>1) 编译并安装busybox</h4><p>将busybox编译生成的_install目录下的文件全部拷贝到rootfs/目录：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># mkdir rootfs</span><br><span class="line"># cp &#x2F;...&#x2F;busybox-1.29.3&#x2F;_install&#x2F;* rootfs&#x2F; -rfd</span><br></pre></td></tr></table></figure>
-<p>也可以在指定busybox的安装目录直接安装：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># make CONFIG_PREFIX&#x3D;&#x2F;...&#x2F;rootfs&#x2F; install</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-安装glibc库"><a href="#2-安装glibc库" class="headerlink" title="2) 安装glibc库"></a>2) 安装glibc库</h4><p>在根文件系统中添加加载器和动态库：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># mkdir rootfs&#x2F;lib</span><br><span class="line"># cp &#x2F;usr&#x2F;arm-linux-gnueabi&#x2F;lib&#x2F;* rootfs&#x2F;lib&#x2F; -rfp</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-静态创建设备文件"><a href="#3-静态创建设备文件" class="headerlink" title="3) 静态创建设备文件"></a>3) 静态创建设备文件</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"># mkdir rootfs&#x2F;dev</span><br><span class="line"># cd rootfs&#x2F;dev</span><br><span class="line"># mknod -m 666 tty1 c 4 1</span><br><span class="line"># mknod -m 666 tty2 c 4 2</span><br><span class="line"># mknod -m 666 tty3 c 4 3</span><br><span class="line"># mknod -m 666 tty4 c 4 4</span><br><span class="line"># mknod -m 666 console c 5 1</span><br><span class="line"># mknod -m 666 null c 1 3</span><br></pre></td></tr></table></figure>
-<p>至此，简易版根文件系统就制作完成，该根文件系统只含有最基本的功能，一些其他功能在以后的操作中会进行添加，如有兴趣可以继续参考下一篇文章《》《》</p>
-<h3 id="5-5-制作SD卡文件系统镜像"><a href="#5-5-制作SD卡文件系统镜像" class="headerlink" title="5.5 制作SD卡文件系统镜像"></a>5.5 制作SD卡文件系统镜像</h3><h4 id="1-生成一个空的SD卡镜像："><a href="#1-生成一个空的SD卡镜像：" class="headerlink" title="1) 生成一个空的SD卡镜像："></a>1) 生成一个空的SD卡镜像：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"># dd if&#x3D;&#x2F;dev&#x2F;zero of&#x3D;rootfs.ext3 bs&#x3D;1M count&#x3D;32</span><br><span class="line">32+0 records in</span><br><span class="line">32+0 records out</span><br><span class="line">33554432 bytes (34 MB, 32 MiB) copied, 0.0236764 s, 1.4 GB&#x2F;s</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-将SD卡格式化为exts文件系统："><a href="#2-将SD卡格式化为exts文件系统：" class="headerlink" title="2) 将SD卡格式化为exts文件系统："></a>2) 将SD卡格式化为exts文件系统：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"># mkfs.ext3 rootfs.ext3</span><br><span class="line">mke2fs 1.42.13 (17-May-2015)</span><br><span class="line">Discarding device blocks: done                            </span><br><span class="line">Creating filesystem with 32768 1k blocks and 8192 inodes</span><br><span class="line">Filesystem UUID: 51ab1063-a137-48e5-a6f4-4552dad3b898</span><br><span class="line">Superblock backups stored on blocks:</span><br><span class="line">    8193, 24577</span><br><span class="line"></span><br><span class="line">Allocating group tables: done                            </span><br><span class="line">Writing inode tables: done                            </span><br><span class="line">Creating journal (4096 blocks): done</span><br><span class="line">Writing superblocks and filesystem accounting information: done</span><br></pre></td></tr></table></figure>
-
-<h4 id="3-将rootfs烧写到SD卡："><a href="#3-将rootfs烧写到SD卡：" class="headerlink" title="3) 将rootfs烧写到SD卡："></a>3) 将rootfs烧写到SD卡：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># sudo mount -t ext3 rootfs.ext3 &#x2F;mnt -o loop</span><br><span class="line"># sudo cp -rf rootfs&#x2F;* &#x2F;mnt&#x2F;</span><br><span class="line"># sudo umount &#x2F;mnt</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-6-验证"><a href="#5-6-验证" class="headerlink" title="5.6 验证"></a>5.6 验证</h3><h4 id="1-Qemu启动命令："><a href="#1-Qemu启动命令：" class="headerlink" title="1) Qemu启动命令："></a>1) Qemu启动命令：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-arm -M vexpress-a9 -m 512M -kernel kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;zImage -dtb kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;vexpress-v2p-ca9.dtb -nographic -append &quot;root&#x3D;&#x2F;dev&#x2F;mmcblk0 rw console&#x3D;ttyAMA0&quot; -sd rootfs.ext3</span><br></pre></td></tr></table></figure>
-
-<h4 id="2-启动脚本："><a href="#2-启动脚本：" class="headerlink" title="2) 启动脚本："></a>2) 启动脚本：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"># boot.sh</span><br><span class="line">#! &#x2F;bin&#x2F;sh</span><br><span class="line">qemu-system-arm \</span><br><span class="line">        -M vexpress-a9  \</span><br><span class="line">        -m 512M \</span><br><span class="line">        -kernel kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;zImage   \   </span><br><span class="line">        -dtb kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;vexpress-v2p-ca9.dtb    \   </span><br><span class="line">        -nographic  \</span><br><span class="line">        -append &quot;root&#x3D;&#x2F;dev&#x2F;mmcblk0 rw console&#x3D;ttyAMA0&quot;    \</span><br><span class="line">        -sd rootfs.ext3</span><br></pre></td></tr></table></figure>
-
-<p>以上为在串口终端启动系统，按照以下的启动命令可以使用LCD屏作为输出启动系统。</p>
-<h4 id="3-图形化启动内核："><a href="#3-图形化启动内核：" class="headerlink" title="3) 图形化启动内核："></a>3) 图形化启动内核：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">qemu-system-arm -M vexpress-a9 -m 512M -kernel kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;zImage -dtb kernel&#x2F;linux-4.4.157&#x2F;arch&#x2F;arm&#x2F;boot&#x2F;dts&#x2F;vexpress-v2p-ca9.dtb -append &quot;root&#x3D;&#x2F;dev&#x2F;mmcblk0 rw console&#x3D;tty0&quot; -sd rootfs.ext3</span><br></pre></td></tr></table></figure>
-
-<h4 id="4-启动日志："><a href="#4-启动日志：" class="headerlink" title="4) 启动日志："></a>4) 启动日志：</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">rtc-pl031 10017000.rtc: setting system clock to 2018-09-24 13:22:14 UTC (1537795334)</span><br><span class="line">ALSA device list:</span><br><span class="line">  #0: ARM AC&#39;97 Interface PL041 rev0 at 0x10004000, irq 33</span><br><span class="line">input: ImExPS&#x2F;2 Generic Explorer Mouse as &#x2F;devices&#x2F;platform&#x2F;smb&#x2F;smb:motherboard&#x2F;smb:motherboard:iofpga@7,00000000&#x2F;10007000.kmi&#x2F;serio1&#x2F;input&#x2F;input2</span><br><span class="line">EXT4-fs (mmcblk0): mounting ext3 file system using the ext4 subsystem</span><br><span class="line">EXT4-fs (mmcblk0): recovery complete</span><br><span class="line">EXT4-fs (mmcblk0): mounted filesystem with ordered data mode. Opts: (null)</span><br><span class="line">VFS: Mounted root (ext3 filesystem) on device 179:0.</span><br><span class="line">Freeing unused kernel memory: 284K</span><br><span class="line">random: nonblocking pool is initialized</span><br><span class="line">can&#39;t run &#39;&#x2F;etc&#x2F;init.d&#x2F;rcS&#39;: No such file or directory</span><br><span class="line"></span><br><span class="line">Please press Enter to activate this console.</span><br><span class="line">&#x2F; #</span><br><span class="line">&#x2F; #</span><br><span class="line">&#x2F; # uname -a</span><br><span class="line">Linux (none) 4.4.157 #1 SMP Sun Sep 23 21:11:22 CST 2018 armv7l GNU&#x2F;Linux</span><br></pre></td></tr></table></figure>
-
-<p>至此，Qemu启动Linux内核并挂载跟文件系统已经启动成功，通过串口终端可以正常和系统进行简单功能的交互。<br>打印中提示的不能运行/etc/init.d/rcS问题，只需要添加/etc/init.d/rcS文件即可，文件内容可以是提示语句。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># cat &#x2F;etc&#x2F;init.d&#x2F;rcS</span><br><span class="line">Hello Qemu Linux!</span><br></pre></td></tr></table></figure>
-
-<h3 id="5-7-退出Qemu环境"><a href="#5-7-退出Qemu环境" class="headerlink" title="5.7 退出Qemu环境"></a>5.7 退出Qemu环境</h3><p>Qemu环境搭建好之后，在出错时需要关闭并重新启动Qemu，不用的时候需要关闭Qemu。</p>
-<h5 id="1）手动退出Qemu"><a href="#1）手动退出Qemu" class="headerlink" title="1）手动退出Qemu"></a>1）手动退出Qemu</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Ctrl + A; X</span><br></pre></td></tr></table></figure>
-
-<h5 id="2）强制退出Qemu"><a href="#2）强制退出Qemu" class="headerlink" title="2）强制退出Qemu"></a>2）强制退出Qemu</h5><p>有时候会发现无法通过shutdown等工具关闭，因为Qemu也是一个进程，可以通过杀掉Qemu进程的方法关闭Qemu模拟环境。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># ps -a</span><br><span class="line"># kill xxx</span><br></pre></td></tr></table></figure>
-
-<p>如下可以采用脚本运行：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># cat kill_qemu.sh </span><br><span class="line">#! &#x2F;bin&#x2F;sh</span><br><span class="line">ps -a | grep qemu-system-arm | awk &#39;&#123;print $1&#125;&#39; | xargs sudo kill -9</span><br></pre></td></tr></table></figure>
-
-<p>本文讲述了Qemu环境启动Linux内核，并挂载SD卡中的根文件系统的一些操作步骤。如果需要在Qemu环境下以ARM开发板的正常启动流程来加载Linux内核并挂载根文件系统，可以参考下一篇文章《<a href="https://www.jianshu.com/p/8619a6739040" target="_blank" rel="noopener">Qemu搭建ARM vexpress开发环境(二)—-通过u-boot启动Linux内核</a>》。</p>
-
-      
-
-      
-    </div>
-    <div class="article-info article-info-index">
-      
-      
-      
-
-      
-
-      
-        
-<div class="share-btn share-icons tooltip-left">
-  <div class="tooltip tooltip-east">
-    <span class="tooltip-item">
-      <a href="javascript:;" class="share-sns share-outer">
-        <i class="icon icon-share"></i>
-      </a>
-    </span>
-    <span class="tooltip-content">
-      <div class="share-wrap">
-        <div class="share-icons">
-          <a class="weibo share-sns" href="javascript:;" data-type="weibo">
-            <i class="icon icon-weibo"></i>
-          </a>
-          <a class="weixin share-sns wxFab" href="javascript:;" data-type="weixin">
-            <i class="icon icon-weixin"></i>
-          </a>
-          <a class="qq share-sns" href="javascript:;" data-type="qq">
-            <i class="icon icon-qq"></i>
-          </a>
-          <a class="douban share-sns" href="javascript:;" data-type="douban">
-            <i class="icon icon-douban"></i>
-          </a>
-          <a class="qzone share-sns" href="javascript:;" data-type="qzone">
-            <i class="icon icon-qzone"></i>
-          </a>
-          <a class="facebook share-sns" href="javascript:;" data-type="facebook">
-            <i class="icon icon-facebook"></i>
-          </a>
-          <a class="twitter share-sns" href="javascript:;" data-type="twitter">
-            <i class="icon icon-twitter"></i>
-          </a>
-          <a class="google share-sns" href="javascript:;" data-type="google">
-            <i class="icon icon-google"></i>
-          </a>
         </div>
-      </div>
-    </span>
-  </div>
-</div>
-
-<div class="page-modal wx-share js-wx-box">
-    <a class="close js-modal-close" href="javascript:;"><i class="icon icon-close"></i></a>
-    <p>扫一扫，分享到微信</p>
-    <div class="wx-qrcode">
-      <img src="//pan.baidu.com/share/qrcode?url=http://mshrimp.github.io/2019/07/30/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83-%E4%B8%80/" alt="微信分享二维码">
-    </div>
-</div>
-
-<div class="mask js-mask"></div>
-      
-      <div class="clearfix"></div>
-    </div>
+        <div class="clearfix"></div>
+    </header>
   </div>
 </article>
-
-  
-<nav id="article-nav">
-  
-    <a href="/2019/08/05/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" id="article-nav-newer" class="article-nav-link-wrap">
-      <i class="icon-circle-left"></i>
-      <div class="article-nav-title">
-        
-          Ubuntu+Hexo+Github搭建个人博客
-        
-      </div>
-    </a>
   
   
-    <a href="/2019/07/21/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/" id="article-nav-older" class="article-nav-link-wrap">
-      <div class="article-nav-title">阶段性自我反思及学习动员----2019.07.07</div>
-      <i class="icon-circle-right"></i>
-    </a>
-  
-</nav>
-
-
-<aside class="wrap-side-operation">
-    <div class="mod-side-operation">
-        
-        <div class="jump-container" id="js-jump-container" style="display:none;">
-            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
-                <i class="icon-font icon-back"></i>
-            </a>
-            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
-                <i class="icon-font icon-plane jump-plane"></i>
-            </div>
-        </div>
-        
-        
-    </div>
-</aside>
-
-
-
-  
-  
+    </div></section>
   
 
-  
-
-  
-
-  
+    
 
 
           </div>
@@ -410,8 +229,8 @@
 	var yiliaConfig = {
 		mathjax: false,
 		isHome: false,
-		isPost: true,
-		isArchive: false,
+		isPost: false,
+		isArchive: true,
 		isTag: false,
 		isCategory: false,
 		open_in_new: false,
