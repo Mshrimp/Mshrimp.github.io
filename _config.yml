@@ -4,7 +4,7 @@
 
 # Site
 title: Mshrimp blog
-subtitle: Ma Chiyuan
+subtitle: micro虾米
 description:
 keywords:
 author: micro虾米
@@ -74,7 +74,8 @@ pagination_dir: page
 # Extensions
 ## Plugins: https://hexo.io/plugins/
 ## Themes: https://hexo.io/themes/
-theme: yilia
+#theme: yilia
+theme: next
 
 # Deployment
 ## Docs: https://hexo.io/docs/deployment.html
@@ -101,3 +102,12 @@ jsonContent:
       excerpt: false
       categories: false
       tags: true
+
+
+# mermaid chart
+mermaid: ## mermaid url https://github.com/knsv/mermaid
+  enable: true  # default true
+  version: "7.1.2" # default v7.1.2
+  options:  # find more api options from https://github.com/knsv/mermaid/blob/master/src/mermaidAPI.js
+    #startOnload: true  // default true
+
