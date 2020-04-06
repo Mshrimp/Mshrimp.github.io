@@ -1,7 +1,7 @@
 ---
 title: Hexo+Github搭建个人博客
 date: 2019-07-17 20:24:52
-tags: Hexo Github 博客
+tags: Hexo
 ---
 
 
@@ -48,7 +48,7 @@ $ npm config set registry https://registry.npm.taobao.org
 
 Hexo软件还未安装，下文会简单讲述Hexo软件的安装；
 
-[TOC]
+
 
 
 ### 2. Github仓库创建和配置

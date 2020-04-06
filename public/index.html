@@ -155,29 +155,31 @@
           <div id="js-content" class="content-ll">
             
   
-    <article id="post-Ubuntu-Hexo-Github搭建个人博客" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/08/05/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">Ubuntu+Hexo+Github搭建个人博客</a>
+      <a class="article-title" href="/2019/08/30/Qemu%E6%90%AD%E5%BB%BAARM%20vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/">Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel</a>
     </h1>
   
 
         
-        <a href="/2019/08/05/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" class="archive-article-date">
-  	<time datetime="2019-08-05T15:26:48.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-05</time>
+        <a href="/2019/08/30/Qemu%E6%90%AD%E5%BB%BAARM%20vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/" class="archive-article-date">
+  	<time datetime="2019-08-30T13:00:00.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-30</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <h3 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h3><h4 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> uname -a</span></span><br><span class="line">Linux xiami 5.3.0-40-generic #32~18.04.1-Ubuntu SMP Mon Feb 3 14:05:59 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</span><br></pre></td></tr></table></figure>
+        <p>标签： Qemu ARM Linux u-boot</p>
+<hr>
+<p>在上文《<a href="https://www.jianshu.com/p/94833e841742" target="_blank" rel="noopener">Qemu搭建ARM vexpress开发环境(一)</a>》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。</p>
         
-          <a class="article-more-a" href="/2019/08/05/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/#more">more >></a>
+          <a class="article-more-a" href="/2019/08/30/Qemu%E6%90%AD%E5%BB%BAARM%20vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/#more">more >></a>
         
       
 
@@ -191,7 +193,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Hexo Github 博客</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Qemu</a>
         		</li>
       		
 		</ul>
@@ -201,7 +203,7 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2019/08/05/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">展开全文 >></a>
+          <a class="article-more-a" href="/2019/08/30/Qemu%E6%90%AD%E5%BB%BAARM%20vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/">展开全文 >></a>
         </p>
       
 
@@ -231,31 +233,31 @@
 
 
   
-    <article id="post-Qemu搭建ARM-vexpress开发环境-一" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+    <article id="post-Qemu搭建ARM-vexpress开发环境(一)" class="article article-type-post  article-index" itemscope itemprop="blogPost">
   <div class="article-inner">
     
       <header class="article-header">
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/30/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83-%E4%B8%80/">Qemu搭建ARM vexpress开发环境(一)</a>
+      <a class="article-title" href="/2019/08/10/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/">Qemu搭建ARM vexpress开发环境(一)</a>
     </h1>
   
 
         
-        <a href="/2019/07/30/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83-%E4%B8%80/" class="archive-article-date">
-  	<time datetime="2019-07-30T13:37:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-30</time>
+        <a href="/2019/08/10/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/" class="archive-article-date">
+  	<time datetime="2019-08-10T13:37:50.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-08-10</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p>标签： Qemu ARM Linux</p>
+        <p>标签： Qemu</p>
 <hr>
 <p>嵌入式软件开发依赖于嵌入式硬件设备，比如：开发板、外部模块设备等，但是如果只是想学习、研究Linux内核，想学习Linux内核的架构，工作模式，需要修改一些代码，重新编译并烧写到开发板中进行验证，这样未必有些复杂，并且为此专门购买各种开发版，浪费资金，开会演示效果还需要携带一大串的板子和电线，不胜其烦。然而Qemu的使用可以避免频繁在开发板上烧写版本，如果进行的调试工作与外设无关，仅仅是内核方面的调试，Qemu模拟ARM开发环境完全可以完美地胜任。</p>
         
-          <a class="article-more-a" href="/2019/07/30/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83-%E4%B8%80/#more">more >></a>
+          <a class="article-more-a" href="/2019/08/10/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/#more">more >></a>
         
       
 
@@ -264,11 +266,22 @@
     <div class="article-info article-info-index">
       
       
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Qemu</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
       
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/30/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83-%E4%B8%80/">展开全文 >></a>
+          <a class="article-more-a" href="/2019/08/10/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/">展开全文 >></a>
         </p>
       
 
@@ -305,23 +318,22 @@
         
   
     <h1 itemprop="name">
-      <a class="article-title" href="/2019/07/21/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/">阶段性自我反思及学习动员----2019.07.07</a>
+      <a class="article-title" href="/2019/07/30/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/">阶段性自我反思及学习动员----2019.07.07</a>
     </h1>
   
 
         
-        <a href="/2019/07/21/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/" class="archive-article-date">
-  	<time datetime="2019-07-21T14:47:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-21</time>
+        <a href="/2019/07/30/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/" class="archive-article-date">
+  	<time datetime="2019-07-30T14:47:42.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-30</time>
 </a>
         
       </header>
     
     <div class="article-entry" itemprop="articleBody">
       
-        <p><img src="http://upload-images.jianshu.io/upload_images/9159706-9206c81a7cc48f8d.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1080/q/50" alt="图片发自简书App"></p>
-<h2 id="自我反思及学习动员"><a href="#自我反思及学习动员" class="headerlink" title="自我反思及学习动员"></a>自我反思及学习动员</h2><p>&emsp;&emsp;Time is flying! 转眼间，工作已经这么多年了，按理说，在职场经过这么多年时间的洗礼，我也应该被洗成职场老手了；然而事实上，老的只是年龄，技术方面一点也不老，甚至还比不过一个刚入职的职场新人。</p>
+        <h2 id="自我反思及学习动员"><a href="#自我反思及学习动员" class="headerlink" title="自我反思及学习动员"></a>自我反思及学习动员</h2><p>&emsp;&emsp;Time is flying! 转眼间，工作已经这么多年了，按理说，在职场经过这么多年时间的洗礼，我也应该被洗成职场老手了；然而事实上，老的只是年龄，技术方面一点也不老，甚至还比不过一个刚入职的职场新人。</p>
         
-          <a class="article-more-a" href="/2019/07/21/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/#more">more >></a>
+          <a class="article-more-a" href="/2019/07/30/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/#more">more >></a>
         
       
 
@@ -334,7 +346,83 @@
 
       
         <p class="article-more-link">
-          <a class="article-more-a" href="/2019/07/21/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/">展开全文 >></a>
+          <a class="article-more-a" href="/2019/07/30/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/">展开全文 >></a>
+        </p>
+      
+
+      
+      <div class="clearfix"></div>
+    </div>
+  </div>
+</article>
+
+<aside class="wrap-side-operation">
+    <div class="mod-side-operation">
+        
+        <div class="jump-container" id="js-jump-container" style="display:none;">
+            <a href="javascript:void(0)" class="mod-side-operation__jump-to-top">
+                <i class="icon-font icon-back"></i>
+            </a>
+            <div id="js-jump-plan-container" class="jump-plan-container" style="top: -11px;">
+                <i class="icon-font icon-plane jump-plane"></i>
+            </div>
+        </div>
+        
+        
+    </div>
+</aside>
+
+
+
+
+  
+    <article id="post-Ubuntu-Hexo-Github搭建个人博客" class="article article-type-post  article-index" itemscope itemprop="blogPost">
+  <div class="article-inner">
+    
+      <header class="article-header">
+        
+  
+    <h1 itemprop="name">
+      <a class="article-title" href="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">Ubuntu+Hexo+Github搭建个人博客</a>
+    </h1>
+  
+
+        
+        <a href="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" class="archive-article-date">
+  	<time datetime="2019-07-28T15:26:48.000Z" itemprop="datePublished"><i class="icon-calendar icon"></i>2019-07-28</time>
+</a>
+        
+      </header>
+    
+    <div class="article-entry" itemprop="articleBody">
+      
+        <h3 id="1-简介"><a href="#1-简介" class="headerlink" title="1. 简介"></a>1. 简介</h3><p>以前部署的Hexo博客是在Windows上搭建的，在Windows系统使用很方便，碰到一些问题也都能够解决；现在安装了Ubuntu-18.04.1系统，需要重新使用Hexo搭建博客；为了兼容以前的windows博客，还需要将以前Windows系统的博客迁移到Ubuntu系统下使用；</p>
+        
+          <a class="article-more-a" href="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/#more">more >></a>
+        
+      
+
+      
+    </div>
+    <div class="article-info article-info-index">
+      
+      
+	<div class="article-tag tagcloud">
+		<i class="icon-price-tags icon"></i>
+		<ul class="article-tag-list">
+			 
+        		<li class="article-tag-list-item">
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Hexo</a>
+        		</li>
+      		
+		</ul>
+	</div>
+
+      
+
+      
+        <p class="article-more-link">
+          <a class="article-more-a" href="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">展开全文 >></a>
         </p>
       
 
@@ -400,7 +488,7 @@
 		<ul class="article-tag-list">
 			 
         		<li class="article-tag-list-item">
-        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Hexo Github 博客</a>
+        			<a href="javascript:void(0)" class="js-tag article-tag-list-link color5">Hexo</a>
         		</li>
       		
 		</ul>
@@ -598,7 +686,11 @@ return o(i(t),arguments.length<2?void 0:u(arguments[1]))}})},function(t,n,r){var
           <ul class="article-tag-list" q-show="showTags">
              
               <li class="article-tag-list-item">
-                <a href="javascript:void(0)" class="js-tag color5">Hexo Github 博客</a>
+                <a href="javascript:void(0)" class="js-tag color5">Hexo</a>
+              </li>
+             
+              <li class="article-tag-list-item">
+                <a href="javascript:void(0)" class="js-tag color5">Qemu</a>
               </li>
             
             <div class="clearfix"></div>

@@ -1,12 +1,18 @@
 ---
 title: Ubuntu+Hexo+Github搭建个人博客
-date: 2019-08-05 23:26:48
-tags: Hexo Github 博客
+date: 2019-07-28 23:26:48
+tags: Hexo
 ---
 
 
 
 ### 1. 简介
+
+以前部署的Hexo博客是在Windows上搭建的，在Windows系统使用很方便，碰到一些问题也都能够解决；现在安装了Ubuntu-18.04.1系统，需要重新使用Hexo搭建博客；为了兼容以前的windows博客，还需要将以前Windows系统的博客迁移到Ubuntu系统下使用；
+
+<!--more-->
+
+
 
 #### 环境
 
@@ -15,9 +21,15 @@ tags: Hexo Github 博客
 Linux xiami 5.3.0-40-generic #32~18.04.1-Ubuntu SMP Mon Feb 3 14:05:59 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux
 ```
 
-<!--more-->
 
-[TOC]
+
+搭建博客需要安装的软件：
+
+> git
+> node.js
+> hexo
+
+
 
 ### 2. Git安装及配置
 
@@ -270,7 +282,7 @@ $ hexo deploy
 
 ### 5. 更换主题
 
-不喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先Github中将yilia主题的源码下载到博客目录的themes目录下；
+由于不太喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先从Github中将yilia主题的源码下载到博客目录的themes目录下（感谢yilia主题作者的无私奉献）；
 
 ```
 # git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia
@@ -283,6 +295,10 @@ themes: yilia
 ```
 
 这个主题中的一些配置，可以根据需要自行修改，配置文件为themes/yilia/_config.yml；
+
+效果如下：
+
+![themes-yilia](Ubuntu-Hexo-Github搭建个人博客/themes-yilia.png)
 
 
 
