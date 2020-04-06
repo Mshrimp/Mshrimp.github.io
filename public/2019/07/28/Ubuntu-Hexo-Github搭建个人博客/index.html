@@ -26,19 +26,19 @@
 <meta property="og:url" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/index.html">
 <meta property="og:site_name" content="Mshrimp blog">
 <meta property="og:description" content="1. 简介以前部署的Hexo博客是在Windows上搭建的，在Windows系统使用很方便，碰到一些问题也都能够解决；现在安装了Ubuntu-18.04.1系统，需要重新使用Hexo搭建博客；为了兼容以前的windows博客，还需要将以前Windows系统的博客迁移到Ubuntu系统下使用；">
-<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image.png">
-<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image2.png">
-<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image4.png">
-<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image5.png">
-<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image1.png">
-<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image3.JPG">
-<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/themes-yilia.png">
+<meta property="og:image" content="http://mshrimp.github.io/.io//Image.png">
+<meta property="og:image" content="http://mshrimp.github.io/.io//Image2.png">
+<meta property="og:image" content="http://mshrimp.github.io/.io//Image4.png">
+<meta property="og:image" content="http://mshrimp.github.io/.io//Image5.png">
+<meta property="og:image" content="http://mshrimp.github.io/.io//Image1.png">
+<meta property="og:image" content="http://mshrimp.github.io/.io//Image3.JPG">
+<meta property="og:image" content="http://mshrimp.github.io/.io//themes-yilia.png">
 <meta property="article:published_time" content="2019-07-28T15:26:48.000Z">
-<meta property="article:modified_time" content="2020-04-06T02:37:27.793Z">
+<meta property="article:modified_time" content="2020-04-06T06:19:23.434Z">
 <meta property="article:author" content="micro虾米">
 <meta property="article:tag" content="Hexo">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image.png">
+<meta name="twitter:image" content="http://mshrimp.github.io/.io//Image.png">
 
 <link rel="canonical" href="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">
 
@@ -189,7 +189,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-04-06 10:37:27" itemprop="dateModified" datetime="2020-04-06T10:37:27+08:00">2020-04-06</time>
+                <time title="Modified: 2020-04-06 14:19:23" itemprop="dateModified" datetime="2020-04-06T14:19:23+08:00">2020-04-06</time>
               </span>
 
           
@@ -217,114 +217,114 @@
 <p>git<br>node.js<br>hexo</p>
 </blockquote>
 <h3 id="2-Git安装及配置"><a href="#2-Git安装及配置" class="headerlink" title="2. Git安装及配置"></a>2. Git安装及配置</h3><h4 id="2-1-安装Git"><a href="#2-1-安装Git" class="headerlink" title="2.1 安装Git"></a>2.1 安装Git</h4><p>使用命令安装Git工具：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># sudo apt install git</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt install git</span></span><br></pre></td></tr></table></figure>
 
 <p>查看是否安张成功：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># git --version</span><br><span class="line">git version 2.17.1</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> git --version</span></span><br><span class="line">git version 2.17.1</span><br></pre></td></tr></table></figure>
 
 
 
 <h4 id="2-2-创建Git仓库"><a href="#2-2-创建Git仓库" class="headerlink" title="2.2 创建Git仓库"></a>2.2 创建Git仓库</h4><p>打开GitHub，点击“New repository”，创建一个新仓库，用来专门存放博客日志信息；仓库名要按照格式：账户名.github.io，比如：Mshrimp.github.io；否则，后边的操作会出现问题；创建仓库时勾选上“<br>Initialize this repository with a README”；</p>
 <p>进入创建好的仓库Mshrimp.github.io，点击右侧的“Settings”，向下拉找到Github Pages，会看到网站是：<a href="https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。">https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。</a></p>
-<p><img src="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image.png" alt="Image"></p>
-<p><img src="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image2.png" alt="Image2"></p>
+<p><img src="/.io//Image.png" alt="Image"></p>
+<p><img src="/.io//Image2.png" alt="Image2"></p>
 <h4 id="2-3-配置git仓库"><a href="#2-3-配置git仓库" class="headerlink" title="2.3 配置git仓库"></a>2.3 配置git仓库</h4><p>如果是第一次使用git，就需要先配置git环境，否则可以跳过；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ git config --global user.name &quot;Mshrimp&quot;</span><br><span class="line">$ git config --global user.email &quot;******@outlook.com&quot;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> git config --global user.name <span class="string">"Mshrimp"</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> git config --global user.email <span class="string">"******@outlook.com"</span></span></span><br></pre></td></tr></table></figure>
 
 <p>在没有配置git环境之前，~/.ssh是不存在的</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ cd ~&#x2F;.ssh</span><br><span class="line">bash: cd: &#x2F;c&#x2F;Users&#x2F;Kevin-TP&#x2F;.ssh: No such file or directory</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">cd</span> ~/.ssh</span></span><br><span class="line">bash: cd: /c/Users/Kevin-TP/.ssh: No such file or directory</span><br></pre></td></tr></table></figure>
 
 <p>使用ssh-keygen生成私钥和公钥</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">$ ssh-keygen -t rsa -C &quot;chiyuan.ma@outlook.com&quot;</span><br><span class="line">Generating public&#x2F;private rsa key pair.</span><br><span class="line">Enter file in which to save the key (&#x2F;c&#x2F;Users&#x2F;Kevin-TP&#x2F;.ssh&#x2F;id_rsa):</span><br><span class="line">Created directory &#39;&#x2F;c&#x2F;Users&#x2F;Kevin-TP&#x2F;.ssh&#39;.</span><br><span class="line">Enter passphrase (empty for no passphrase):</span><br><span class="line">Enter same passphrase again:</span><br><span class="line">Your identification has been saved in &#x2F;c&#x2F;Users&#x2F;Kevin-TP&#x2F;.ssh&#x2F;id_rsa.</span><br><span class="line">Your public key has been saved in &#x2F;c&#x2F;Users&#x2F;Kevin-TP&#x2F;.ssh&#x2F;id_rsa.pub.</span><br><span class="line">The key fingerprint is:</span><br><span class="line">SHA256:pHNkvs9RsOToxmFH6gnkOb7j&#x2F;dlRSc4c6TkOvGQ6fcc chiyuan.ma@outlook.com</span><br><span class="line">The key&#39;s randomart image is:</span><br><span class="line">+---[RSA 3072]----+</span><br><span class="line">|                 |</span><br><span class="line">|               . |</span><br><span class="line">|      . + +   +  |</span><br><span class="line">|     o B * + * + |</span><br><span class="line">|      B S + * X  |</span><br><span class="line">|     . X &#x3D; * &#x3D; o |</span><br><span class="line">|      . B + + o E|</span><br><span class="line">|      .+ o &#x3D; o . |</span><br><span class="line">|     .o...&#x3D; .    |</span><br><span class="line">+----[SHA256]-----+</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ssh-keygen -t rsa -C <span class="string">"chiyuan.ma@outlook.com"</span></span></span><br><span class="line">Generating public/private rsa key pair.</span><br><span class="line">Enter file in which to save the key (/c/Users/Kevin-TP/.ssh/id_rsa):</span><br><span class="line">Created directory '/c/Users/Kevin-TP/.ssh'.</span><br><span class="line">Enter passphrase (empty for no passphrase):</span><br><span class="line">Enter same passphrase again:</span><br><span class="line">Your identification has been saved in /c/Users/Kevin-TP/.ssh/id_rsa.</span><br><span class="line">Your public key has been saved in /c/Users/Kevin-TP/.ssh/id_rsa.pub.</span><br><span class="line">The key fingerprint is:</span><br><span class="line">SHA256:pHNkvs9RsOToxmFH6gnkOb7j/dlRSc4c6TkOvGQ6fcc chiyuan.ma@outlook.com</span><br><span class="line">The key's randomart image is:</span><br><span class="line">+---[RSA 3072]----+</span><br><span class="line">|                 |</span><br><span class="line">|               . |</span><br><span class="line">|      . + +   +  |</span><br><span class="line">|     o B * + * + |</span><br><span class="line">|      B S + * X  |</span><br><span class="line">|     . X = * = o |</span><br><span class="line">|      . B + + o E|</span><br><span class="line">|      .+ o = o . |</span><br><span class="line">|     .o...= .    |</span><br><span class="line">+----[SHA256]-----+</span><br></pre></td></tr></table></figure>
 
 <p>从以上的操作打印可以知道，生成的密钥和公钥的保存路径</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Your identification has been saved in &#x2F;c&#x2F;Users&#x2F;Kevin-TP&#x2F;.ssh&#x2F;id_rsa.</span><br><span class="line">Your public key has been saved in &#x2F;c&#x2F;Users&#x2F;Kevin-TP&#x2F;.ssh&#x2F;id_rsa.pub.</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Your identification has been saved in /c/Users/Kevin-TP/.ssh/id_rsa.</span><br><span class="line">Your public key has been saved in /c/Users/Kevin-TP/.ssh/id_rsa.pub.</span><br></pre></td></tr></table></figure>
 
 <p>查看生成的密钥和公钥</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ cd ~&#x2F;.ssh</span><br><span class="line">$ ls</span><br><span class="line">id_rsa  id_rsa.pub</span><br><span class="line">$ cat id_rsa.pub</span><br><span class="line">ssh-rsa </span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">cd</span> ~/.ssh</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ls</span></span><br><span class="line">id_rsa  id_rsa.pub</span><br><span class="line"><span class="meta">#</span><span class="bash"> cat id_rsa.pub</span></span><br><span class="line">ssh-rsa </span><br><span class="line">......</span><br></pre></td></tr></table></figure>
 
 
 
 <h4 id="2-4-添加公钥"><a href="#2-4-添加公钥" class="headerlink" title="2.4 添加公钥"></a>2.4 添加公钥</h4><p>把本地公钥添加到github中；在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；</p>
-<p><img src="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image4.png" alt="Image4"></p>
-<p><img src="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image5.png" alt="Image5"></p>
+<p><img src="/.io//Image4.png" alt="Image4"></p>
+<p><img src="/.io//Image5.png" alt="Image5"></p>
 <p>使用“ssh -T <a href="mailto:git@github.com">git@github.com</a>”命令，测试添加ssh是否成功；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ ssh -T git@github.com</span><br><span class="line">......</span><br><span class="line">Hi Mshrimp! You&#39;ve successfully authenticated, but GitHub does not provide shell access.</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ssh -T git@github.com</span></span><br><span class="line">......</span><br><span class="line">Hi Mshrimp! You've successfully authenticated, but GitHub does not provide shell access.</span><br></pre></td></tr></table></figure>
 
 
 
 <h3 id="3-Node安装"><a href="#3-Node安装" class="headerlink" title="3. Node安装"></a>3. Node安装</h3><p>命令行安装：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># sudo apt-get install nodejs</span><br><span class="line"># sudo apt install npm</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt-get install nodejs</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> sudo apt install npm</span></span><br></pre></td></tr></table></figure>
 
 <p>查看nodejs工具是否安装成功：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># nodejs -v</span><br><span class="line">v8.10.0</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> nodejs -v</span></span><br><span class="line">v8.10.0</span><br></pre></td></tr></table></figure>
 
 
 
 <h3 id="4-Hexo安装及配置"><a href="#4-Hexo安装及配置" class="headerlink" title="4. Hexo安装及配置"></a>4. Hexo安装及配置</h3><p>先创建一个hexo操作的文件目录</p>
-<p><img src="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image1.png" alt="Image1"></p>
+<p><img src="/.io//Image1.png" alt="Image1"></p>
 <p>如果使用的是Linux系统，可以直接在命令行中输入命令操作，如果是windows系统，用管理员权限打开“命令提示符”，使用命令在电脑上安装hexo；或者，在hexo目录上右键，选择“Git Bash Here”，用git bash工具打开hexo目录，在git bash中使用命令操作；</p>
-<h4 id="4-1-安装hexo"><a href="#4-1-安装hexo" class="headerlink" title="4.1 安装hexo"></a>4.1 安装hexo</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># npm install hexo-cli -g</span><br><span class="line"># npm install hexo -g</span><br></pre></td></tr></table></figure>
+<h4 id="4-1-安装hexo"><a href="#4-1-安装hexo" class="headerlink" title="4.1 安装hexo"></a>4.1 安装hexo</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> npm install hexo-cli -g</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> npm install hexo -g</span></span><br></pre></td></tr></table></figure>
 
 
 
 <p>检查hexo是否安装成功</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ hexo -v</span><br><span class="line">hexo: 4.2.0</span><br><span class="line">hexo-cli: 3.1.0</span><br><span class="line">os: Linux 5.3.0-45-generic linux x64</span><br><span class="line">http_parser: 2.7.1</span><br><span class="line">node: 8.10.0</span><br><span class="line">v8: 6.2.414.50</span><br><span class="line">uv: 1.18.0</span><br><span class="line">zlib: 1.2.11</span><br><span class="line">ares: 1.14.0</span><br><span class="line">modules: 57</span><br><span class="line">nghttp2: 1.30.0</span><br><span class="line">openssl: 1.0.2n</span><br><span class="line">icu: 60.2</span><br><span class="line">unicode: 10.0</span><br><span class="line">cldr: 32.0.1</span><br><span class="line">tz: 2017c</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hexo -v</span></span><br><span class="line">hexo: 4.2.0</span><br><span class="line">hexo-cli: 3.1.0</span><br><span class="line">os: Linux 5.3.0-45-generic linux x64</span><br><span class="line">http_parser: 2.7.1</span><br><span class="line">node: 8.10.0</span><br><span class="line">v8: 6.2.414.50</span><br><span class="line">uv: 1.18.0</span><br><span class="line">zlib: 1.2.11</span><br><span class="line">ares: 1.14.0</span><br><span class="line">modules: 57</span><br><span class="line">nghttp2: 1.30.0</span><br><span class="line">openssl: 1.0.2n</span><br><span class="line">icu: 60.2</span><br><span class="line">unicode: 10.0</span><br><span class="line">cldr: 32.0.1</span><br><span class="line">tz: 2017c</span><br></pre></td></tr></table></figure>
 
-<h4 id="4-2-初始化hexo文件夹"><a href="#4-2-初始化hexo文件夹" class="headerlink" title="4.2 初始化hexo文件夹"></a>4.2 初始化hexo文件夹</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># hexo init</span><br></pre></td></tr></table></figure>
+<h4 id="4-2-初始化hexo文件夹"><a href="#4-2-初始化hexo文件夹" class="headerlink" title="4.2 初始化hexo文件夹"></a>4.2 初始化hexo文件夹</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hexo init</span></span><br></pre></td></tr></table></figure>
 
 <p>看到“Start blogging with Hexo！”打印，说明初始化完成；</p>
 <p>输入npm install，安装所需要的组件</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># npm install</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> npm install</span></span><br></pre></td></tr></table></figure>
 
 <p>hexo已经安装并初始化完成；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"># ls</span><br><span class="line">_config.yml  node_modules&#x2F;  package.json  package-lock.json  scaffolds&#x2F;  source&#x2F;  themes&#x2F;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ls</span></span><br><span class="line">_config.yml  node_modules/  package.json  package-lock.json  scaffolds/  source/  themes/</span><br></pre></td></tr></table></figure>
 
 <p>到此，hexo环境安装完成。</p>
-<h4 id="4-3-Hexo操作"><a href="#4-3-Hexo操作" class="headerlink" title="4.3 Hexo操作"></a>4.3 Hexo操作</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">$ hexo g #generate 生成静态文件</span><br><span class="line">$ hexo s #server 启动服务器。</span><br><span class="line">&#x2F;&#x2F; 默认情况下，访问网址为： [http:&#x2F;&#x2F;localhost:4000&#x2F;]</span><br></pre></td></tr></table></figure>
+<h4 id="4-3-Hexo操作"><a href="#4-3-Hexo操作" class="headerlink" title="4.3 Hexo操作"></a>4.3 Hexo操作</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hexo g <span class="comment">#generate 生成静态文件</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> hexo s <span class="comment">#server 启动服务器。</span></span></span><br><span class="line">// 默认情况下，访问网址为： [http://localhost:4000/]</span><br></pre></td></tr></table></figure>
 
 <p>在浏览器地址栏输入“<a href="http://localhost:4000/”打开页面，是一个空的博客网页；" target="_blank" rel="noopener">http://localhost:4000/”打开页面，是一个空的博客网页；</a></p>
-<p><img src="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/Image3.JPG" alt="Image3"></p>
+<p><img src="/.io//Image3.JPG" alt="Image3"></p>
 <h4 id="4-4-将git库和hexo链接起来"><a href="#4-4-将git库和hexo链接起来" class="headerlink" title="4.4 将git库和hexo链接起来"></a>4.4 将git库和hexo链接起来</h4><p>配置Deployment</p>
 <p>在hexo文件夹中，找到_config.yml文件，修改repository值（在末尾），repository值是github项目里的ssh；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repository: git@github.com:Mshrimp&#x2F;Mshrimp.github.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repository: git@github.com:Mshrimp/Mshrimp.github.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
 
 
 <p>HexoBlog部署到git，需要安装hexo-deployer-git插件，在blog目录下运行以下命令进行安装；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">$ npm install hexo-deployer-git --save</span><br><span class="line"></span><br><span class="line">npm WARN babel-eslint@10.1.0 requires a peer of eslint@&gt;&#x3D; 4.12.1 but none is </span><br><span class="line">installed. You must install peer dependencies yourself.</span><br><span class="line"></span><br><span class="line">+ hexo-deployer-git@1.0.0</span><br><span class="line">added 1 package from 1 contributor, removed 4 packages and updated 14 packages in </span><br><span class="line">5.684s</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> npm install hexo-deployer-git --save</span></span><br><span class="line"></span><br><span class="line">npm WARN babel-eslint@10.1.0 requires a peer of eslint@&gt;= 4.12.1 but none is </span><br><span class="line">installed. You must install peer dependencies yourself.</span><br><span class="line"></span><br><span class="line">+ hexo-deployer-git@1.0.0</span><br><span class="line">added 1 package from 1 contributor, removed 4 packages and updated 14 packages in </span><br><span class="line">5.684s</span><br></pre></td></tr></table></figure>
 
 <p>修改根目录下_config.yml文件后，需要使用$ hexo deploy部署一下，否则修改内容不会生效；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hexo deploy</span></span><br></pre></td></tr></table></figure>
 
 
 <p>至此，一个空的博客已经搭建完成，下一步，添加博客文章；</p>
 <h3 id="5-更换主题"><a href="#5-更换主题" class="headerlink" title="5. 更换主题"></a>5. 更换主题</h3><p>由于不太喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先从Github中将yilia主题的源码下载到博客目录的themes目录下（感谢yilia主题作者的无私奉献）；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># git clone https:&#x2F;&#x2F;github.com&#x2F;litten&#x2F;hexo-theme-yilia.git themes&#x2F;yilia</span><br></pre></td></tr></table></figure>
+<figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># git clone https://github.com/litten/hexo-theme-yilia.git themes/yilia</span></span><br></pre></td></tr></table></figure>
 
 <p>在博客根目录下，修改_config.yml文件的themes：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">themes: yilia</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">themes: yilia</span><br></pre></td></tr></table></figure>
 
 <p>这个主题中的一些配置，可以根据需要自行修改，配置文件为themes/yilia/_config.yml；</p>
 <p>效果如下：</p>
-<p><img src="/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/themes-yilia.png" alt="themes-yilia"></p>
+<p><img src="/.io//themes-yilia.png" alt="themes-yilia"></p>
 <h3 id="6-博客迁移"><a href="#6-博客迁移" class="headerlink" title="6. 博客迁移"></a>6. 博客迁移</h3><h4 id="6-1-常规迁移"><a href="#6-1-常规迁移" class="headerlink" title="6.1 常规迁移"></a>6.1 常规迁移</h4><p>以前部署的Hexo博客是在Windows上搭建的，现在安装了Ubuntu-18.04.1，需要重新搭建博客；为了兼容以前的windows博客，需要使用以前的Hexo下的几个文件夹：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_config.yml  package.json  source&#x2F;  themes&#x2F;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_config.yml  package.json  source/  themes/</span><br></pre></td></tr></table></figure>
 
 <p>这时，在Ubuntu系统上创建文件夹hexo，以hexo为主目录搭建博客环境：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"># mkdir hexo</span><br><span class="line"># cd hexo</span><br><span class="line"># hexo init</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> mkdir hexo</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">cd</span> hexo</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> hexo init</span></span><br></pre></td></tr></table></figure>
 
 <p>将上边四个文件或文件夹复制到hexo目录替换：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"># cp _config.yml  package.json  source  themes . -rf</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> cp _config.yml  package.json  <span class="built_in">source</span>  themes . -rf</span></span><br></pre></td></tr></table></figure>
 
 <p>之后就可以按照hexo命令进行操作了；</p>
 <h4 id="6-2-特殊情况"><a href="#6-2-特殊情况" class="headerlink" title="6.2 特殊情况"></a>6.2 特殊情况</h4><p>由于我的实际情况是，不但将hexo中的博客文件保存在了Github上，还将hexo生成的环境工程，以并保存在Github同一个工程的其他分支了，如：ubuntu分支；这样我就可以一并保存所有文件了；</p>
 <p>在这种特殊情况下，博客迁移操作原理上和常规迁移一样，只是操作稍微不同；</p>
 <p>将以前用的工程在Ubuntu环境中克隆下来，Mshrimp.github.io；</p>
 <p>新建hexo目录，并初始化hexo目录：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"># mkdir hexo</span><br><span class="line"># cd hexo</span><br><span class="line"># hexo init</span><br><span class="line"># ls</span><br><span class="line">_config.yml  node_modules&#x2F;  package.json  package-lock.json  scaffolds&#x2F;  source&#x2F;  themes&#x2F;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> mkdir hexo</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">cd</span> hexo</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> hexo init</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ls</span></span><br><span class="line">_config.yml  node_modules/  package.json  package-lock.json  scaffolds/  source/  themes/</span><br></pre></td></tr></table></figure>
 
 <p>将hexo中生成的文件或文件夹复制到Mshrimp.github.io目录替换：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">node_modules&#x2F;  package-lock.json  scaffolds&#x2F;</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">node_modules/  package-lock.json  scaffolds/</span><br></pre></td></tr></table></figure>
 
 <p>这个操作，和常规迁移的区别是，复制的方向相反，其余都一样；</p>
 
