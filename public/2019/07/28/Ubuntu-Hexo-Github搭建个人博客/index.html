@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
 <meta name="theme-color" content="#222">
-<meta name="generator" content="Hexo 4.2.0">
+<meta name="generator" content="Hexo 3.9.0">
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
   <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
   <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
@@ -21,26 +21,27 @@
   </script>
 
   <meta name="description" content="1. 简介以前部署的Hexo博客是在Windows上搭建的，在Windows系统使用很方便，碰到一些问题也都能够解决；现在安装了Ubuntu-18.04.1系统，需要重新使用Hexo搭建博客；为了兼容以前的windows博客，还需要将以前Windows系统的博客迁移到Ubuntu系统下使用；">
+<meta name="keywords" content="Hexo">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Ubuntu+Hexo+Github搭建个人博客">
-<meta property="og:url" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/index.html">
+<meta property="og:url" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/index.html">
 <meta property="og:site_name" content="Mshrimp blog">
 <meta property="og:description" content="1. 简介以前部署的Hexo博客是在Windows上搭建的，在Windows系统使用很方便，碰到一些问题也都能够解决；现在安装了Ubuntu-18.04.1系统，需要重新使用Hexo搭建博客；为了兼容以前的windows博客，还需要将以前Windows系统的博客迁移到Ubuntu系统下使用；">
-<meta property="og:image" content="http://mshrimp.github.io/.io//Image.png">
-<meta property="og:image" content="http://mshrimp.github.io/.io//Image2.png">
-<meta property="og:image" content="http://mshrimp.github.io/.io//Image4.png">
-<meta property="og:image" content="http://mshrimp.github.io/.io//Image5.png">
-<meta property="og:image" content="http://mshrimp.github.io/.io//Image1.png">
-<meta property="og:image" content="http://mshrimp.github.io/.io//Image3.JPG">
-<meta property="og:image" content="http://mshrimp.github.io/.io//themes-yilia.png">
-<meta property="article:published_time" content="2019-07-28T15:26:48.000Z">
-<meta property="article:modified_time" content="2020-04-06T06:19:23.434Z">
-<meta property="article:author" content="micro虾米">
-<meta property="article:tag" content="Hexo">
+<meta property="og:locale" content="default">
+<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image.png">
+<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image2.png">
+<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image4.png">
+<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image5.png">
+<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image1.png">
+<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image3.JPG">
+<meta property="og:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/themes-yilia.png">
+<meta property="og:updated_time" content="2020-04-06T06:19:23.434Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://mshrimp.github.io/.io//Image.png">
+<meta name="twitter:title" content="Ubuntu+Hexo+Github搭建个人博客">
+<meta name="twitter:description" content="1. 简介以前部署的Hexo博客是在Windows上搭建的，在Windows系统使用很方便，碰到一些问题也都能够解决；现在安装了Ubuntu-18.04.1系统，需要重新使用Hexo搭建博客；为了兼容以前的windows博客，还需要将以前Windows系统的博客迁移到Ubuntu系统下使用；">
+<meta name="twitter:image" content="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image.png">
 
-<link rel="canonical" href="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">
+<link rel="canonical" href="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/">
 
 
 <script id="page-configurations">
@@ -159,7 +160,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -210,8 +211,6 @@
 
 <h4 id="环境"><a href="#环境" class="headerlink" title="环境"></a>环境</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> uname -a</span></span><br><span class="line">Linux xiami 5.3.0-40-generic #32~18.04.1-Ubuntu SMP Mon Feb 3 14:05:59 UTC 2020 x86_64 x86_64 x86_64 GNU/Linux</span><br></pre></td></tr></table></figure>
 
-
-
 <p>搭建博客需要安装的软件：</p>
 <blockquote>
 <p>git<br>node.js<br>hexo</p>
@@ -222,12 +221,10 @@
 <p>查看是否安张成功：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> git --version</span></span><br><span class="line">git version 2.17.1</span><br></pre></td></tr></table></figure>
 
-
-
 <h4 id="2-2-创建Git仓库"><a href="#2-2-创建Git仓库" class="headerlink" title="2.2 创建Git仓库"></a>2.2 创建Git仓库</h4><p>打开GitHub，点击“New repository”，创建一个新仓库，用来专门存放博客日志信息；仓库名要按照格式：账户名.github.io，比如：Mshrimp.github.io；否则，后边的操作会出现问题；创建仓库时勾选上“<br>Initialize this repository with a README”；</p>
 <p>进入创建好的仓库Mshrimp.github.io，点击右侧的“Settings”，向下拉找到Github Pages，会看到网站是：<a href="https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。">https://mshrimp.github.io/，点击就可以访问，也可以通过外网访问，这时这个博客项目已经部署到网站上了，但是是个空的网站，没有内容；这个网址是博客的默认地址，如果有兴趣可以自己购买域名换成想要的地址。</a></p>
-<p><img src="/.io//Image.png" alt="Image"></p>
-<p><img src="/.io//Image2.png" alt="Image2"></p>
+<p><img src="/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image.png" alt="Image"></p>
+<p><img src="/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image2.png" alt="Image2"></p>
 <h4 id="2-3-配置git仓库"><a href="#2-3-配置git仓库" class="headerlink" title="2.3 配置git仓库"></a>2.3 配置git仓库</h4><p>如果是第一次使用git，就需要先配置git环境，否则可以跳过；</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> git config --global user.name <span class="string">"Mshrimp"</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> git config --global user.email <span class="string">"******@outlook.com"</span></span></span><br></pre></td></tr></table></figure>
 
@@ -243,15 +240,11 @@
 <p>查看生成的密钥和公钥</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> <span class="built_in">cd</span> ~/.ssh</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> ls</span></span><br><span class="line">id_rsa  id_rsa.pub</span><br><span class="line"><span class="meta">#</span><span class="bash"> cat id_rsa.pub</span></span><br><span class="line">ssh-rsa </span><br><span class="line">......</span><br></pre></td></tr></table></figure>
 
-
-
 <h4 id="2-4-添加公钥"><a href="#2-4-添加公钥" class="headerlink" title="2.4 添加公钥"></a>2.4 添加公钥</h4><p>把本地公钥添加到github中；在GitHub中，点击右侧图像下拉选项，选择“Settings”，在“SSH and GPG keys”中，点击“New SSH key”，并将~/.ssh/id_rsa.pub文件里的内容复制上去，保存退出；</p>
-<p><img src="/.io//Image4.png" alt="Image4"></p>
-<p><img src="/.io//Image5.png" alt="Image5"></p>
+<p><img src="/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image4.png" alt="Image4"></p>
+<p><img src="/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image5.png" alt="Image5"></p>
 <p>使用“ssh -T <a href="mailto:git@github.com">git@github.com</a>”命令，测试添加ssh是否成功；</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ssh -T git@github.com</span></span><br><span class="line">......</span><br><span class="line">Hi Mshrimp! You've successfully authenticated, but GitHub does not provide shell access.</span><br></pre></td></tr></table></figure>
-
-
 
 <h3 id="3-Node安装"><a href="#3-Node安装" class="headerlink" title="3. Node安装"></a>3. Node安装</h3><p>命令行安装：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt-get install nodejs</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> sudo apt install npm</span></span><br></pre></td></tr></table></figure>
@@ -259,14 +252,10 @@
 <p>查看nodejs工具是否安装成功：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> nodejs -v</span></span><br><span class="line">v8.10.0</span><br></pre></td></tr></table></figure>
 
-
-
 <h3 id="4-Hexo安装及配置"><a href="#4-Hexo安装及配置" class="headerlink" title="4. Hexo安装及配置"></a>4. Hexo安装及配置</h3><p>先创建一个hexo操作的文件目录</p>
-<p><img src="/.io//Image1.png" alt="Image1"></p>
+<p><img src="/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image1.png" alt="Image1"></p>
 <p>如果使用的是Linux系统，可以直接在命令行中输入命令操作，如果是windows系统，用管理员权限打开“命令提示符”，使用命令在电脑上安装hexo；或者，在hexo目录上右键，选择“Git Bash Here”，用git bash工具打开hexo目录，在git bash中使用命令操作；</p>
 <h4 id="4-1-安装hexo"><a href="#4-1-安装hexo" class="headerlink" title="4.1 安装hexo"></a>4.1 安装hexo</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> npm install hexo-cli -g</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> npm install hexo -g</span></span><br></pre></td></tr></table></figure>
-
-
 
 <p>检查hexo是否安装成功</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hexo -v</span></span><br><span class="line">hexo: 4.2.0</span><br><span class="line">hexo-cli: 3.1.0</span><br><span class="line">os: Linux 5.3.0-45-generic linux x64</span><br><span class="line">http_parser: 2.7.1</span><br><span class="line">node: 8.10.0</span><br><span class="line">v8: 6.2.414.50</span><br><span class="line">uv: 1.18.0</span><br><span class="line">zlib: 1.2.11</span><br><span class="line">ares: 1.14.0</span><br><span class="line">modules: 57</span><br><span class="line">nghttp2: 1.30.0</span><br><span class="line">openssl: 1.0.2n</span><br><span class="line">icu: 60.2</span><br><span class="line">unicode: 10.0</span><br><span class="line">cldr: 32.0.1</span><br><span class="line">tz: 2017c</span><br></pre></td></tr></table></figure>
@@ -283,19 +272,17 @@
 <p>到此，hexo环境安装完成。</p>
 <h4 id="4-3-Hexo操作"><a href="#4-3-Hexo操作" class="headerlink" title="4.3 Hexo操作"></a>4.3 Hexo操作</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hexo g <span class="comment">#generate 生成静态文件</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash"> hexo s <span class="comment">#server 启动服务器。</span></span></span><br><span class="line">// 默认情况下，访问网址为： [http://localhost:4000/]</span><br></pre></td></tr></table></figure>
 
-<p>在浏览器地址栏输入“<a href="http://localhost:4000/”打开页面，是一个空的博客网页；" target="_blank" rel="noopener">http://localhost:4000/”打开页面，是一个空的博客网页；</a></p>
-<p><img src="/.io//Image3.JPG" alt="Image3"></p>
+<p>在浏览器地址栏输入“<a href="http://localhost:4000/”打开页面，是一个空的博客网页；">http://localhost:4000/”打开页面，是一个空的博客网页；</a></p>
+<p><img src="/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/Image3.JPG" alt="Image3"></p>
 <h4 id="4-4-将git库和hexo链接起来"><a href="#4-4-将git库和hexo链接起来" class="headerlink" title="4.4 将git库和hexo链接起来"></a>4.4 将git库和hexo链接起来</h4><p>配置Deployment</p>
 <p>在hexo文件夹中，找到_config.yml文件，修改repository值（在末尾），repository值是github项目里的ssh；</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">deploy:</span><br><span class="line">  type: git</span><br><span class="line">  repository: git@github.com:Mshrimp/Mshrimp.github.io.git</span><br><span class="line">  branch: master</span><br></pre></td></tr></table></figure>
-
 
 <p>HexoBlog部署到git，需要安装hexo-deployer-git插件，在blog目录下运行以下命令进行安装；</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> npm install hexo-deployer-git --save</span></span><br><span class="line"></span><br><span class="line">npm WARN babel-eslint@10.1.0 requires a peer of eslint@&gt;= 4.12.1 but none is </span><br><span class="line">installed. You must install peer dependencies yourself.</span><br><span class="line"></span><br><span class="line">+ hexo-deployer-git@1.0.0</span><br><span class="line">added 1 package from 1 contributor, removed 4 packages and updated 14 packages in </span><br><span class="line">5.684s</span><br></pre></td></tr></table></figure>
 
 <p>修改根目录下_config.yml文件后，需要使用$ hexo deploy部署一下，否则修改内容不会生效；</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> hexo deploy</span></span><br></pre></td></tr></table></figure>
-
 
 <p>至此，一个空的博客已经搭建完成，下一步，添加博客文章；</p>
 <h3 id="5-更换主题"><a href="#5-更换主题" class="headerlink" title="5. 更换主题"></a>5. 更换主题</h3><p>由于不太喜欢原来自带的主题，找了一个比较好看的yilia主题，需要先从Github中将yilia主题的源码下载到博客目录的themes目录下（感谢yilia主题作者的无私奉献）；</p>
@@ -306,7 +293,7 @@
 
 <p>这个主题中的一些配置，可以根据需要自行修改，配置文件为themes/yilia/_config.yml；</p>
 <p>效果如下：</p>
-<p><img src="/.io//themes-yilia.png" alt="themes-yilia"></p>
+<p><img src="/2019/07/28/Ubuntu-Hexo-Github搭建个人博客/themes-yilia.png" alt="themes-yilia"></p>
 <h3 id="6-博客迁移"><a href="#6-博客迁移" class="headerlink" title="6. 博客迁移"></a>6. 博客迁移</h3><h4 id="6-1-常规迁移"><a href="#6-1-常规迁移" class="headerlink" title="6.1 常规迁移"></a>6.1 常规迁移</h4><p>以前部署的Hexo博客是在Windows上搭建的，现在安装了Ubuntu-18.04.1，需要重新搭建博客；为了兼容以前的windows博客，需要使用以前的Hexo下的几个文件夹：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">_config.yml  package.json  source/  themes/</span><br></pre></td></tr></table></figure>
 
@@ -345,11 +332,11 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2019/07/17/Hexo-Github%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E5%8D%9A%E5%AE%A2/" rel="prev" title="Hexo+Github搭建个人博客">
+    <a href="/2019/07/17/Hexo-Github搭建个人博客/" rel="prev" title="Hexo+Github搭建个人博客">
       <i class="fa fa-chevron-left"></i> Hexo+Github搭建个人博客
     </a></div>
       <div class="post-nav-item">
-    <a href="/2019/07/30/%E9%98%B6%E6%AE%B5%E6%80%A7%E8%87%AA%E6%88%91%E5%8F%8D%E6%80%9D%E5%8F%8A%E5%AD%A6%E4%B9%A0%E5%8A%A8%E5%91%98-2019-07-07/" rel="next" title="阶段性自我反思及学习动员----2019.07.07">
+    <a href="/2019/07/30/阶段性自我反思及学习动员-2019-07-07/" rel="next" title="阶段性自我反思及学习动员----2019.07.07">
       阶段性自我反思及学习动员----2019.07.07 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -424,12 +411,12 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">6</span>
+          <span class="site-state-item-count">7</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">2</span>
+        <span class="site-state-item-count">3</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>
@@ -462,12 +449,11 @@
   </span>
   <span class="author" itemprop="copyrightHolder">micro虾米</span>
 </div>
-  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
   </div>
 
 
-
-  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script src='https://unpkg.com/mermaid@/dist/mermaid.min.js'></script>
   <script>
     if (window.mermaid) {
       mermaid.initialize({theme: 'forest'});
@@ -492,17 +478,9 @@
   <script src="/lib/anime.min.js"></script>
   <script src="/lib/velocity/velocity.min.js"></script>
   <script src="/lib/velocity/velocity.ui.min.js"></script>
-
-<script src="/js/utils.js"></script>
-
-<script src="/js/motion.js"></script>
-
-
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
 <script src="/js/schemes/muse.js"></script>
-
-
 <script src="/js/next-boot.js"></script>
-
 
 
 
