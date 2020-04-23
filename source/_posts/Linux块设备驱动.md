@@ -121,11 +121,8 @@ Linux块设备驱动
 
 
 ```c
-
 #include <linux/fs.h>
-
 int register_blkdev(unsigned int major, const char *name);
-
 ```
 
 
@@ -145,11 +142,8 @@ int register_blkdev(unsigned int major, const char *name);
 
 
 ```c
-
 #include <linux/fs.h>
-
 void unregister_blkdev(unsigned int major, const char *name);
-
 ```
 
 
@@ -159,21 +153,13 @@ void unregister_blkdev(unsigned int major, const char *name);
 
 
 ```c
-
 #include <linux/fs.h>
-
 int sbull_major = 0;
-
 sbull_major = register_blkdev(sbull_major, "sbull");
-
 if (sbull_major < 0) {
-
 	printk(KERN_WARNNING "sbull: unable to get major number\n");
-
 	return -EBUSY;
-
 }
-
 ```
 
 
@@ -182,78 +168,42 @@ if (sbull_major < 0) {
 
 
 ```c
-
 // include/linux/fs.h
-
 struct block_device {
-
     dev_t           bd_dev;  /* not a kdev_t - it's a search key */
-
     int         bd_openers;
-
     struct inode *      bd_inode;   /* will die */
-
     struct super_block *    bd_super;
-
     struct mutex        bd_mutex;   /* open/close mutex */
-
     void *          bd_claiming;
-
     void *          bd_holder;
-
     int         bd_holders;
-
     bool            bd_write_holder;
-
 #ifdef CONFIG_SYSFS
-
     struct list_head    bd_holder_disks;
-
 #endif
-
     struct block_device *   bd_contains;
-
     unsigned        bd_block_size;
-
     struct hd_struct *  bd_part;
-
     /* number of times partitions within this device have been opened. */
-
     unsigned        bd_part_count;
-
     int         bd_invalidated;
-
     struct gendisk *    bd_disk;
-
     struct request_queue *  bd_queue;
-
     struct list_head    bd_list;
-
     /*
-
      * Private data.  You must have bd_claim'ed the block_device
-
      * to use this.  NOTE:  bd_claim allows an owner to claim
-
      * the same device multiple times, the owner must take special
-
      * care to not mess up bd_private for that case.
-
      */
-
     unsigned long       bd_private;
 
-
     /* The counter of freeze processes */
-
     int         bd_fsfreeze_count;
-
     /* Mutex for freeze */
-
     struct mutex        bd_fsfreeze_mutex;
-
 };
-
 ```
 
 
@@ -277,49 +227,27 @@ struct block_device {
 
 
 ```c
-
 // include/linux/blkdev.h
-
 struct block_device_operations {
-
     int (*open) (struct block_device *, fmode_t);
-
     void (*release) (struct gendisk *, fmode_t);
-
     int (*rw_page)(struct block_device *, sector_t, struct page *, bool);
-
     int (*ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-
     int (*compat_ioctl) (struct block_device *, fmode_t, unsigned, unsigned long);
-
     long (*direct_access)(struct block_device *, sector_t, void **, pfn_t *,
-
             long);
-
     unsigned int (*check_events) (struct gendisk *disk,
-
                       unsigned int clearing);
-
     /* ->media_changed() is DEPRECATED, use ->check_events() instead */
-
     int (*media_changed) (struct gendisk *);
-
     void (*unlock_native_capacity) (struct gendisk *);
-
     int (*revalidate_disk) (struct gendisk *);
-
     int (*getgeo)(struct block_device *, struct hd_geometry *);
-
     /* this callback is with swap_lock and sometimes page table lock held */
-
     void (*swap_slot_free_notify) (struct block_device *, unsigned long);
-
     struct module *owner;
-
     const struct pr_ops *pr_ops;
-
 };
-
 ```
 
 
@@ -1003,15 +931,15 @@ graph TB
 
 
 ```c
-static void mcy_block_exit(void)
-{
-    printk("%s: %d\n", __func__, __LINE__);
+    static void mcy_block_exit(void)
+    {
+        printk("%s: %d\n", __func__, __LINE__);
 
-    del_gendisk(mcy_blkdev_disk);
-    put_disk(mcy_blkdev_disk);
-    blk_cleanup_queue(mcy_blkdev_queue);
-    unregister_blkdev(major, "mcy_blk");
-}
+        del_gendisk(mcy_blkdev_disk);
+        put_disk(mcy_blkdev_disk);
+        blk_cleanup_queue(mcy_blkdev_queue);
+        unregister_blkdev(major, "mcy_blk");
+    }
 ```
 
 

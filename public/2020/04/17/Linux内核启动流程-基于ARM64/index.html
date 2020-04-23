@@ -20,18 +20,18 @@
     var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="Linux内核启动流程-基于ARM64以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；">
+  <meta name="description" content="Linux内核启动流程-基于ARM64以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；">
 <meta name="keywords" content="Kernel">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux内核启动流程-基于ARM64">
 <meta property="og:url" content="http://mshrimp.github.io/2020/04/17/Linux内核启动流程-基于ARM64/index.html">
 <meta property="og:site_name" content="Mshrimp blog">
-<meta property="og:description" content="Linux内核启动流程-基于ARM64以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；">
+<meta property="og:description" content="Linux内核启动流程-基于ARM64以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；">
 <meta property="og:locale" content="default">
-<meta property="og:updated_time" content="2020-04-19T02:55:58.911Z">
+<meta property="og:updated_time" content="2020-04-20T14:05:06.005Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux内核启动流程-基于ARM64">
-<meta name="twitter:description" content="Linux内核启动流程-基于ARM64以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；">
+<meta name="twitter:description" content="Linux内核启动流程-基于ARM64以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；">
 
 <link rel="canonical" href="http://mshrimp.github.io/2020/04/17/Linux内核启动流程-基于ARM64/">
 
@@ -182,7 +182,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-04-19 10:55:58" itemprop="dateModified" datetime="2020-04-19T10:55:58+08:00">2020-04-19</time>
+                <time title="Modified: 2020-04-20 22:05:06" itemprop="dateModified" datetime="2020-04-20T22:05:06+08:00">2020-04-20</time>
               </span>
 
           
@@ -196,14 +196,14 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h2 id="Linux内核启动流程-基于ARM64"><a href="#Linux内核启动流程-基于ARM64" class="headerlink" title="Linux内核启动流程-基于ARM64"></a>Linux内核启动流程-基于ARM64</h2><p>以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；</p>
+        <h2 id="Linux内核启动流程-基于ARM64"><a href="#Linux内核启动流程-基于ARM64" class="headerlink" title="Linux内核启动流程-基于ARM64"></a>Linux内核启动流程-基于ARM64</h2><p>以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；</p>
 <a id="more"></a>
 
 
 
 <h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p>[TOC]</p>
-<h3 id="0-简述"><a href="#0-简述" class="headerlink" title="0. 简述"></a>0. 简述</h3><p>以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；</p>
-<p>上电启动，系统启动要经过uboot、vboot、kernel、filesystem、ADM几个过程，如下：</p>
+<h3 id="0-简述"><a href="#0-简述" class="headerlink" title="0. 简述"></a>0. 简述</h3><p>以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；</p>
+<p>上电启动，系统启动要经过uboot、kernel、filesystem、ADM几个过程，如下：</p>
 <pre class="mermaid">graph LR
     uboot(uboot)-->kernel(kernel)
     -->filesystem(filesystem)
@@ -222,7 +222,7 @@
 
 
 <p>Linux内核版本：</p>
-<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">linux-4.9.115-cgel</span><br><span class="line"><span class="meta">#</span><span class="bash"> uname -a</span></span><br><span class="line">Linux zte 4.9.115-rt93-EMBSYS-CGEL-6.1.R5 #2 SMP PREEMPT Thu Dec 12 14:37:15 CST 2019 aarch64 GNU/Linux</span><br></pre></td></tr></table></figure>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">linux-4.9.115</span><br><span class="line"><span class="meta">#</span><span class="bash"> uname -a</span></span><br><span class="line">Linux vexpress 4.9.115 #2 SMP Wed Apr 1 22:49:35 CST 2020 aarch64 GNU/Linux</span><br></pre></td></tr></table></figure>
 
 <p><strong>说明</strong>：由于Linux内核系统庞大繁杂，要想把内核启动中的每个细节都描述清楚，基本上不可能，更何况作者能力水平也达不到；因此，就在追踪内核启动流程代码的同时，只描述比较重要的几个部分；可以在以后的工作、学习中，随着水平的提高，不断地增加内容；</p>
 <h3 id="1-目标文件"><a href="#1-目标文件" class="headerlink" title="1. 目标文件"></a>1. 目标文件</h3><p>内核编译后生成的目标文件是ELF格式的vmlinux，vmlinux文件是各个源代码按照vmlinux.lds设定的规则，链接后得到的Object文件，并不是一个可执行的文件，不能在ARM平台上运行；通常会对其压缩，生成zImage或bzImage；通常内核映像以压缩格式存储，并不是一个可执行的内核；因此内核阶段需要先对内核映像自解压，他们的文件头部打包有解压缩程序；</p>
@@ -758,12 +758,12 @@ graph TB
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">9</span>
+          <span class="site-state-item-count">12</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
       <div class="site-state-item site-state-tags">
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">tags</span>
       </div>
   </nav>

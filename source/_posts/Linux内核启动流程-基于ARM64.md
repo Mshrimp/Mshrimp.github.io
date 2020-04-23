@@ -10,7 +10,7 @@ tags: Kernel
 
 ## Linux内核启动流程-基于ARM64
 
-以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；
+以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；
 
 <!--more-->
 
@@ -25,10 +25,10 @@ tags: Kernel
 ### 0. 简述
 
 
-以Lx2160芯片为例，讲述Linux在ARM64架构设备上的系统启动流程；Lx2160芯片是NXP的64位ARM处理器；
+以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；
 
 
-上电启动，系统启动要经过uboot、vboot、kernel、filesystem、ADM几个过程，如下：
+上电启动，系统启动要经过uboot、kernel、filesystem、ADM几个过程，如下：
 
 
 ```mermaid
@@ -58,9 +58,9 @@ Linux内核版本：
 
 
 ```shell
-linux-4.9.115-cgel
+linux-4.9.115
 # uname -a
-Linux zte 4.9.115-rt93-EMBSYS-CGEL-6.1.R5 #2 SMP PREEMPT Thu Dec 12 14:37:15 CST 2019 aarch64 GNU/Linux
+Linux vexpress 4.9.115 #2 SMP Wed Apr 1 22:49:35 CST 2020 aarch64 GNU/Linux
 ```
 
 **说明**：由于Linux内核系统庞大繁杂，要想把内核启动中的每个细节都描述清楚，基本上不可能，更何况作者能力水平也达不到；因此，就在追踪内核启动流程代码的同时，只描述比较重要的几个部分；可以在以后的工作、学习中，随着水平的提高，不断地增加内容；

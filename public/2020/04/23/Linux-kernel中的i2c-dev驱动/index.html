@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="Linux-kernel中的i2c-dev驱动在i2c-dev.c文件中，实现了I2C适配器设备文件的功能，每个I2C适配器被分配一个设备节点；通过适配器访问设备文件节点，主设备号为89，次设备号为0～255；应用程序通过生成的设备节点/dev/i2c-X，使用open、close、read、write、ioctl系统调用进行访问；i2c-dev.c并不是针对特定的设备而设计；">
+<meta name="keywords" content="i2c">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux-kernel中的i2c-dev驱动">
+<meta property="og:url" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中的i2c-dev驱动/index.html">
+<meta property="og:site_name" content="Mshrimp blog">
+<meta property="og:description" content="Linux-kernel中的i2c-dev驱动在i2c-dev.c文件中，实现了I2C适配器设备文件的功能，每个I2C适配器被分配一个设备节点；通过适配器访问设备文件节点，主设备号为89，次设备号为0～255；应用程序通过生成的设备节点/dev/i2c-X，使用open、close、read、write、ioctl系统调用进行访问；i2c-dev.c并不是针对特定的设备而设计；">
+<meta property="og:locale" content="default">
+<meta property="og:updated_time" content="2020-04-23T14:26:22.812Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux-kernel中的i2c-dev驱动">
+<meta name="twitter:description" content="Linux-kernel中的i2c-dev驱动在i2c-dev.c文件中，实现了I2C适配器设备文件的功能，每个I2C适配器被分配一个设备节点；通过适配器访问设备文件节点，主设备号为89，次设备号为0～255；应用程序通过生成的设备节点/dev/i2c-X，使用open、close、read、write、ioctl系统调用进行访问；i2c-dev.c并不是针对特定的设备而设计；">
+
+<link rel="canonical" href="http://mshrimp.github.io/2020/04/23/Linux-kernel中的i2c-dev驱动/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Linux-kernel中的i2c-dev驱动 | Mshrimp blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Mshrimp blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">micro虾米</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2020/04/23/Linux-kernel中的i2c-dev驱动/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="micro虾米">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mshrimp blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux-kernel中的i2c-dev驱动
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-04-23 21:43:49 / Modified: 22:26:22" itemprop="dateCreated datePublished" datetime="2020-04-23T21:43:49+08:00">2020-04-23</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="Linux-kernel中的i2c-dev驱动"><a href="#Linux-kernel中的i2c-dev驱动" class="headerlink" title="Linux-kernel中的i2c-dev驱动"></a>Linux-kernel中的i2c-dev驱动</h2><p>在i2c-dev.c文件中，实现了I2C适配器设备文件的功能，每个I2C适配器被分配一个设备节点；通过适配器访问设备文件节点，主设备号为89，次设备号为0～255；应用程序通过生成的设备节点/dev/i2c-X，使用open、close、read、write、ioctl系统调用进行访问；i2c-dev.c并不是针对特定的设备而设计；</p>
+<a id="more"></a>
+
+
+
+<h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p>[TOC]</p>
+<h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p>Linux内核的I2C子系统，支持I2C通用设备驱动；</p>
+<p>用户态驱动：由应用层实现对硬件的控制；</p>
+<p>代码实现在drivers/i2c/i2c-dev.c；</p>
+<p>设备文件：/dev/i2c-X，X为序号；</p>
+<h3 id="内核态实现"><a href="#内核态实现" class="headerlink" title="内核态实现"></a>内核态实现</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">CONFIG_I2C_CHARDEV=y</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">// driver/i2c/Makefile</span><br><span class="line">obj-$(CONFIG_I2C_CHARDEV)   += i2c-dev.o</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/i2c-dev.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> I2C_MAJOR   89      <span class="comment">/* Device major number      */</span></span></span><br></pre></td></tr></table></figure>
+
+<h3 id="用户态实现"><a href="#用户态实现" class="headerlink" title="用户态实现"></a>用户态实现</h3><p>在Linux内核中，已经注册了的I2C适配器，可以在用户空间进行访问；i2c-dev驱动对每个I2C适配器生成一个设备节点/dev/i2c-X，主设备号固定为89，X为数字，是I2C适配器的编号，从0开始，编号和设备节点的此设备号一致；</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ls /dev/i2c-* -l</span></span><br><span class="line">crw-rw----    1 root     root       89,   0 Nov  3 22:02 /dev/i2c-0</span><br><span class="line">crw-rw----    1 root     root       89,   1 Nov  3 22:02 /dev/i2c-1</span><br><span class="line">crw-rw----    1 root     root       89,   2 Nov  3 22:02 /dev/i2c-2</span><br><span class="line">crw-rw----    1 root     root       89,   3 Nov  3 22:02 /dev/i2c-3</span><br></pre></td></tr></table></figure>
+
+<p>设备节点/dev/i2c-X的编号X和注册次序有关，使用前还是需要通过/sys/class/i2c-dev/来确定编号；</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ls /sys/class/i2c-dev/ -l</span></span><br><span class="line">total 0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Nov  4 04:01 i2c-0 -&gt; ../../devices/platform/soc/2000000.i2c/i2c-0/i2c-dev/i2c-0</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Nov  4 04:01 i2c-1 -&gt; ../../devices/platform/soc/2010000.i2c/i2c-1/i2c-dev/i2c-1</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Nov  4 04:01 i2c-2 -&gt; ../../devices/platform/soc/2030000.i2c/i2c-2/i2c-dev/i2c-2</span><br><span class="line">lrwxrwxrwx    1 root     root             0 Nov  4 04:01 i2c-3 -&gt; ../../devices/platform/soc/2050000.i2c/i2c-3/i2c-dev/i2c-3</span><br></pre></td></tr></table></figure>
+
+<p>或者</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> cat /sys/class/i2c-dev/i2c-0/name</span></span><br><span class="line">2000000.i2c</span><br><span class="line"><span class="meta">#</span><span class="bash"> cat /sys/class/i2c-dev/i2c-2/name</span></span><br><span class="line">2030000.i2c</span><br></pre></td></tr></table></figure>
+
+<p>这些设备节点实现了文件操作接口，用户空间通过这些I2C设备节点访问I2C适配器；对I2C设备进行读写时，可以通过调用read/write或ioctl来实现；在内核态read、write、ioctl系统调用都是通过i2c_transfer()函数实现和I2C设备的通信；</p>
+<p>用户态使用open函数打开对应的I2C设备节点/dev/i2c-X，如：/dev/i2c-2；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> fd = <span class="number">-1</span>;</span><br><span class="line">fd = <span class="built_in">open</span>(<span class="string">"/dev/i2c-2"</span>, O_RDWR);</span><br></pre></td></tr></table></figure>
+
+<p>i2c-dev为open的设备节点建立一个i2c_client；但是这个i2c_client并不加添加到i2c_adapter的client链表中，而是在用户关闭设备节点时，自动释放i2c_client；</p>
+<h4 id="read-write实现"><a href="#read-write实现" class="headerlink" title="read/write实现"></a>read/write实现</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">i2c_write_bytes</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">unsigned</span> short addr, <span class="keyword">unsigned</span> <span class="keyword">char</span> *data, <span class="keyword">int</span> len)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> *data_wr = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    data_wr = <span class="built_in">malloc</span>(len + <span class="number">2</span>);</span><br><span class="line">    <span class="keyword">if</span> (!data_wr) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, malloc failed!\n"</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    data_wr[<span class="number">0</span>] = addr / <span class="number">0xff</span>;</span><br><span class="line">    data_wr[<span class="number">1</span>] = addr % <span class="number">0xff</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memcpy</span>(&amp;data_wr[<span class="number">2</span>], data, len);</span><br><span class="line"></span><br><span class="line">    ioctl(fd, I2C_SLAVE, SLAVE_ADDR);</span><br><span class="line">    ioctl(fd, I2C_TIMEOUT, <span class="number">1</span>);</span><br><span class="line">    ioctl(fd, I2C_RETRIES, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">write</span>(fd, data_wr, len+<span class="number">2</span>);</span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, write failed, ret: 0x%x\n"</span>, __func__, ret);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s, write ok, num: %d\n"</span>, __func__, ret);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (data_wr != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">free</span>(data_wr);</span><br><span class="line">        data_wr = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">i2c_read_bytes</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">unsigned</span> short addr, <span class="keyword">unsigned</span> <span class="keyword">char</span> *data, <span class="keyword">int</span> len)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> addr_slave[<span class="number">2</span>] = &#123; <span class="number">0</span> &#125;;</span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    ioctl(fd, I2C_SLAVE, SLAVE_ADDR);</span><br><span class="line">    ioctl(fd, I2C_TIMEOUT, <span class="number">1</span>);</span><br><span class="line">    ioctl(fd, I2C_RETRIES, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    addr_slave[<span class="number">0</span>] = addr / <span class="number">0xff</span>;</span><br><span class="line">    addr_slave[<span class="number">1</span>] = addr % <span class="number">0xff</span>;</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">write</span>(fd, addr_slave, <span class="number">2</span>);</span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, write failed, ret: 0x%x\n"</span>, __func__, ret);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ret = <span class="built_in">read</span>(fd, data, len);</span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, read failed, ret: 0x%x\n"</span>, __func__, ret);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s, read ok, num: %d\n"</span>, __func__, ret);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ioctl实现"><a href="#ioctl实现" class="headerlink" title="ioctl实现"></a>ioctl实现</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">i2c_write_bytes</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">unsigned</span> short addr, <span class="keyword">unsigned</span> <span class="keyword">char</span> *data, <span class="keyword">int</span> len)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">i2c_rdwr_ioctl_data</span> <span class="title">data_wr</span>;</span></span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    data_wr.nmsgs = <span class="number">1</span>;</span><br><span class="line">    data_wr.msgs = <span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(struct i2c_msg) * data_wr.nmsgs);</span><br><span class="line">    <span class="keyword">if</span> (!data_wr.msgs) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, msgs malloc failed!\n"</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    data_wr.msgs[<span class="number">0</span>].addr = SLAVE_ADDR;</span><br><span class="line">    data_wr.msgs[<span class="number">0</span>].flags = <span class="number">0</span>;</span><br><span class="line">    data_wr.msgs[<span class="number">0</span>].len = len + <span class="number">2</span>;</span><br><span class="line">    data_wr.msgs[<span class="number">0</span>].buf = <span class="built_in">malloc</span>(data_wr.msgs[<span class="number">0</span>].len + <span class="number">2</span>);</span><br><span class="line">    <span class="keyword">if</span> (!data_wr.msgs[<span class="number">0</span>].buf) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, msgs buf malloc failed!\n"</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    data_wr.msgs[<span class="number">0</span>].buf[<span class="number">0</span>] = addr / <span class="number">0xff</span>;</span><br><span class="line">    data_wr.msgs[<span class="number">0</span>].buf[<span class="number">1</span>] = addr % <span class="number">0xff</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">memcpy</span>(&amp;data_wr.msgs[<span class="number">0</span>].buf[<span class="number">2</span>], data, len);</span><br><span class="line"></span><br><span class="line">    ret = ioctl(fd, I2C_RDWR, (<span class="keyword">unsigned</span> <span class="keyword">long</span>)&amp;data_wr);</span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, ioctl failed, ret: 0x%x\n"</span>, __func__, ret);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s, write ok, num: %d\n"</span>, __func__, ret);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (data_wr.msgs[<span class="number">0</span>].buf != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">free</span>(data_wr.msgs[<span class="number">0</span>].buf);</span><br><span class="line">        data_wr.msgs[<span class="number">0</span>].buf = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (data_wr.msgs != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">free</span>(data_wr.msgs);</span><br><span class="line">        data_wr.msgs = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">i2c_read_bytes</span><span class="params">(<span class="keyword">int</span> fd, <span class="keyword">unsigned</span> short addr, <span class="keyword">unsigned</span> <span class="keyword">char</span> *data, <span class="keyword">int</span> len)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">i2c_rdwr_ioctl_data</span> <span class="title">data_rd</span>;</span></span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    data_rd.nmsgs = <span class="number">2</span>;</span><br><span class="line">    data_rd.msgs = <span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(struct i2c_msg) * data_rd.nmsgs);</span><br><span class="line">    <span class="keyword">if</span> (!data_rd.msgs) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, msgs malloc failed!\n"</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    data_rd.msgs[<span class="number">0</span>].addr = SLAVE_ADDR;</span><br><span class="line">    data_rd.msgs[<span class="number">0</span>].flags = <span class="number">0</span>;</span><br><span class="line">    data_rd.msgs[<span class="number">0</span>].len = <span class="number">2</span>;</span><br><span class="line">    data_rd.msgs[<span class="number">0</span>].buf = <span class="built_in">malloc</span>(data_rd.msgs[<span class="number">0</span>].len);</span><br><span class="line">    <span class="keyword">if</span> (!data_rd.msgs[<span class="number">0</span>].buf) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, msgs buf malloc failed!\n"</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    data_rd.msgs[<span class="number">0</span>].buf[<span class="number">0</span>] = addr / <span class="number">0xff</span>;</span><br><span class="line">    data_rd.msgs[<span class="number">0</span>].buf[<span class="number">1</span>] = addr % <span class="number">0xff</span>;</span><br><span class="line"></span><br><span class="line">    data_rd.msgs[<span class="number">1</span>].addr = SLAVE_ADDR;</span><br><span class="line">    data_rd.msgs[<span class="number">1</span>].flags = I2C_M_RD;</span><br><span class="line">    data_rd.msgs[<span class="number">1</span>].len = len;</span><br><span class="line">    data_rd.msgs[<span class="number">1</span>].buf = <span class="built_in">malloc</span>(data_rd.msgs[<span class="number">0</span>].len);</span><br><span class="line">    <span class="keyword">if</span> (!data_rd.msgs[<span class="number">0</span>].buf) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, msgs buf malloc failed!\n"</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">memset</span>(data_rd.msgs[<span class="number">1</span>].buf, <span class="number">0</span>, data_rd.msgs[<span class="number">1</span>].len);</span><br><span class="line"></span><br><span class="line">    ret = ioctl(fd, I2C_RDWR, (<span class="keyword">unsigned</span> <span class="keyword">long</span>)&amp;data_rd);</span><br><span class="line">    <span class="keyword">if</span> (ret &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, ioctl failed, ret: 0x%x\n"</span>, __func__, ret);</span><br><span class="line">        <span class="keyword">return</span> ret;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">memcpy</span>(data, data_rd.msgs[<span class="number">1</span>].buf, len);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"%s, read ok, num: %d\n"</span>, __func__, ret);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (data_rd.msgs[<span class="number">0</span>].buf != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">free</span>(data_rd.msgs[<span class="number">0</span>].buf);</span><br><span class="line">        data_rd.msgs[<span class="number">0</span>].buf = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (data_rd.msgs != <span class="literal">NULL</span>) &#123;</span><br><span class="line">        <span class="built_in">free</span>(data_rd.msgs);</span><br><span class="line">        data_rd.msgs = <span class="literal">NULL</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="main函数"><a href="#main函数" class="headerlink" title="main函数"></a>main函数</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdio.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;string.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;stdlib.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/types.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/stat.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;fcntl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;unistd.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;sys/ioctl.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/i2c.h&gt;</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">include</span> <span class="meta-string">&lt;linux/i2c-dev.h&gt;</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SLAVE_ADDR  0x51</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">arr_show</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">char</span> *data, <span class="keyword">int</span> len)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; len; i++) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"data[%d]: 0x%x\n"</span>, i, data[i]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">usage</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"xxx -r addr len\n"</span>);</span><br><span class="line">    <span class="built_in">printf</span>(<span class="string">"xxx -w addr data1 data2 ...\n"</span>);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">int</span> argc, <span class="keyword">char</span> *argv[])</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> opt;</span><br><span class="line">    <span class="keyword">int</span> fd = <span class="number">-1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">unsigned</span> short addr;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> buf[<span class="number">256</span>] = &#123; <span class="number">0</span> &#125;;</span><br><span class="line">    <span class="keyword">int</span> len = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> i = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (argc &lt; <span class="number">4</span>) &#123;</span><br><span class="line">        usage();</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    fd = <span class="built_in">open</span>(<span class="string">"/dev/i2c-2"</span>, O_RDWR);</span><br><span class="line">    <span class="keyword">if</span> (fd &lt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"%s, open failed!\n"</span>, __func__);</span><br><span class="line">        <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> ((opt = getopt(argc, argv, <span class="string">"w:r:"</span>)) != <span class="number">-1</span>) &#123;</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"optarg: %s\n"</span>, optarg);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"optind: %d\n"</span>, optind);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"argc: %d\n"</span>, argc);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"argv[optind]: %s\n"</span>, argv[optind]);</span><br><span class="line"></span><br><span class="line">        addr = (<span class="keyword">unsigned</span> short)strtol(optarg, <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">        <span class="built_in">printf</span>(<span class="string">"addr: %d\n"</span>, addr);</span><br><span class="line">        <span class="keyword">switch</span>(opt) &#123;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'w'</span>:</span><br><span class="line">                <span class="keyword">for</span> (len = <span class="number">0</span>; optind &lt; argc; optind++, len++) &#123;</span><br><span class="line">                    buf[len] = (<span class="keyword">unsigned</span> <span class="keyword">char</span>)strtol(argv[optind], <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">                &#125;</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">"len: %d\n"</span>, len);</span><br><span class="line"></span><br><span class="line">                i2c_write_bytes(fd, addr, buf, len);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">case</span> <span class="string">'r'</span>:</span><br><span class="line">                len = (<span class="keyword">unsigned</span> <span class="keyword">int</span>)strtol(argv[optind], <span class="literal">NULL</span>, <span class="number">0</span>);</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">"len: %d\n"</span>, len);</span><br><span class="line"></span><br><span class="line">                i2c_read_bytes(fd, addr, buf, len);</span><br><span class="line"></span><br><span class="line">                arr_show(buf, len);</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            <span class="keyword">default</span>:</span><br><span class="line">                <span class="built_in">printf</span>(<span class="string">"Invalid parameter!\n"</span>);</span><br><span class="line">                usage;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">close</span>(fd);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/i2c/" rel="tag"># i2c</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/04/20/u-boot引导kernel启动过程/" rel="prev" title="u-boot引导kernel启动过程">
+      <i class="fa fa-chevron-left"></i> u-boot引导kernel启动过程
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/" rel="next" title="Linux-kernel中I2C的master_xfer驱动实现----基于imx6">
+      Linux-kernel中I2C的master_xfer驱动实现----基于imx6 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux-kernel中的i2c-dev驱动"><span class="nav-text">Linux-kernel中的i2c-dev驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目录"><span class="nav-text">目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#简介"><span class="nav-text">简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#内核态实现"><span class="nav-text">内核态实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#用户态实现"><span class="nav-text">用户态实现</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#read-write实现"><span class="nav-text">read/write实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#ioctl实现"><span class="nav-text">ioctl实现</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#main函数"><span class="nav-text">main函数</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">micro虾米</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">12</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">micro虾米</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+
+  <script src='https://unpkg.com/mermaid@/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script>
+<script src="/js/schemes/muse.js"></script>
+<script src="/js/next-boot.js"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+</body>
+</html>
