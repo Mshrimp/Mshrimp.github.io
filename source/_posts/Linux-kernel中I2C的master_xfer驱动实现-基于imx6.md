@@ -40,7 +40,7 @@ http://read.pudn.com/downloads664/sourcecode/embedded/2692975/IMX6SDLRM.pdf
 
 #### 寄存器描述
 
-![I2C memory map](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C memory map.png)
+![I2C memory map](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-memory-map.png)
 
 
 
@@ -48,35 +48,35 @@ http://read.pudn.com/downloads664/sourcecode/embedded/2692975/IMX6SDLRM.pdf
 
 ##### I2C Address Register
 
-![I2C Address Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C Address Register-1587653607352.png)
+![I2C Address Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Address-Register.png)
 
 
 
 ##### I2C Frequency Divider Register
 
-![I2C Frequency Divider Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C Frequency Divider Register.png)
+![I2C Frequency Divider Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Frequency-Divider-Register.png)
 
 
 
 ##### I2C Control Register
 
-![I2C Control Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C Control Register.png)
+![I2C Control Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Control-Register.png)
 
-![I2Cx_I2CR field descriptions](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2CR field descriptions.png)
+![I2Cx_I2CR field descriptions](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2CR-field-descriptions.png)
 
-![I2Cx_I2CR field descriptions2](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2CR field descriptions2.png)
+![I2Cx_I2CR field descriptions2](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2CR-field-descriptions2.png)
 
 
 
 ##### I2C Status Register
 
-![I2C Status Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C Status Register.png)
+![I2C Status Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Status-Register.png)
 
-![I2Cx_I2SR field descriptions](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR field descriptions.png)
+![I2Cx_I2SR field descriptions](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR-field-descriptions.png)
 
-![I2Cx_I2SR field descriptions2](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR field descriptions2.png)
+![I2Cx_I2SR field descriptions2](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR-field-descriptions2.png)
 
-![I2Cx_I2SR field descriptions3](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR field descriptions3.png)
+![I2Cx_I2SR field descriptions3](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR-field-descriptions3.png)
 
 
 
@@ -84,7 +84,7 @@ http://read.pudn.com/downloads664/sourcecode/embedded/2692975/IMX6SDLRM.pdf
 
 ##### I2C Data I/O Register
 
-![I2C Data IO Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C Data IO Register.png)
+![I2C Data IO Register](Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Data-IO-Register.png)
 
 
 

@@ -6,11 +6,9 @@ tags: Kernel
 
 
 
+以arm64为例，简单讲述Linux在ARM64架构设备上系统启动的重要流程；
 
 
-## Linux内核启动流程-基于ARM64
-
-以arm64为例，讲述Linux在ARM64架构设备上的系统启动流程；
 
 <!--more-->
 
