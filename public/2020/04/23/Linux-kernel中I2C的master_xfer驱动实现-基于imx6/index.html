@@ -29,7 +29,7 @@
 <meta property="og:description" content="在I2C驱动中，每个适配器i2c_adapter都有自己的I2C通信方法，在struct i2c_algorithm结构中的master_xfer()函数中实现；i2c_algorithm结构中的关键函数master_xfer()用于产生I2C访问周期需要的信号，以struct i2c_msg结构的格式进行数据传送； 未完成">
 <meta property="og:locale" content="default">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-memory-map.png">
-<meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Address-Register.png">
+<meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Address-Register2.png">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Frequency-Divider-Register.png">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Control-Register.png">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2CR-field-descriptions.png">
@@ -39,7 +39,7 @@
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR-field-descriptions2.png">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2SR-field-descriptions3.png">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Data-IO-Register.png">
-<meta property="og:updated_time" content="2020-04-25T04:52:39.099Z">
+<meta property="og:updated_time" content="2020-04-25T12:13:36.900Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux-kernel中I2C的master_xfer驱动实现----基于imx6">
 <meta name="twitter:description" content="在I2C驱动中，每个适配器i2c_adapter都有自己的I2C通信方法，在struct i2c_algorithm结构中的master_xfer()函数中实现；i2c_algorithm结构中的关键函数master_xfer()用于产生I2C访问周期需要的信号，以struct i2c_msg结构的格式进行数据传送； 未完成">
@@ -194,7 +194,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-04-25 12:52:39" itemprop="dateModified" datetime="2020-04-25T12:52:39+08:00">2020-04-25</time>
+                <time title="Modified: 2020-04-25 20:13:36" itemprop="dateModified" datetime="2020-04-25T20:13:36+08:00">2020-04-25</time>
               </span>
 
           
@@ -212,11 +212,13 @@
 <p>未完成</p>
 <a id="more"></a>
 
+
+
 <p><strong>注：</strong>本文含有一些从《IMX6SDLRM.pdf》手册中获取的一些数据信息截图，如有侵权，纯属无意，还请告知，立即删除！</p>
 <h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p>[TOC]</p>
 <h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><p><a href="http://read.pudn.com/downloads664/sourcecode/embedded/2692975/IMX6SDLRM.pdf">http://read.pudn.com/downloads664/sourcecode/embedded/2692975/IMX6SDLRM.pdf</a></p>
 <h4 id="寄存器描述"><a href="#寄存器描述" class="headerlink" title="寄存器描述"></a>寄存器描述</h4><p><img src="/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-memory-map.png" alt="I2C memory map"></p>
-<h5 id="I2C-Address-Register"><a href="#I2C-Address-Register" class="headerlink" title="I2C Address Register"></a>I2C Address Register</h5><p><img src="/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Address-Register.png" alt="I2C Address Register"></p>
+<h5 id="I2C-Address-Register"><a href="#I2C-Address-Register" class="headerlink" title="I2C Address Register"></a>I2C Address Register</h5><p><img src="/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Address-Register2.png" alt="I2C-Address-Register2"></p>
 <h5 id="I2C-Frequency-Divider-Register"><a href="#I2C-Frequency-Divider-Register" class="headerlink" title="I2C Frequency Divider Register"></a>I2C Frequency Divider Register</h5><p><img src="/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Frequency-Divider-Register.png" alt="I2C Frequency Divider Register"></p>
 <h5 id="I2C-Control-Register"><a href="#I2C-Control-Register" class="headerlink" title="I2C Control Register"></a>I2C Control Register</h5><p><img src="/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2C-Control-Register.png" alt="I2C Control Register"></p>
 <p><img src="/2020/04/23/Linux-kernel中I2C的master_xfer驱动实现-基于imx6/I2Cx_I2CR-field-descriptions.png" alt="I2Cx_I2CR field descriptions"></p>
@@ -244,8 +246,8 @@
         
     <div class="post-nav">
       <div class="post-nav-item">
-    <a href="/2020/04/23/Linux-kernel中的i2c-dev驱动/" rel="prev" title="Linux-kernel中的i2c-dev驱动">
-      <i class="fa fa-chevron-left"></i> Linux-kernel中的i2c-dev驱动
+    <a href="/2020/04/19/Linux内核启动流程-基于ARM64/" rel="prev" title="Linux内核启动流程-基于ARM64">
+      <i class="fa fa-chevron-left"></i> Linux内核启动流程-基于ARM64
     </a></div>
       <div class="post-nav-item"></div>
     </div>
