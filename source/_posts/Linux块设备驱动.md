@@ -48,13 +48,13 @@ Linux块设备驱动
 
 
 
-
-
-
-
-
-
-
+|       字符设备       |       块设备       |
+| :------------------: | :----------------: |
+|       顺序访问       |      随机访问      |
+|      数据流设备      |      存储设备      |
+|     以字节为单位     |     以块为单位     |
+| 没有缓存区，实时读写 |  有缓存区，非实时  |
+|   由应用层程序调用   | 由文件系统程序调用 |
 
 
 
@@ -304,12 +304,6 @@ start_sect和nr_sects：定义了该分区在块设备上的起始扇区和长�
 
 
 
-
-
-
-
-
-
 拥有了设备内存和请求队列，就可以分配、初始化及安装gendisk结构；在struct gendisk是动态分配的结构，需要内核进行初始化，驱动必须通过alloc_disk分配：
 
 
@@ -348,19 +342,41 @@ void add_disk(struct gendisk *gd);
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
 #### 4. 请求队列
+
+
+
+块设备驱动程序的核心是请求函数，包含请求处理过程；
+
+有I/O调度类设备，使用blk_init_queue()函数：
+
+```c
+// block/blk-core.c
+struct request_queue *blk_init_queue(request_fn_proc *rfn, spinlock_t *lock)
+```
+
+无I/O调度类设备，使用blk_alloc_queue()函数：
+
+```c
+// block/blk-core.c
+struct request_queue *blk_alloc_queue(gfp_t gfp_mask)
+// block/blk-settings.c
+void blk_queue_make_request(struct request_queue *q, make_request_fn *mfn)
+```
+
+从请求队列中提取请求：
+
+```c
+// block/blk-core.c
+struct request *blk_fetch_request(struct request_queue *q)
+```
+
+在卸载函数中使用的清除请求队列：
+
+```c
+// block/blk-core.c
+void blk_cleanup_queue(struct request_queue *q)
+```
 
 
 
@@ -379,16 +395,9 @@ struct request_queue {
     make_request_fn     *make_request_fn;
 	......
     void            *queuedata;
-
-    spinlock_t      __queue_lock;
-    spinlock_t      *queue_lock;
-
     struct list_head    icq_list;
-
     struct queue_limits limits;
-
     struct blk_flush_queue  *fq;
-
     struct list_head    requeue_list;
     spinlock_t      requeue_lock;
     struct delayed_work requeue_work;
@@ -398,8 +407,6 @@ struct request_queue {
 
 
 queue_head：表头，用于构建一个IO请求的双链表；链表每个元素代表向块设备读取数据的一个请求；内核会重排该链表，以得到更好的IO性能；
-
-
 
 
 
@@ -467,26 +474,35 @@ struct bio_vec {
 };
 ```
 
-
-
-
-
-
-
-
-块设备驱动程序的核心是请求函数，包含请求处理过程；
+struct bvec_iter结构体用来记录当前bvec被处理的情况，用于遍历bio；
 
 ```c
-// include/linux/blkdev.h
-struct request_queue *blk_init_queue(request_fn_proc *rfn, spinlock_t *lock)
+// include/linux/bvec.h
+struct bvec_iter {
+    sector_t        bi_sector;  /* device address in 512 byte sectors */
+    unsigned int	bi_size;    /* residual I/O count */
+    unsigned int	bi_idx;     /* current index into bvl_vec */
+    unsigned int	bi_bvec_done;   /* number of bytes completed in current bvec */
+};
 ```
 
-或
 
-```c
-// include/linux/blkdev.h
-void blk_queue_make_request(struct request_queue *q, make_request_fn *mfn)
-```
+
+#### 5. 数据结构间的关系
+
+| 数据结构      | 描述                                                         |
+| ------------- | ------------------------------------------------------------ |
+| request_queue | 表示针对一个gendisk对象的所有请求的队列，是对应gendisk结构的一个成员； |
+| request       | 表示经过I/O调度之后的针对gendisk的一个请求，是request_queue结构队列的一个节点，多个request构成了一个request_queue队列； |
+| bio           | 表示应用程序对一个gendisk原始的访问请求；一个bio由多个bio_vec组成，多个bio经过I/O调度和合并形成一个request； |
+| bio_vec       | 描述的应用层准备读写一个gendisk时需要使用的内存页（page）的一部分；多个bio_vec形成一个bio； |
+| bvec_iter     | 描述一个bio_vec结构中的一个sector信息；                      |
+
+
+
+块设备数据结构间的关系如下所示：
+
+![块设备数据结构间的关系](Linux块设备驱动/块设备数据结构间的关系.png)
 
 
 
@@ -519,8 +535,8 @@ void blk_queue_make_request(struct request_queue *q, make_request_fn *mfn)
 ```mermaid
 graph TB
 	A("注册设备(register_blkdev)(可选)")-->B("分配磁盘(alloc_disk)")
-	B-->C("不使用请求队列(blk_init_queue)")-->E
-	B-->D("使用请求队列(blk_alloc_queue)")-->E
+	B--有I/O调度-->C("不使用请求队列(blk_init_queue)")-->E
+	B--无I/O调度-->D("使用请求队列(blk_alloc_queue)")-->E
 	E("设置磁盘属性(gendisk)")-->F("激活磁盘(add_disk)")
 ```
 
@@ -596,8 +612,11 @@ static DEFINE_SPINLOCK(sbull_blkdev_lock);
 sbull_blkdev_queue = blk_init_queue(sbull_blkdev_request, &sbull_blkdev_lock);
 ```
 
+blk_init_queue()函数返回请求队列request_queue，将sbull_blkdev_request()函数指针方式关联到该设备；
 
-blk_init_queue()函数返回请求队列request_queue；将blkdev_request()函数指针方式关联到设备；而第二个参数是自旋锁，用来保护request_queue队列不被同时访问；
+第一个参数是函数指针，用来指定请求队列的处理函数；
+
+第二个参数是自旋锁，用来保护request_queue队列不被同时访问；
 
 
 
@@ -862,13 +881,11 @@ blkdev->disk->private_data = blkdev;
 
 
 
-
-
-每个块设备，都有一个请求队列，当请求队列生成时，请求函数request()就与该队列绑定，这个操作有两种方法实现；
+每个块设备，都有一个请求队列，当请求队列生成时，请求函数request()就与该队列绑定，这个操作根据有无有I/O调度，分两种方法实现；
 
 #### 3.1 blk_init_queue
 
-第一种是通过blk_init_queue()函数完成；
+第一种是有I/O调度类设备，通过blk_init_queue()函数完成；
 
 
 ```c
@@ -990,7 +1007,7 @@ void sbull_transfer(blkdev_t *dev, unsigned long sector, unsigned long nsect, ch
 
 
 
-
+第二种是无I/O调度类设备，通过blk_alloc_queue()函数完成；
 
 实现方法：
 
@@ -1264,6 +1281,14 @@ static inline unsigned int blk_rq_count_bios(struct request *rq)
 
 
 
+
+
+
+
+
+
+
+
 #### 3.4 I/O调度器
 
 
@@ -1381,7 +1406,7 @@ none
 
 https://www.cnblogs.com/big-devil/p/8590007.html
 
-
+https://www.cnblogs.com/xiaojiang1025/p/6500557.html
 
 
 

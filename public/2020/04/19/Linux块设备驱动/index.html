@@ -30,7 +30,8 @@
 <meta property="og:locale" content="default">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/19/Linux块设备驱动/Linux%E7%9A%84%E5%9D%97IO.png">
 <meta property="og:image" content="http://mshrimp.github.io/2020/04/19/Linux块设备驱动/%E5%9D%97%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%9E%B6%E6%9E%84%E5%9B%BE.jpg">
-<meta property="og:updated_time" content="2020-05-03T13:40:18.341Z">
+<meta property="og:image" content="http://mshrimp.github.io/2020/04/19/Linux块设备驱动/%E5%9D%97%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB.png">
+<meta property="og:updated_time" content="2020-05-05T13:42:54.618Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux块设备驱动">
 <meta name="twitter:description" content="Linux块设备驱动Linux块设备驱动 未完成">
@@ -185,7 +186,7 @@
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-05-03 21:40:18" itemprop="dateModified" datetime="2020-05-03T21:40:18+08:00">2020-05-03</time>
+                <time title="Modified: 2020-05-05 21:42:54" itemprop="dateModified" datetime="2020-05-05T21:42:54+08:00">2020-05-05</time>
               </span>
 
           
@@ -211,6 +212,34 @@
 <p>字符设备是一种顺序的数据流设备，对字符设备的读写是以字节为单位进行的，这些字符连续地形成一个数据流，字符设备没有缓存区，对于字符设备的读写是实时的；</p>
 <p>块设备</p>
 <p>块设备是一种具有一定结构的随机存取设备，对块设备的读写是以块为单位进行的，块设备使用缓存区来存放数据，待条件满足后，将数据从缓存区一次性写入到设备，或者从设备一次性读取到缓存区；</p>
+<table>
+<thead>
+<tr>
+<th align="center">字符设备</th>
+<th align="center">块设备</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="center">顺序访问</td>
+<td align="center">随机访问</td>
+</tr>
+<tr>
+<td align="center">数据流设备</td>
+<td align="center">存储设备</td>
+</tr>
+<tr>
+<td align="center">以字节为单位</td>
+<td align="center">以块为单位</td>
+</tr>
+<tr>
+<td align="center">没有缓存区，实时读写</td>
+<td align="center">有缓存区，非实时</td>
+</tr>
+<tr>
+<td align="center">由应用层程序调用</td>
+<td align="center">由文件系统程序调用</td>
+</tr>
+</tbody></table>
 <p>为了创建一个块设备驱动程序，实现一个基于内存的块设备驱动程序；</p>
 <h4 id="1-块设备结构"><a href="#1-块设备结构" class="headerlink" title="1. 块设备结构"></a>1. 块设备结构</h4><p><strong>段（Segments）</strong>：由若干个块组成；是Linux内存管理机制中一个内存页或内存页的一部分；</p>
 <p><strong>块（Blocks）</strong>：由Linux制定对内核或文件系统等数据处理的基本单位；通常通常为4096个字节，由1个或多个扇区组成；</p>
@@ -273,8 +302,21 @@
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">add_disk</span><span class="params">(struct gendisk *gd)</span></span>;</span><br></pre></td></tr></table></figure>
 
 <p>调用add_disk后，磁盘设备将被激活，并随时会调用它提供的操作方法，因此在驱动程序完全被初始化并且能够响应对磁盘的请求前，不要调用add_disk；</p>
-<h4 id="4-请求队列"><a href="#4-请求队列" class="headerlink" title="4. 请求队列"></a>4. 请求队列</h4><p>块设备的读写请求放置在请求队列中，在struct gendisk中，通过struct request_queue *queue指针指向请求队列；请求队列用数据结构struct request_queue表示；</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/blkdev.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">request_queue</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">queue_head</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">request</span>      *<span class="title">last_merge</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">elevator_queue</span>   *<span class="title">elevator</span>;</span></span><br><span class="line">	......</span><br><span class="line">    request_fn_proc     *request_fn;</span><br><span class="line">    make_request_fn     *make_request_fn;</span><br><span class="line">	......</span><br><span class="line">    <span class="keyword">void</span>            *queuedata;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">spinlock_t</span>      __queue_lock;</span><br><span class="line">    <span class="keyword">spinlock_t</span>      *queue_lock;</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">icq_list</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">queue_limits</span> <span class="title">limits</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">blk_flush_queue</span>  *<span class="title">fq</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">requeue_list</span>;</span></span><br><span class="line">    <span class="keyword">spinlock_t</span>      requeue_lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">delayed_work</span> <span class="title">requeue_work</span>;</span></span><br><span class="line">	......</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+<h4 id="4-请求队列"><a href="#4-请求队列" class="headerlink" title="4. 请求队列"></a>4. 请求队列</h4><p>块设备驱动程序的核心是请求函数，包含请求处理过程；</p>
+<p>有I/O调度类设备，使用blk_init_queue()函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// block/blk-core.c</span></span><br><span class="line"><span class="function">struct request_queue *<span class="title">blk_init_queue</span><span class="params">(request_fn_proc *rfn, <span class="keyword">spinlock_t</span> *lock)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>无I/O调度类设备，使用blk_alloc_queue()函数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// block/blk-core.c</span></span><br><span class="line"><span class="function">struct request_queue *<span class="title">blk_alloc_queue</span><span class="params">(<span class="keyword">gfp_t</span> gfp_mask)</span></span></span><br><span class="line"><span class="function"><span class="comment">// block/blk-settings.c</span></span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">blk_queue_make_request</span><span class="params">(struct request_queue *q, make_request_fn *mfn)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>从请求队列中提取请求：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// block/blk-core.c</span></span><br><span class="line"><span class="function">struct request *<span class="title">blk_fetch_request</span><span class="params">(struct request_queue *q)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>在卸载函数中使用的清除请求队列：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// block/blk-core.c</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">blk_cleanup_queue</span><span class="params">(struct request_queue *q)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>块设备的读写请求放置在请求队列中，在struct gendisk中，通过struct request_queue *queue指针指向请求队列；请求队列用数据结构struct request_queue表示；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/blkdev.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">request_queue</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">queue_head</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">request</span>      *<span class="title">last_merge</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">elevator_queue</span>   *<span class="title">elevator</span>;</span></span><br><span class="line">	......</span><br><span class="line">    request_fn_proc     *request_fn;</span><br><span class="line">    make_request_fn     *make_request_fn;</span><br><span class="line">	......</span><br><span class="line">    <span class="keyword">void</span>            *queuedata;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">icq_list</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">queue_limits</span> <span class="title">limits</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">blk_flush_queue</span>  *<span class="title">fq</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span>    <span class="title">requeue_list</span>;</span></span><br><span class="line">    <span class="keyword">spinlock_t</span>      requeue_lock;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">delayed_work</span> <span class="title">requeue_work</span>;</span></span><br><span class="line">	......</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
 <p>queue_head：表头，用于构建一个IO请求的双链表；链表每个元素代表向块设备读取数据的一个请求；内核会重排该链表，以得到更好的IO性能；</p>
 <p>与每个块设备驱动程序相关的I/O请求队列用request_queue结构体描述，而每个request_queue队列中的请求用request结构体描述；</p>
@@ -286,12 +328,39 @@
 <p>块数据通过bio_vec结构体数组在内部被表示成I/O向量；每个bio_vec数组元素由三元组组成（即，页、页偏移、长度），表示该块I/O的一个段；</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/bvec.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bio_vec</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">page</span> *<span class="title">bv_page</span>;</span>	<span class="comment">// 页指针</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span>    bv_len;	<span class="comment">// 传输的字节数</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span>    bv_offset;	<span class="comment">// 偏移位置</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
-<p>块设备驱动程序的核心是请求函数，包含请求处理过程；</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/blkdev.h</span></span><br><span class="line"><span class="function">struct request_queue *<span class="title">blk_init_queue</span><span class="params">(request_fn_proc *rfn, <span class="keyword">spinlock_t</span> *lock)</span></span></span><br></pre></td></tr></table></figure>
+<p>struct bvec_iter结构体用来记录当前bvec被处理的情况，用于遍历bio；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/bvec.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">bvec_iter</span> &#123;</span></span><br><span class="line">    <span class="keyword">sector_t</span>        bi_sector;  <span class="comment">/* device address in 512 byte sectors */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span>	bi_size;    <span class="comment">/* residual I/O count */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span>	bi_idx;     <span class="comment">/* current index into bvl_vec */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span>	bi_bvec_done;   <span class="comment">/* number of bytes completed in current bvec */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
 
-<p>或</p>
-<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/blkdev.h</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">blk_queue_make_request</span><span class="params">(struct request_queue *q, make_request_fn *mfn)</span></span></span><br></pre></td></tr></table></figure>
-
+<h4 id="5-数据结构间的关系"><a href="#5-数据结构间的关系" class="headerlink" title="5. 数据结构间的关系"></a>5. 数据结构间的关系</h4><table>
+<thead>
+<tr>
+<th>数据结构</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>request_queue</td>
+<td>表示针对一个gendisk对象的所有请求的队列，是对应gendisk结构的一个成员；</td>
+</tr>
+<tr>
+<td>request</td>
+<td>表示经过I/O调度之后的针对gendisk的一个请求，是request_queue结构队列的一个节点，多个request构成了一个request_queue队列；</td>
+</tr>
+<tr>
+<td>bio</td>
+<td>表示应用程序对一个gendisk原始的访问请求；一个bio由多个bio_vec组成，多个bio经过I/O调度和合并形成一个request；</td>
+</tr>
+<tr>
+<td>bio_vec</td>
+<td>描述的应用层准备读写一个gendisk时需要使用的内存页（page）的一部分；多个bio_vec形成一个bio；</td>
+</tr>
+<tr>
+<td>bvec_iter</td>
+<td>描述一个bio_vec结构中的一个sector信息；</td>
+</tr>
+</tbody></table>
+<p>块设备数据结构间的关系如下所示：</p>
+<p><img src="/2020/04/19/Linux块设备驱动/%E5%9D%97%E8%AE%BE%E5%A4%87%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84%E9%97%B4%E7%9A%84%E5%85%B3%E7%B3%BB.png" alt="块设备数据结构间的关系"></p>
 <h3 id="2-块设备驱动的初始化"><a href="#2-块设备驱动的初始化" class="headerlink" title="2. 块设备驱动的初始化"></a>2. 块设备驱动的初始化</h3><h4 id="2-1-块设备的注册过程"><a href="#2-1-块设备的注册过程" class="headerlink" title="2.1 块设备的注册过程"></a>2.1 块设备的注册过程</h4><p>注册一个块设备驱动，需要以下步骤：</p>
 <blockquote>
 <p>创建一个块设备 </p>
@@ -302,8 +371,8 @@
 </blockquote>
 <pre class="mermaid">graph TB
     A("注册设备(register_blkdev)(可选)")-->B("分配磁盘(alloc_disk)")
-    B-->C("不使用请求队列(blk_init_queue)")-->E
-    B-->D("使用请求队列(blk_alloc_queue)")-->E
+    B--有I/O调度-->C("不使用请求队列(blk_init_queue)")-->E
+    B--无I/O调度-->D("使用请求队列(blk_alloc_queue)")-->E
     E("设置磁盘属性(gendisk)")-->F("激活磁盘(add_disk)")</pre>
 
 
@@ -333,7 +402,9 @@
 <h5 id="2）注册请求队列"><a href="#2）注册请求队列" class="headerlink" title="2）注册请求队列"></a>2）注册请求队列</h5><p>注册请求队列的操作，将一个请求的操作方法与该设备相关联，通过blk_init_queue()函数实现；</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">request_queue</span> *<span class="title">sbull_blkdev_request</span> = <span class="title">NULL</span>;</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="title">DEFINE_SPINLOCK</span><span class="params">(sbull_blkdev_lock)</span></span>;</span><br><span class="line">sbull_blkdev_queue = blk_init_queue(sbull_blkdev_request, &amp;sbull_blkdev_lock);</span><br></pre></td></tr></table></figure>
 
-<p>blk_init_queue()函数返回请求队列request_queue；将blkdev_request()函数指针方式关联到设备；而第二个参数是自旋锁，用来保护request_queue队列不被同时访问；</p>
+<p>blk_init_queue()函数返回请求队列request_queue，将sbull_blkdev_request()函数指针方式关联到该设备；</p>
+<p>第一个参数是函数指针，用来指定请求队列的处理函数；</p>
+<p>第二个参数是自旋锁，用来保护request_queue队列不被同时访问；</p>
 <h5 id="3）设置读写块大小"><a href="#3）设置读写块大小" class="headerlink" title="3）设置读写块大小"></a>3）设置读写块大小</h5><p>硬件执行磁盘是以扇区为单位的，而文件系统是以块为单位处理数据；通常，扇区大小为512字节，块大小为4096字节；需要将硬件支持的扇区大小和驱动程序在一次请求中能接收的最大扇区数通知块层；</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/blkdev.h</span></span><br><span class="line"><span class="keyword">int</span> sbull_blkdev_sect_size = <span class="number">512</span>;</span><br><span class="line"><span class="keyword">int</span> sbull_blkdev_size = <span class="number">16</span> * <span class="number">1024</span> * <span class="number">1024</span>;</span><br><span class="line"><span class="comment">// blk_queue_hardsect_size(blkdev_queue, my_blkdev_sect_size);</span></span><br><span class="line">blk_queue_logical_block_size(sbull_blkdev_queue, sbull_blkdev_sect_size);</span><br></pre></td></tr></table></figure>
 
@@ -415,8 +486,8 @@
 <td></td>
 </tr>
 </tbody></table>
-<p>每个块设备，都有一个请求队列，当请求队列生成时，请求函数request()就与该队列绑定，这个操作有两种方法实现；</p>
-<h4 id="3-1-blk-init-queue"><a href="#3-1-blk-init-queue" class="headerlink" title="3.1 blk_init_queue"></a>3.1 blk_init_queue</h4><p>第一种是通过blk_init_queue()函数完成；</p>
+<p>每个块设备，都有一个请求队列，当请求队列生成时，请求函数request()就与该队列绑定，这个操作根据有无有I/O调度，分两种方法实现；</p>
+<h4 id="3-1-blk-init-queue"><a href="#3-1-blk-init-queue" class="headerlink" title="3.1 blk_init_queue"></a>3.1 blk_init_queue</h4><p>第一种是有I/O调度类设备，通过blk_init_queue()函数完成；</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// block/blk-core.c</span></span><br><span class="line"><span class="function">struct request_queue *<span class="title">blk_init_queue</span><span class="params">(request_fn_proc *rfn, <span class="keyword">spinlock_t</span> *lock)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> blk_init_queue_node(rfn, lock, NUMA_NO_NODE);</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(blk_init_queue);</span><br></pre></td></tr></table></figure>
 
 <p>blk_init_queue()函数的调用关系：</p>
@@ -429,7 +500,8 @@
 
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sbull_transfer</span><span class="params">(<span class="keyword">blkdev_t</span> *dev, <span class="keyword">unsigned</span> <span class="keyword">long</span> sector, <span class="keyword">unsigned</span> <span class="keyword">long</span> nsect, <span class="keyword">char</span> *<span class="built_in">buffer</span>, <span class="keyword">int</span> <span class="built_in">write</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> offset = sector * SBULL_BLKDEV_SECTOR_SIZE;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> nbytes = nsect * SBULL_BLKDEV_SECTOR_SIZE;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (offset + nbytes &gt; dev-&gt;<span class="built_in">size</span>) &#123;</span><br><span class="line">        printk(<span class="string">"%s, over range, size: 0x%lx, offset: 0x%lx, nbytes: 0x%lx"</span>, __func__, dev-&gt;<span class="built_in">size</span>, offset, nbytes);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">write</span>) &#123;</span><br><span class="line">        <span class="built_in">memcpy</span>(dev-&gt;data + offset, <span class="built_in">buffer</span>, nbytes);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">memcpy</span>(<span class="built_in">buffer</span>, dev-&gt;data + offset, nbytes);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h4 id="3-2-blk-alloc-queue"><a href="#3-2-blk-alloc-queue" class="headerlink" title="3.2 blk_alloc_queue"></a>3.2 blk_alloc_queue</h4><p>实现方法：</p>
+<h4 id="3-2-blk-alloc-queue"><a href="#3-2-blk-alloc-queue" class="headerlink" title="3.2 blk_alloc_queue"></a>3.2 blk_alloc_queue</h4><p>第二种是无I/O调度类设备，通过blk_alloc_queue()函数完成；</p>
+<p>实现方法：</p>
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">blkdev-&gt;<span class="built_in">queue</span> = blk_alloc_queue(GFP_KERNEL);</span><br><span class="line">blk_queue_make_request(blkdev-&gt;<span class="built_in">queue</span>, sbull_blkdev_make_request);</span><br></pre></td></tr></table></figure>
 
 <figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="title">sbull_blkdev_make_request</span><span class="params">(struct request_queue *q, struct bio *bio)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">blkdev_t</span> *dev = q-&gt;queuedata;</span><br><span class="line">    <span class="keyword">int</span> status = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    status = sbull_xfer_bio(dev, bio);</span><br><span class="line">    bio_endio(bio);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">sbull_xfer_bio</span><span class="params">(<span class="keyword">blkdev_t</span> *dev, struct bio *bio)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">bvec_iter</span> <span class="title">iter</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">bio_vec</span> <span class="title">bvec</span>;</span></span><br><span class="line">    <span class="keyword">sector_t</span> sector = bio-&gt;bi_iter.bi_sector;</span><br><span class="line">    <span class="keyword">char</span> *<span class="built_in">buffer</span> = <span class="literal">NULL</span>;</span><br><span class="line"></span><br><span class="line">    bio_for_each_segment(bvec, bio, iter) &#123;</span><br><span class="line">        <span class="built_in">buffer</span> = __bio_kmap_atomic(bio, iter);</span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">buffer</span>) &#123;</span><br><span class="line">            printk(<span class="string">"%s, buffer is null\n"</span>, __func__);</span><br><span class="line">            <span class="keyword">return</span> <span class="number">-1</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        sbull_transfer(dev, sector, bio_cur_bytes(bio)&gt;&gt;<span class="number">9</span>, <span class="built_in">buffer</span>, bio_data_dir(bio) == WRITE);</span><br><span class="line">        sector += bio_cur_bytes(bio)&gt;&gt;<span class="number">9</span>;</span><br><span class="line">        __bio_kunmap_atomic(bio);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -475,6 +547,7 @@
 <p>在PC上查看/mnt/ramblock.bin，sudo mount -o loop ramblock.bin /mnt</p>
 </blockquote>
 <h3 id="9-总结"><a href="#9-总结" class="headerlink" title="9. 总结"></a>9. 总结</h3><h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p><a href="https://www.cnblogs.com/big-devil/p/8590007.html">https://www.cnblogs.com/big-devil/p/8590007.html</a></p>
+<p><a href="https://www.cnblogs.com/xiaojiang1025/p/6500557.html">https://www.cnblogs.com/xiaojiang1025/p/6500557.html</a></p>
 <p><a href="#目录">回到目录</a></p>
 
     </div>
@@ -560,7 +633,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux块设备驱动"><span class="nav-text">Linux块设备驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目录"><span class="nav-text">目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#0-简介"><span class="nav-text">0. 简介</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-块设备结构"><span class="nav-text">1. 块设备结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-块设备驱动框架"><span class="nav-text">2. 块设备驱动框架</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-重要结构及操作"><span class="nav-text">1. 重要结构及操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-注册块设备驱动程序"><span class="nav-text">1. 注册块设备驱动程序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-块设备操作"><span class="nav-text">2. 块设备操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-注册磁盘"><span class="nav-text">3. 注册磁盘</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-请求队列"><span class="nav-text">4. 请求队列</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-块设备驱动的初始化"><span class="nav-text">2. 块设备驱动的初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-块设备的注册过程"><span class="nav-text">2.1 块设备的注册过程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1）注册块设备"><span class="nav-text">1）注册块设备</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2）注册请求队列"><span class="nav-text">2）注册请求队列</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3）设置读写块大小"><span class="nav-text">3）设置读写块大小</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4）创建磁盘"><span class="nav-text">4）创建磁盘</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5）块设备初始化实例"><span class="nav-text">5）块设备初始化实例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-块设备的卸载过程"><span class="nav-text">2.2 块设备的卸载过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-封装块设备信息"><span class="nav-text">2.3 封装块设备信息</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-队列请求"><span class="nav-text">3. 队列请求</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-blk-init-queue"><span class="nav-text">3.1 blk_init_queue</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-blk-alloc-queue"><span class="nav-text">3.2 blk_alloc_queue</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-两种队列请求的区别"><span class="nav-text">3.3 两种队列请求的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-4-I-O调度器"><span class="nav-text">3.4 I/O调度器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-测试验证"><span class="nav-text">8. 测试验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-总结"><span class="nav-text">9. 总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#Linux块设备驱动"><span class="nav-text">Linux块设备驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#目录"><span class="nav-text">目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#0-简介"><span class="nav-text">0. 简介</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-块设备结构"><span class="nav-text">1. 块设备结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-块设备驱动框架"><span class="nav-text">2. 块设备驱动框架</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-重要结构及操作"><span class="nav-text">1. 重要结构及操作</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-注册块设备驱动程序"><span class="nav-text">1. 注册块设备驱动程序</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-块设备操作"><span class="nav-text">2. 块设备操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-注册磁盘"><span class="nav-text">3. 注册磁盘</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-请求队列"><span class="nav-text">4. 请求队列</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-数据结构间的关系"><span class="nav-text">5. 数据结构间的关系</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-块设备驱动的初始化"><span class="nav-text">2. 块设备驱动的初始化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-块设备的注册过程"><span class="nav-text">2.1 块设备的注册过程</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1）注册块设备"><span class="nav-text">1）注册块设备</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2）注册请求队列"><span class="nav-text">2）注册请求队列</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#3）设置读写块大小"><span class="nav-text">3）设置读写块大小</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#4）创建磁盘"><span class="nav-text">4）创建磁盘</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#5）块设备初始化实例"><span class="nav-text">5）块设备初始化实例</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-块设备的卸载过程"><span class="nav-text">2.2 块设备的卸载过程</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-封装块设备信息"><span class="nav-text">2.3 封装块设备信息</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-队列请求"><span class="nav-text">3. 队列请求</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-blk-init-queue"><span class="nav-text">3.1 blk_init_queue</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-blk-alloc-queue"><span class="nav-text">3.2 blk_alloc_queue</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-两种队列请求的区别"><span class="nav-text">3.3 两种队列请求的区别</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-4-I-O调度器"><span class="nav-text">3.4 I/O调度器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#8-测试验证"><span class="nav-text">8. 测试验证</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#9-总结"><span class="nav-text">9. 总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-text">参考资料</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
