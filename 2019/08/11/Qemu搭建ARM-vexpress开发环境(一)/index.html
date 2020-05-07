@@ -23,16 +23,16 @@
   <meta name="description" content="标签： Qemu  嵌入式软件开发依赖于嵌入式硬件设备，比如：开发板、外部模块设备等，但是如果只是想学习、研究Linux内核，想学习Linux内核的架构，工作模式，需要修改一些代码，重新编译并烧写到开发板中进行验证，这样未必有些复杂，并且为此专门购买各种开发版，浪费资金，开会演示效果还需要携带一大串的板子和电线，不胜其烦。然而Qemu的使用可以避免频繁在开发板上烧写版本，如果进行的调试工作与外设无">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Qemu搭建ARM vexpress开发环境(一)">
-<meta property="og:url" content="http://mshrimp.github.io/2019/08/10/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/index.html">
+<meta property="og:url" content="http://mshrimp.github.io/2019/08/11/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/index.html">
 <meta property="og:site_name" content="Mshrimp blog">
 <meta property="og:description" content="标签： Qemu  嵌入式软件开发依赖于嵌入式硬件设备，比如：开发板、外部模块设备等，但是如果只是想学习、研究Linux内核，想学习Linux内核的架构，工作模式，需要修改一些代码，重新编译并烧写到开发板中进行验证，这样未必有些复杂，并且为此专门购买各种开发版，浪费资金，开会演示效果还需要携带一大串的板子和电线，不胜其烦。然而Qemu的使用可以避免频繁在开发板上烧写版本，如果进行的调试工作与外设无">
-<meta property="article:published_time" content="2019-08-10T13:37:50.000Z">
-<meta property="article:modified_time" content="2020-05-06T14:00:50.618Z">
+<meta property="article:published_time" content="2019-08-11T13:37:50.000Z">
+<meta property="article:modified_time" content="2020-05-07T13:53:23.523Z">
 <meta property="article:author" content="micro虾米">
 <meta property="article:tag" content="Qemu">
 <meta name="twitter:card" content="summary">
 
-<link rel="canonical" href="http://mshrimp.github.io/2019/08/10/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/">
+<link rel="canonical" href="http://mshrimp.github.io/2019/08/11/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/">
 
 
 <script id="page-configurations">
@@ -151,7 +151,7 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
-    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2019/08/10/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2019/08/11/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/avatar.gif">
@@ -174,14 +174,14 @@
               </span>
               <span class="post-meta-item-text">Posted on</span>
 
-              <time title="Created: 2019-08-10 21:37:50" itemprop="dateCreated datePublished" datetime="2019-08-10T21:37:50+08:00">2019-08-10</time>
+              <time title="Created: 2019-08-11 21:37:50" itemprop="dateCreated datePublished" datetime="2019-08-11T21:37:50+08:00">2019-08-11</time>
             </span>
               <span class="post-meta-item">
                 <span class="post-meta-item-icon">
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2020-05-06 22:00:50" itemprop="dateModified" datetime="2020-05-06T22:00:50+08:00">2020-05-06</time>
+                <time title="Modified: 2020-05-07 21:53:23" itemprop="dateModified" datetime="2020-05-07T21:53:23+08:00">2020-05-07</time>
               </span>
 
           
@@ -467,7 +467,7 @@
       <i class="fa fa-chevron-left"></i> Hexo博客异常问题
     </a></div>
       <div class="post-nav-item">
-    <a href="/2019/08/20/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/" rel="next" title="Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel">
+    <a href="/2019/08/18/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/" rel="next" title="Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel">
       Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
@@ -668,7 +668,7 @@ NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
       repo        : 'mshrimp_blog_talk',
       owner       : 'mshrimp',
       admin       : ['mshrimp'],
-      id          : 'a1342616c6727763fe0ca94850ea055a',
+      id          : 'd6eb0b1aa4ab1fb12c17da5fd4800ff4',
         language: '',
       distractionFreeMode: true
     });
