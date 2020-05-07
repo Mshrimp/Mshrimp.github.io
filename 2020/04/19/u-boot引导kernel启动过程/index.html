@@ -213,7 +213,8 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	bootm(bootm)--&gt;do_bootm(do_bootm)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    bootm(bootm)-->do_bootm(do_bootm)</pre>
 
 
 
@@ -233,7 +234,9 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">	do_bootm(do_bootm)--&gt;do_bootm_states(do_bootm_states)</span><br><span class="line">	do_bootm--&gt;do_bootm_subcommand(do_bootm_subcommand)--&gt;do_bootm_states</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph LR
+    do_bootm(do_bootm)-->do_bootm_states(do_bootm_states)
+    do_bootm-->do_bootm_subcommand(do_bootm_subcommand)-->do_bootm_states</pre>
 
 
 
@@ -262,7 +265,17 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">	do_bootm_states(do_bootm_states)--&gt;states(states)</span><br><span class="line">	states--BOOTM_STATE_START--&gt;bootm_start(bootm_start)</span><br><span class="line">	states--BOOTM_STATE_FINDOS--&gt;bootm_find_os(bootm_find_os)</span><br><span class="line">	states--BOOTM_STATE_FINDOTHER--&gt;bootm_find_other(bootm_find_other)</span><br><span class="line">	states--BOOTM_STATE_LOADOS--&gt;bootm_load_os(bootm_load_os)</span><br><span class="line">	states--BOOTM_STATE_RAMDISK--&gt;boot_ramdisk_high(boot_ramdisk_high)</span><br><span class="line">	states--BOOTM_STATE_FDT--&gt;boot_relocate_fdt(boot_relocate_fdt)</span><br><span class="line">	states--BOOTM_STATE_OS_PREP--&gt;boot_fn(boot_fn)</span><br><span class="line">	states--BOOTM_STATE_OS_FAKE_GO--&gt;boot_selected_os1(boot_selected_os)</span><br><span class="line">	states--BOOTM_STATE_OS_GO--&gt;boot_selected_os2(boot_selected_os)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph LR
+    do_bootm_states(do_bootm_states)-->states(states)
+    states--BOOTM_STATE_START-->bootm_start(bootm_start)
+    states--BOOTM_STATE_FINDOS-->bootm_find_os(bootm_find_os)
+    states--BOOTM_STATE_FINDOTHER-->bootm_find_other(bootm_find_other)
+    states--BOOTM_STATE_LOADOS-->bootm_load_os(bootm_load_os)
+    states--BOOTM_STATE_RAMDISK-->boot_ramdisk_high(boot_ramdisk_high)
+    states--BOOTM_STATE_FDT-->boot_relocate_fdt(boot_relocate_fdt)
+    states--BOOTM_STATE_OS_PREP-->boot_fn(boot_fn)
+    states--BOOTM_STATE_OS_FAKE_GO-->boot_selected_os1(boot_selected_os)
+    states--BOOTM_STATE_OS_GO-->boot_selected_os2(boot_selected_os)</pre>
 
 
 
@@ -283,7 +296,19 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">	bootm_find_os(bootm_find_os)--&gt;boot_get_kernel(boot_get_kernel)</span><br><span class="line">	boot_get_kernel--&gt;images_os1(images.os)</span><br><span class="line">	images_os1--&gt;image_start(image_start)</span><br><span class="line">	images_os1--&gt;image_len(image_len)</span><br><span class="line">	bootm_find_os--IMAGE_FORMAT_LEGACY--&gt;images_os(images.os)</span><br><span class="line">	images_os--&gt;type(type)</span><br><span class="line">	images_os--&gt;comp(comp)</span><br><span class="line">	images_os--&gt;os(os)</span><br><span class="line">	images_os--&gt;start(start)</span><br><span class="line">	images_os--&gt;endend(end)</span><br><span class="line">	images_os--&gt;load(load)</span><br><span class="line">	images_os--&gt;arch(arch)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph LR
+    bootm_find_os(bootm_find_os)-->boot_get_kernel(boot_get_kernel)
+    boot_get_kernel-->images_os1(images.os)
+    images_os1-->image_start(image_start)
+    images_os1-->image_len(image_len)
+    bootm_find_os--IMAGE_FORMAT_LEGACY-->images_os(images.os)
+    images_os-->type(type)
+    images_os-->comp(comp)
+    images_os-->os(os)
+    images_os-->start(start)
+    images_os-->endend(end)
+    images_os-->load(load)
+    images_os-->arch(arch)</pre>
 
 
 
@@ -306,7 +331,11 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	do_bootm_states(do_bootm_states)</span><br><span class="line">	--&gt;bootm_os_get_boot_func(bootm_os_get_boot_func)</span><br><span class="line">	--&gt;boot_os(&quot;boot_os[os]&quot;)</span><br><span class="line">	--&gt;do_bootm_linux(do_bootm_linux)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    do_bootm_states(do_bootm_states)
+    -->bootm_os_get_boot_func(bootm_os_get_boot_func)
+    -->boot_os("boot_os[os]")
+    -->do_bootm_linux(do_bootm_linux)</pre>
 
 
 
@@ -345,7 +374,9 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">    do_bootm_linux(do_bootm_linux)--&gt;boot_prep_linux(boot_prep_linux)</span><br><span class="line">	do_bootm_linux--&gt;boot_jump_linux(boot_jump_linux)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    do_bootm_linux(do_bootm_linux)-->boot_prep_linux(boot_prep_linux)
+    do_bootm_linux-->boot_jump_linux(boot_jump_linux)</pre>
 
 
 

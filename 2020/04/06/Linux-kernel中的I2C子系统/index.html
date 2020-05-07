@@ -353,16 +353,26 @@
 
 
 <p>通过i2c_add_driver()函数，向I2C总线注册一个空的I2C设备驱动程序；可以不用关心；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	i2c_init1(i2c_init)--&gt;bus_register1(bus_register)</span><br><span class="line">	subgraph i2c_init</span><br><span class="line">		bus_register1(bus_register)--&gt;</span><br><span class="line">		class_compat_register(class_compat_register)--&gt;</span><br><span class="line">		i2c_add_driver(i2c_add_driver)</span><br><span class="line">	end</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    i2c_init1(i2c_init)-->bus_register1(bus_register)
+    subgraph i2c_init
+        bus_register1(bus_register)-->
+        class_compat_register(class_compat_register)-->
+        i2c_add_driver(i2c_add_driver)
+    end</pre>
 
 
 
 <p>注册过程中发生异常错误时，需要使用对应的函数进行反向操作：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	class_compat_register(class_compat_register)</span><br><span class="line">	class_compat_unregister(class_compat_unregister)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    class_compat_register(class_compat_register)
+    class_compat_unregister(class_compat_unregister)</pre>
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	bus_register(bus_register) </span><br><span class="line">	bus_unregister(bus_unregister)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    bus_register(bus_register) 
+    bus_unregister(bus_unregister)</pre>
 
 
 
@@ -370,7 +380,9 @@
 
 
 <p>i2c_del_driver()函数，用来从I2C总线注销设备驱动程序；和i2c_add_driver()函数功能相反；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	i2c_add_driver(i2c_add_driver) </span><br><span class="line">	i2c_del_driver(i2c_del_driver)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    i2c_add_driver(i2c_add_driver) 
+    i2c_del_driver(i2c_del_driver)</pre>
 
 
 
@@ -384,7 +396,9 @@
 <h5 id="3-2-1-添加适配器驱动"><a href="#3-2-1-添加适配器驱动" class="headerlink" title="3.2.1 添加适配器驱动"></a>3.2.1 添加适配器驱动</h5><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// drivers/i2c/i2c-core.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">i2c_add_adapter</span><span class="params">(struct i2c_adapter *adapter)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">dev</span> = &amp;<span class="title">adapter</span>-&gt;<span class="title">dev</span>;</span></span><br><span class="line">    <span class="keyword">int</span> id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (dev-&gt;of_node) &#123;</span><br><span class="line">        id = of_alias_get_id(dev-&gt;of_node, <span class="string">"i2c"</span>);</span><br><span class="line">        <span class="keyword">if</span> (id &gt;= <span class="number">0</span>) &#123; </span><br><span class="line">            adapter-&gt;nr = id;</span><br><span class="line">            <span class="keyword">return</span> __i2c_add_numbered_adapter(adapter);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;    </span><br><span class="line"></span><br><span class="line">    mutex_lock(&amp;core_lock);</span><br><span class="line">    id = idr_alloc(&amp;i2c_adapter_idr, adapter,</span><br><span class="line">               __i2c_first_dynamic_bus_num, <span class="number">0</span>, GFP_KERNEL);</span><br><span class="line">    mutex_unlock(&amp;core_lock);</span><br><span class="line">    <span class="keyword">if</span> (WARN(id &lt; <span class="number">0</span>, <span class="string">"couldn't get idr"</span>))</span><br><span class="line">        <span class="keyword">return</span> id;</span><br><span class="line"></span><br><span class="line">    adapter-&gt;nr = id;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> i2c_register_adapter(adapter);</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(i2c_add_adapter);</span><br></pre></td></tr></table></figure>
 
 <p>通过i2c_register_adapter()函数，向内核注册一个适配器设备adapter；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	i2c_add_adapter(i2c_add_adapter)</span><br><span class="line">	--&gt;i2c_register_adapter(i2c_register_adapter)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    i2c_add_adapter(i2c_add_adapter)
+    -->i2c_register_adapter(i2c_register_adapter)</pre>
 
 
 
@@ -426,7 +440,11 @@
 
 <p>driver_find()函数，在I2C总线中，找到name对应的I2C device_driver；</p>
 <p>bus_add_driver()函数，将驱动添加到总线上；</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	i2c_add_driver(i2c_add_driver)--&gt;</span><br><span class="line">	i2c_register_driver(i2c_register_driver)--&gt;</span><br><span class="line">	driver_register(driver_register)--&gt;</span><br><span class="line">	bus_add_driver(bus_add_driver)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    i2c_add_driver(i2c_add_driver)-->
+    i2c_register_driver(i2c_register_driver)-->
+    driver_register(driver_register)-->
+    bus_add_driver(bus_add_driver)</pre>
 
 
 
@@ -450,7 +468,11 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	i2c_new_device(i2c_new_device)--&gt;</span><br><span class="line">	device_register(device_register)--&gt;</span><br><span class="line">	device_initialize(device_initialize)</span><br><span class="line">	device_register--&gt;device_add(device_add)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    i2c_new_device(i2c_new_device)-->
+    device_register(device_register)-->
+    device_initialize(device_initialize)
+    device_register-->device_add(device_add)</pre>
 
 
 
@@ -471,7 +493,9 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	i2c_new_device(i2c_new_device)</span><br><span class="line">	i2c_unregister_device(i2c_unregister_device)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    i2c_new_device(i2c_new_device)
+    i2c_unregister_device(i2c_unregister_device)</pre>
 
 
 
@@ -571,7 +595,13 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	eeprom_init(eeprom_init)--&gt;</span><br><span class="line">	i2c_add_driver(i2c_add_driver)--&gt;eeprom_driver(eeprom_driver)</span><br><span class="line">	eeprom_driver--&gt;driver(driver)</span><br><span class="line">	eeprom_driver--&gt;probe(probe)</span><br><span class="line">	eeprom_driver--&gt;remove(remove)</span><br><span class="line">	eeprom_driver--&gt;id_table(id_table)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    eeprom_init(eeprom_init)-->
+    i2c_add_driver(i2c_add_driver)-->eeprom_driver(eeprom_driver)
+    eeprom_driver-->driver(driver)
+    eeprom_driver-->probe(probe)
+    eeprom_driver-->remove(remove)
+    eeprom_driver-->id_table(id_table)</pre>
 
 
 
@@ -673,7 +703,15 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	bus_add_driver(bus_add_driver)--&gt;</span><br><span class="line">	driver_attach(driver_attach)--bus_for_each_dev--&gt;</span><br><span class="line">	__driver_attach(__driver_attach)--&gt;</span><br><span class="line">	driver_match_device(driver_match_device)--&gt;</span><br><span class="line">	bus_match(drv-&gt;bus-&gt;match)</span><br><span class="line">	__driver_attach--&gt;driver_probe_device(driver_probe_device)--&gt;</span><br><span class="line">	really_probe(really_probe)--&gt;</span><br><span class="line">	bus_probe(dev-&gt;bus-&gt;probe)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    bus_add_driver(bus_add_driver)-->
+    driver_attach(driver_attach)--bus_for_each_dev-->
+    __driver_attach(__driver_attach)-->
+    driver_match_device(driver_match_device)-->
+    bus_match(drv->bus->match)
+    __driver_attach-->driver_probe_device(driver_probe_device)-->
+    really_probe(really_probe)-->
+    bus_probe(dev->bus->probe)</pre>
 
 
 
@@ -691,7 +729,11 @@
 
 
 
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">graph LR</span><br><span class="line">	i2c_device_match(i2c_device_match)</span><br><span class="line">	i2c_device_match--&gt;of_driver_match_device(of_driver_match_device)</span><br><span class="line">	i2c_device_match--&gt;acpi_driver_match_device(acpi_driver_match_device)</span><br><span class="line">	i2c_device_match--id_table--&gt;i2c_match_id(i2c_match_id)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph LR
+    i2c_device_match(i2c_device_match)
+    i2c_device_match-->of_driver_match_device(of_driver_match_device)
+    i2c_device_match-->acpi_driver_match_device(acpi_driver_match_device)
+    i2c_device_match--id_table-->i2c_match_id(i2c_match_id)</pre>
 
 
 
@@ -699,7 +741,17 @@
 <p>从i2c_device_match()函数的定义可以得出，i2c的match函数，优先选择设备树匹配（of_driver_match_device），如果设备树匹配成功，函数就返回；否则，会进行下一个。。。。。。，最后，如果定义了id_table，就会通过i2c_match_id()函数进行id_table匹配；如果三者全都匹配不成功，才算是匹配失败；</p>
 <p>从i2c_device_match函数来看，配置了设备树，就不需要id_table的定义了；但是实际上还是需要id_table的定义的，因为在后边的probe函数中需要判断id_table是否定义，如果定义了才能执行driver-&gt;probe函数；</p>
 <p>设备树的匹配过程如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">graph TB</span><br><span class="line">	of_driver_match_device(of_driver_match_device)--&gt;</span><br><span class="line">	of_match_device(of_match_device)--&gt;</span><br><span class="line">	of_match_node(of_match_node)--&gt;</span><br><span class="line">	__of_match_node(__of_match_node)--&gt;</span><br><span class="line">	__of_device_is_compatible(__of_device_is_compatible)</span><br><span class="line">	__of_device_is_compatible--compatible--&gt;of_compat_cmp(of_compat_cmp)</span><br><span class="line">	__of_device_is_compatible--type--&gt;of_compat_cmp</span><br><span class="line">	__of_device_is_compatible--name--&gt;of_compat_cmp</span><br><span class="line">	of_compat_cmp--&gt;</span><br><span class="line">	strcasecmp(strcasecmp)</span><br></pre></td></tr></table></figure>
+<pre class="mermaid">graph TB
+    of_driver_match_device(of_driver_match_device)-->
+    of_match_device(of_match_device)-->
+    of_match_node(of_match_node)-->
+    __of_match_node(__of_match_node)-->
+    __of_device_is_compatible(__of_device_is_compatible)
+    __of_device_is_compatible--compatible-->of_compat_cmp(of_compat_cmp)
+    __of_device_is_compatible--type-->of_compat_cmp
+    __of_device_is_compatible--name-->of_compat_cmp
+    of_compat_cmp-->
+    strcasecmp(strcasecmp)</pre>
 
 
 
