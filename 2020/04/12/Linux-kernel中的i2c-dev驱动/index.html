@@ -26,13 +26,13 @@
 <meta property="og:url" content="http://mshrimp.github.io/2020/04/12/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/index.html">
 <meta property="og:site_name" content="Mshrimp blog">
 <meta property="og:description" content="I2C设备驱动，可以直接使用内核中i2c-dev.c文件提供的read&#x2F;write或ioctl操作接口，在应用层通过read&#x2F;write和ioctl系统调用实现对I2C设备的读写；也就是常说的I2C用户态驱动；用户态I2C驱动，需要在用户态封装i2c_msg结构体消息，通过内核态i2c_transfer()函数和I2C从设备通信；">
-<meta property="og:image" content="http://mshrimp.github.io/2020/04/12/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux%E7%9A%84I2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A1%86%E6%9E%B6.png">
+<meta property="og:image" content="http://mshrimp.github.io/2020/04/12/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux%E7%9A%84I2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A1%86%E6%9E%B6.png">
 <meta property="article:published_time" content="2020-04-12T13:43:49.000Z">
 <meta property="article:modified_time" content="2020-05-06T14:00:50.614Z">
 <meta property="article:author" content="micro虾米">
 <meta property="article:tag" content="i2c">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:image" content="http://mshrimp.github.io/2020/04/12/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux%E7%9A%84I2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A1%86%E6%9E%B6.png">
+<meta name="twitter:image" content="http://mshrimp.github.io/2020/04/12/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux%E7%9A%84I2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A1%86%E6%9E%B6.png">
 
 <link rel="canonical" href="http://mshrimp.github.io/2020/04/12/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/">
 
@@ -205,7 +205,7 @@
 <h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p>[TOC]</p>
 <h3 id="0-简介"><a href="#0-简介" class="headerlink" title="0. 简介"></a>0. 简介</h3><p>I2C设备驱动，可以直接使用内核中i2c-dev.c文件提供的read/write或ioctl操作接口，在应用层通过read/write和ioctl系统调用实现对I2C设备的读写；也就是常说的I2C用户态驱动；</p>
 <p>用户态驱动，和一般的I2C设备驱动实现原理差不多，都是封装i2c_msg结构体消息，通过i2c_transfer()函数和I2C从设备通信；区别在于，一般的I2C设备驱动，在内核态封装了该功能；而用户态驱动，需要在用户态封装；可以根据实际需要选择合适的I2C驱动实现方法；</p>
-<p><img src="Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux%E7%9A%84I2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A1%86%E6%9E%B6.png" alt="Linux的I2C子系统框架"></p>
+<p><img src="/2020/04/12/Linux-kernel%E4%B8%AD%E7%9A%84i2c-dev%E9%A9%B1%E5%8A%A8/Linux%E7%9A%84I2C%E5%AD%90%E7%B3%BB%E7%BB%9F%E6%A1%86%E6%9E%B6.png" alt="Linux的I2C子系统框架"></p>
 <p>在i2c-dev.c文件中，实现了I2C适配器设备文件的功能，每个I2C适配器被分配一个设备节点；通过适配器访问设备文件节点，主设备号为89，次设备号为0～255；应用程序通过生成的设备节点/dev/i2c-X，使用open、close、read、write、ioctl系统调用进行访问；</p>
 <p>i2c-dev.c并不是针对特定的设备而设计，只是提供通用的open、close、read、write、ioctl等系统调用接口，应用程序可以通过这些系统调用接口访问挂接在适配器上的I2C设备；</p>
 <p>内核代码实现在drivers/i2c/i2c-dev.c；</p>
