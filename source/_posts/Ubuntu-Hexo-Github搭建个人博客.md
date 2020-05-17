@@ -302,6 +302,14 @@ themes: yilia
 
 
 
+其他好用的主题：
+
+```shell
+git clone https://github.com/theme-next/hexo-theme-next themes/next
+```
+
+
+
 ### 6. 博客迁移
 
 #### 6.1 常规迁移

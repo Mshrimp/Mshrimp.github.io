@@ -1,0 +1,719 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="标签： Qemu  在上文《Qemu搭建ARM vexpress开发环境(一)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel">
+<meta property="og:url" content="http://mshrimp.github.io/2019/08/18/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/index.html">
+<meta property="og:site_name" content="Mshrimp blog">
+<meta property="og:description" content="标签： Qemu  在上文《Qemu搭建ARM vexpress开发环境(一)》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。">
+<meta property="article:published_time" content="2019-08-18T13:00:00.000Z">
+<meta property="article:modified_time" content="2020-05-07T13:53:36.751Z">
+<meta property="article:author" content="micro虾米">
+<meta property="article:tag" content="Qemu">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://mshrimp.github.io/2019/08/18/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel | Mshrimp blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Mshrimp blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">micro虾米</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2019/08/18/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%BA%8C)----u-boot%E5%90%AF%E5%8A%A8kernel/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="micro虾米">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mshrimp blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-08-18 21:00:00" itemprop="dateCreated datePublished" datetime="2019-08-18T21:00:00+08:00">2019-08-18</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-05-07 21:53:36" itemprop="dateModified" datetime="2020-05-07T21:53:36+08:00">2020-05-07</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>标签： Qemu</p>
+<hr>
+<p>在上文《<a href="https://www.jianshu.com/p/94833e841742">Qemu搭建ARM vexpress开发环境(一)</a>》中已经简单讲述了通过Qemu直接启动Linux内核，并挂载SD卡根文件系统的方法，这种方法是直接启动内核，与实际应用中ARM板的启动方式：u-boot、kernel、rootfs有些不同。现在就来讲述下用Qemu搭建通过u-boot启动Linux内核并挂载根文件系统的方法。</p>
+<a id="more"></a>
+
+
+
+<h2 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h2><p>[TOC]</p>
+<h2 id="1-简述"><a href="#1-简述" class="headerlink" title="1. 简述"></a>1. 简述</h2><p>嵌入式系统要正常运行，应该包含：u-boot、kernel、rootfs、appfs。这几部分在ARM开发板Flash上的位置关系应该类似于下图所示：</p>
+<table>
+<thead>
+<tr>
+<th align="center">BootLoader</th>
+<th align="center">BootParameters</th>
+<th align="center">Kernel</th>
+<th align="center">Rootfs</th>
+<th align="center">Appfs</th>
+</tr>
+</thead>
+</table>
+<p>嵌入式系统的启动流程如下：</p>
+<pre class="mermaid">graph TB
+    BootLoader(BootLoader)--BootParameters-->Kernel(Kernel)-->Rootfs(Rootfs)-->Appfs(Appfs)</pre>
+
+<p>rootfs可以添加到开发板的Flash，也可以不用添加到开发板，而是部署到PC机上，开发板在运行完kernel，要挂载rootfs时，可以通过NFS网络挂载到设定好的PC机上的rootfs根文件系统上（下一篇文章《Qemu搭建ARM vexpress开发环境(三)—-NFS网络根文件系统》会详细讲解NFS网络挂载根文件系统的具体操作方法）。</p>
+<h2 id="2-准备u-boot"><a href="#2-准备u-boot" class="headerlink" title="2. 准备u-boot"></a>2. 准备u-boot</h2><p>用来使用u-boot启动加载Linux内核</p>
+<h3 id="2-1-下载u-boot"><a href="#2-1-下载u-boot" class="headerlink" title="2.1 下载u-boot"></a>2.1 下载u-boot</h3><p>从 <a href="http://ftp.denx.de/pub/u-boot">http://ftp.denx.de/pub/u-boot</a> 网站选择一个u-boot版本源码下载，本文中使用的是u-boot-2020.01版本。</p>
+<h3 id="2-2-解压u-boot"><a href="#2-2-解压u-boot" class="headerlink" title="2.2 解压u-boot"></a>2.2 解压u-boot</h3><p>解压u-boot:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> tar -xvf u-boot-2020.01.tar.bz2</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-3-编译u-boot"><a href="#2-3-编译u-boot" class="headerlink" title="2.3 编译u-boot"></a>2.3 编译u-boot</h3><h4 id="2-3-1-配置时碰到的问题"><a href="#2-3-1-配置时碰到的问题" class="headerlink" title="2.3.1 配置时碰到的问题"></a>2.3.1 配置时碰到的问题</h4><h5 id="配置命令"><a href="#配置命令" class="headerlink" title="配置命令"></a>配置命令</h5><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- vexpress_ca9x4_defconfig</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果没有修改Makefile和config.mk文件，需要在编译时加上ARCH和CROSS_COMPILE的配置；在编译u-boot时可能会出现一些问题，只要逐个问题解决就可以编译完成了；</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/bin/sh: 1: bison: not found</span><br><span class="line">scripts/Makefile.lib:226: recipe for target 'scripts/kconfig/zconf.tab.c' failed</span><br><span class="line">make[1]: *** [scripts/kconfig/zconf.tab.c] Error 127</span><br><span class="line">Makefile:539: recipe for target 'vexpress_ca9x4_defconfig' failed</span><br><span class="line">make: *** [vexpress_ca9x4_defconfig] Error 2</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt-get install bison</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">/bin/sh: 1: flex: not found</span><br><span class="line">scripts/Makefile.lib:218: recipe for target 'scripts/kconfig/zconf.lex.c' failed</span><br><span class="line">make[1]: *** [scripts/kconfig/zconf.lex.c] Error 127</span><br><span class="line">Makefile:539: recipe for target 'vexpress_ca9x4_defconfig' failed</span><br><span class="line">make: *** [vexpress_ca9x4_defconfig] Error 2</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt-get install flex</span></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make vexpress_ca9x4_defconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object -j4</span></span><br><span class="line">scripts/kconfig/conf  --syncconfig Kconfig</span><br><span class="line">  CHK     include/config.h</span><br><span class="line">  GEN     include/autoconf.mk.dep</span><br><span class="line">  CFG     u-boot.cfg</span><br><span class="line">  GEN     include/autoconf.mk</span><br><span class="line">*** Your GCC is older than 6.0 and is not supported</span><br><span class="line">arch/arm/config.mk:66: recipe for target 'checkgcc6' failed</span><br><span class="line">make: *** [checkgcc6] Error 1</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> vim arch/arm/config.mk</span></span><br><span class="line">ifeq ($(CONFIG_$(SPL_)SYS_THUMB_BUILD),y)</span><br><span class="line"><span class="meta">#</span><span class="bash">archprepare: checkthumb checkgcc6</span></span><br><span class="line">archprepare: checkthumb</span><br><span class="line">checkthumb:</span><br><span class="line">        @if test "$(call cc-name)" = "gcc" -a \</span><br><span class="line">                        "$(call cc-version)" -lt "0404"; then \</span><br><span class="line">                echo -n '*** Your GCC does not produce working '; \</span><br><span class="line">                echo 'binaries in THUMB mode.'; \</span><br><span class="line">                echo '*** Your board is configured for THUMB mode.'; \</span><br><span class="line">                false; \</span><br><span class="line">        fi</span><br><span class="line"><span class="meta">#</span><span class="bash"><span class="keyword">else</span></span></span><br><span class="line"><span class="meta">#</span><span class="bash">archprepare: checkgcc6</span></span><br><span class="line">endif</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash">checkgcc6:</span></span><br><span class="line"><span class="meta">#</span><span class="bash">        @<span class="keyword">if</span> <span class="built_in">test</span> <span class="string">"<span class="variable">$(call cc-name)</span>"</span> = <span class="string">"gcc"</span> -a \</span></span><br><span class="line"><span class="meta">#</span><span class="bash">                        <span class="string">"<span class="variable">$(call cc-version)</span>"</span> -lt <span class="string">"0600"</span>; <span class="keyword">then</span> \</span></span><br><span class="line"><span class="meta">#</span><span class="bash">                <span class="built_in">echo</span> <span class="string">'*** Your GCC is older than 6.0 and is not supported'</span>; \</span></span><br><span class="line"><span class="meta">#</span><span class="bash">                <span class="literal">false</span>; \</span></span><br><span class="line"><span class="meta">#</span><span class="bash">        <span class="keyword">fi</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2-3-2-生成配置文件"><a href="#2-3-2-生成配置文件" class="headerlink" title="2.3.2 生成配置文件"></a>2.3.2 生成配置文件</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make vexpress_ca9x4_defconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object</span></span><br><span class="line">make[1]: Entering directory '/home/xiami/tool/u-boot-2020.01/object'</span><br><span class="line">  HOSTCC  scripts/basic/fixdep</span><br><span class="line">  GEN     ./Makefile</span><br><span class="line">  HOSTCC  scripts/kconfig/conf.o</span><br><span class="line">  YACC    scripts/kconfig/zconf.tab.c</span><br><span class="line">  LEX     scripts/kconfig/zconf.lex.c</span><br><span class="line">  HOSTCC  scripts/kconfig/zconf.tab.o</span><br><span class="line">  HOSTLD  scripts/kconfig/conf</span><br><span class="line"><span class="meta">#</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> configuration written to .config</span></span><br><span class="line"><span class="meta">#</span></span><br><span class="line">make[1]: Leaving directory '/home/xiami/tool/u-boot-2020.01/object'</span><br></pre></td></tr></table></figure>
+
+
+
+<p>./configs/vexpress_ca9x4_defconfig</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ls object/.config -l</span></span><br><span class="line">-rw-r--r-- 1 xiami xiami 22698 Mar 17 23:20 object/.config</span><br></pre></td></tr></table></figure>
+
+
+
+<p>如果需要修改配置文件中的一些选项，可以通过以下界面操作选择：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make menuconfig ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- O=./object</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2-3-3-编译"><a href="#2-3-3-编译" class="headerlink" title="2.3.3 编译"></a>2.3.3 编译</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- -j4 O=./object</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2-3-4-简化编译过程"><a href="#2-3-4-简化编译过程" class="headerlink" title="2.3.4 简化编译过程"></a>2.3.4 简化编译过程</h4><p>这种方式编译比较直接，但是在调试时，需要多次编译u-boot，参数太多会带来不便，于是可以通过以下方法，修改Makefile和config.mk文件中的ARCH和CROSS_COMPILE选项，在编译的时候就可以省去了在编译命令中添加编译配置的设置。</p>
+<p>修改Makefile</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> vim Makefile</span></span><br><span class="line">CROSS_COMPILE = arm-linux-gnueabi-</span><br></pre></td></tr></table></figure>
+<p>修改config.mk</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> vim config.mk</span></span><br><span class="line">ARCH = arm</span><br></pre></td></tr></table></figure>
+
+
+<p>编译u-boot:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make vexpress_ca9x4_defconfig</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> make -j4</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-4-启动u-boot"><a href="#2-4-启动u-boot" class="headerlink" title="2.4 启动u-boot"></a>2.4 启动u-boot</h3><p>通过Qemu启动命令启动u-boot：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> qemu-system-arm -M vexpress-a9 -m 512M -nographic -kernel ./u-boot</span></span><br><span class="line"></span><br><span class="line">U-Boot 2020.01 (Mar 17 2020 - 23:21:36 +0800)</span><br><span class="line"></span><br><span class="line">DRAM:  512 MiB</span><br><span class="line">WARNING: Caches not enabled</span><br><span class="line">Flash: 128 MiB</span><br><span class="line">MMC:   MMC: 0</span><br><span class="line">*** Warning - bad CRC, using default environment</span><br><span class="line"></span><br><span class="line">In:    serial</span><br><span class="line">Out:   serial</span><br><span class="line">Err:   serial</span><br><span class="line">Net:   smc911x-0</span><br><span class="line">Hit any key to stop autoboot:  0 </span><br><span class="line">=&gt;</span><br></pre></td></tr></table></figure>
+
+<p>查看u-boot的版本：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">=&gt; version</span><br><span class="line">U-Boot 2020.01 (Mar 20 2020 - 23:01:23 +0800)</span><br><span class="line"></span><br><span class="line">arm-linux-gnueabi-gcc (Ubuntu/Linaro 7.5.0-3ubuntu1~18.04) 7.5.0</span><br><span class="line">GNU ld (GNU Binutils for Ubuntu) 2.30</span><br></pre></td></tr></table></figure>
+
+
+
+<p>打印u-boot的环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">=&gt; print</span><br><span class="line">arch=arm</span><br><span class="line">baudrate=38400</span><br><span class="line">board=vexpress</span><br><span class="line">board_name=vexpress</span><br><span class="line">......</span><br><span class="line">scriptaddr=0x88000000</span><br><span class="line">stderr=serial</span><br><span class="line">stdin=serial</span><br><span class="line">stdout=serial</span><br><span class="line">vendor=armltd</span><br><span class="line"></span><br><span class="line">Environment size: 2656/262140 bytes</span><br></pre></td></tr></table></figure>
+
+<p>至此，u-boot启动成功，下一步开始配置u-boot的内核启动参数，来启动Linux内核，并挂在根文件系统。</p>
+<h2 id="3-准备内核"><a href="#3-准备内核" class="headerlink" title="3. 准备内核"></a>3. 准备内核</h2><h3 id="3-1-指定加载地址"><a href="#3-1-指定加载地址" class="headerlink" title="3.1 指定加载地址"></a>3.1 指定加载地址</h3><p>使用u-boot引导内核启动，需要内核的uImage镜像：</p>
+<blockquote>
+<p>需要将内核编译为uImage格式，需要指定uImage在内存中的加载地址，编译内核时指定：make LOADADDR=? uImage -j4</p>
+</blockquote>
+<p>如果不指定LOADADDR参数，编译时会报错，如下：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- uImage -j4 O=./object</span></span><br><span class="line">make[1]: Entering directory '/home/xiami/tool/linux-4.14.172/object'</span><br><span class="line">......</span><br><span class="line">  Kernel: arch/arm/boot/Image is ready</span><br><span class="line">  Kernel: arch/arm/boot/zImage is ready</span><br><span class="line">multiple (or no) load addresses: </span><br><span class="line">This is incompatible with uImages</span><br><span class="line">Specify LOADADDR on the commandline to build an uImage</span><br><span class="line">../arch/arm/boot/Makefile:79: recipe for target 'arch/arm/boot/uImage' failed</span><br><span class="line">make[2]: *** [arch/arm/boot/uImage] Error 1</span><br><span class="line">arch/arm/Makefile:338: recipe for target 'uImage' failed</span><br><span class="line">make[1]: *** [uImage] Error 2</span><br><span class="line">make[1]: Leaving directory '/home/xiami/tool/linux-4.14.172/object'</span><br><span class="line">Makefile:146: recipe for target 'sub-make' failed</span><br><span class="line">make: *** [sub-make] Error 2</span><br></pre></td></tr></table></figure>
+
+
+
+<p>在内核目录直接编译：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make LOADADDR=0x60003000 uImage -j4</span></span><br></pre></td></tr></table></figure>
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4 O=./object</span></span><br><span class="line">make[1]: Entering directory '/home/xiami/tool/linux-4.14.172/object'</span><br><span class="line">......</span><br><span class="line">  Kernel: arch/arm/boot/Image is ready</span><br><span class="line">  Kernel: arch/arm/boot/zImage is ready</span><br><span class="line">  UIMAGE  arch/arm/boot/uImage</span><br><span class="line">"mkimage" command not found - U-Boot images will not be built</span><br><span class="line">../arch/arm/boot/Makefile:79: recipe for target 'arch/arm/boot/uImage' failed</span><br><span class="line">make[2]: *** [arch/arm/boot/uImage] Error 1</span><br><span class="line">arch/arm/Makefile:338: recipe for target 'uImage' failed</span><br><span class="line">make[1]: *** [uImage] Error 2</span><br><span class="line">make[1]: Leaving directory '/home/xiami/tool/linux-4.14.172/object'</span><br><span class="line">Makefile:146: recipe for target 'sub-make' failed</span><br><span class="line">make: *** [sub-make] Error 2</span><br></pre></td></tr></table></figure>
+
+
+
+<p>第一次编译会报错，提示没有找到mkimage工具，需要手动安装u-boot-tools即可；</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt-get install u-boot-tools</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="3-2-编译uImage"><a href="#3-2-编译uImage" class="headerlink" title="3.2 编译uImage"></a>3.2 编译uImage</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make ARCH=arm CROSS_COMPILE=arm-linux-gnueabi- LOADADDR=0x60003000 uImage -j4 O=./object</span></span><br><span class="line">make[1]: Entering directory '/home/xiami/tool/linux-4.14.172/object'</span><br><span class="line">......</span><br><span class="line">Load Address: 60003000</span><br><span class="line">Entry Point:  60003000</span><br><span class="line">  Kernel: arch/arm/boot/uImage is ready</span><br><span class="line">make[1]: Leaving directory '/home/xiami/tool/linux-4.14.172/object'</span><br></pre></td></tr></table></figure>
+
+
+
+<p>或者在Makefile中添加加载地址配置：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> vim arch/arm/boot/Makefile</span></span><br><span class="line">LOADADDR ?= 0x60003000</span><br></pre></td></tr></table></figure>
+<p>再编译生成uImage文件:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> make uImage -j4</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="4-Qemu网络功能设置"><a href="#4-Qemu网络功能设置" class="headerlink" title="4. Qemu网络功能设置"></a>4. Qemu网络功能设置</h2><p>Qemu虚拟机在u-boot启动时，需要将uImage加载到内存，而uImage从哪里来？可以通过TFTP服务器下载uImage到内存指定地址。而在这之前需要通过桥接方式将网络链接到Ubuntu系统。</p>
+<h3 id="4-1-配置Qemu与主机的网络连接"><a href="#4-1-配置Qemu与主机的网络连接" class="headerlink" title="4.1 配置Qemu与主机的网络连接"></a>4.1 配置Qemu与主机的网络连接</h3><p>采用桥接网络连接Host主机通信<br>主机内核需要支持tun/tap模块</p>
+<h3 id="4-2-配置Ubuntu主机"><a href="#4-2-配置Ubuntu主机" class="headerlink" title="4.2 配置Ubuntu主机"></a>4.2 配置Ubuntu主机</h3><h4 id="1-安装工具"><a href="#1-安装工具" class="headerlink" title="1) 安装工具"></a>1) 安装工具</h4><p>安装桥接网络依赖的两个工具：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt install uml-utilities bridge-utils</span></span><br></pre></td></tr></table></figure>
+
+<p>创建tun设备文件：/dev/net/tun（一般会自动创建）</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ls /dev/net/tun -l</span></span><br><span class="line">crw-rw-rw- 1 root root 10, 200 Mar 20 21:31 /dev/net/tun</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2-配置网络"><a href="#2-配置网络" class="headerlink" title="2) 配置网络"></a>2) 配置网络</h4><p>修改/etc/network/interfaces文件配置网络</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo vim /etc/network/interfaces</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> interfaces(5) file used by ifup(8) and ifdown(8)</span></span><br><span class="line">auto lo</span><br><span class="line">iface lo inet loopback</span><br><span class="line"></span><br><span class="line">auto br0</span><br><span class="line">iface br0 inet dhcp</span><br><span class="line">bridge_ports enp0s25</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="3-添加网络配置脚本"><a href="#3-添加网络配置脚本" class="headerlink" title="3) 添加网络配置脚本"></a>3) 添加网络配置脚本</h4><p>配置/etc/qemu-ifup、/etc/qemu-ifdown脚本；</p>
+<p>默认情况下，当qemu使用tap设备时，会执行/etc/qemu-ifup和/etc/qemu-ifdown这两个脚本；需要创建这两个脚本，并加上可执行权限；</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> cat /etc/qemu-ifup</span></span><br><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line"></span><br><span class="line">echo sudo tunctl -u $(id -un) -t $1</span><br><span class="line">sudo tunctl -u $(id -un) -t $1</span><br><span class="line"></span><br><span class="line">echo sudo ifconfig $1 0.0.0.0 promisc up</span><br><span class="line">sudo ifconfig $1 0.0.0.0 promisc up</span><br><span class="line"></span><br><span class="line">echo sudo brctl addif br0 $1</span><br><span class="line">sudo brctl addif br0 $1</span><br><span class="line"></span><br><span class="line">echo brctl show</span><br><span class="line">brctl show</span><br><span class="line"></span><br><span class="line"><span class="meta">#</span><span class="bash"> sudo ifconfig br0 192.168.1.102</span></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ifconfig</span></span><br><span class="line">enp0s25: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.1.102  netmask 255.255.255.0  broadcast 192.168.1.255</span><br><span class="line">        inet6 ****::***:****:****:****  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether **:**:**:**:**:**  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 146587  bytes 69384714 (69.3 MB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 117583  bytes 13689404 (13.6 MB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br><span class="line">        device interrupt 20  memory 0xf3900000-f3920000</span><br></pre></td></tr></table></figure>
+
+
+
+<p>查询到enp0s25的IP地址是192.168.1.102，需要将br0配置在同一个192.168.1.***网段；</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> cat /etc/qemu-ifdown</span></span><br><span class="line"><span class="meta">#</span><span class="bash">!/bin/sh</span></span><br><span class="line"></span><br><span class="line">echo sudo brctl delif br0 $1</span><br><span class="line">sudo brctl delif br0 $1</span><br><span class="line"></span><br><span class="line">echo sudo tunctl -d $1</span><br><span class="line">sudo tunctl -d $1</span><br><span class="line"> </span><br><span class="line">echo brctl show</span><br><span class="line">brctl show</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> chmod a+x /etc/qemu-ifup</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> chmod a+x /etc/qemu-ifdown</span></span><br></pre></td></tr></table></figure>
+
+<p>重启PC，使新的/etc/network/interfaces配置文件生效；</p>
+<h3 id="4-3-关闭防火墙"><a href="#4-3-关闭防火墙" class="headerlink" title="4.3 关闭防火墙"></a>4.3 关闭防火墙</h3><h4 id="1-关闭防火墙"><a href="#1-关闭防火墙" class="headerlink" title="1) 关闭防火墙"></a>1) 关闭防火墙</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo ufw <span class="built_in">disable</span></span></span><br><span class="line">Firewall stopped and disabled on system startup</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2-查看当前防火墙状态"><a href="#2-查看当前防火墙状态" class="headerlink" title="2) 查看当前防火墙状态"></a>2) 查看当前防火墙状态</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo ufw status</span></span><br><span class="line">Status: inactive</span><br></pre></td></tr></table></figure>
+
+
+
+<p>另外，附上开启防火墙的操作方法：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ufw <span class="built_in">enable</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="4-4-重启系统，使配置生效"><a href="#4-4-重启系统，使配置生效" class="headerlink" title="4.4 重启系统，使配置生效"></a>4.4 重启系统，使配置生效</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> reboot</span></span><br></pre></td></tr></table></figure>
+<p>或者：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> init 6</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="4-5-查看Qemu的网络环境"><a href="#4-5-查看Qemu的网络环境" class="headerlink" title="4.5 查看Qemu的网络环境"></a>4.5 查看Qemu的网络环境</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> ifconfig</span></span><br><span class="line">br0: flags=4163&lt;UP,BROADCAST,RUNNING,MULTICAST&gt;  mtu 1500</span><br><span class="line">        inet 192.168.1.102  netmask 255.255.255.0  broadcast 192.168.1.255</span><br><span class="line">        inet6 ****::***:****:****:****  prefixlen 64  scopeid 0x20&lt;link&gt;</span><br><span class="line">        ether **:**:**:**:**:**  txqueuelen 1000  (Ethernet)</span><br><span class="line">        RX packets 44667  bytes 16853864 (16.8 MB)</span><br><span class="line">        RX errors 0  dropped 0  overruns 0  frame 0</span><br><span class="line">        TX packets 45161  bytes 32391098 (32.3 MB)</span><br><span class="line">        TX errors 0  dropped 0 overruns 0  carrier 0  collisions 0</span><br></pre></td></tr></table></figure>
+
+<p>虚拟网口br0即Qemu虚拟机与Linux主机通讯的网口；</p>
+<p>在u-boot中测试网络是否接通：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">=&gt; ping 192.168.1.102</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">host 192.168.1.102 is alive</span><br></pre></td></tr></table></figure>
+
+
+
+<h2 id="5-安装TFTP服务器"><a href="#5-安装TFTP服务器" class="headerlink" title="5. 安装TFTP服务器"></a>5. 安装TFTP服务器</h2><p>创建TFTP服务器，用来给Qemu模拟开发板启动uImage时，下载uImage到内存中。</p>
+<h3 id="5-1-安装TFTP工具"><a href="#5-1-安装TFTP工具" class="headerlink" title="5.1 安装TFTP工具"></a>5.1 安装TFTP工具</h3><p>安装Linux主机Host的TFTP服务器工具：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo apt install tftp-hpa tftpd-hpa xinetd</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="5-2-配置"><a href="#5-2-配置" class="headerlink" title="5.2 配置"></a>5.2 配置</h3><h4 id="1-修改配置文件，设置TFTP服务器目录"><a href="#1-修改配置文件，设置TFTP服务器目录" class="headerlink" title="1) 修改配置文件，设置TFTP服务器目录"></a>1) 修改配置文件，设置TFTP服务器目录</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> sudo vim /etc/default/tftpd-hpa</span></span><br><span class="line">......</span><br><span class="line">TFTP_USERNAME="xiami"</span><br><span class="line">TFTP_DIRECTORY="/home/xiami/qemu/boot-uboot"</span><br><span class="line">TFTP_ADDRESS="0.0.0.0:69"</span><br><span class="line">TFTP_OPTIONS="-l -c -s"</span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+
+
+<blockquote>
+<p>说明：</p>
+<p>TFTP_USERNAME：必须设置为当前的用户名，或：root</p>
+<p>TFTP_DIRECTORY：设定TFTP的根目录</p>
+<p>TFTP_ADDRESS：</p>
+<p>TFTP_OPTIONS：TFTP启动参数</p>
+<p>​    -l: 以standalone/listen模式启动TFTP服务，而不是从inetd启动，不需要安装xinetd</p>
+<p>​    -c: 可创建新文件，默认，TFTP只允许覆盖原文件，不能创建新文件</p>
+<p>​    -s: 改变TFTP启动的根目录；加入-s后，客户端使用TFTP时，不再需要输入指定目录，填写文件的完整路径，而是使用配置文件中写好的目录；</p>
+</blockquote>
+<h4 id="2-Linux主机上创建tftp目录"><a href="#2-Linux主机上创建tftp目录" class="headerlink" title="2) Linux主机上创建tftp目录"></a>2) Linux主机上创建tftp目录</h4><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> mkdir /home/mcy/tftpboot</span></span><br><span class="line"><span class="meta">#</span><span class="bash"> chmod 777 /home/mcy/tftpboot</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="3-重启tftp服务"><a href="#3-重启tftp服务" class="headerlink" title="3) 重启tftp服务"></a>3) 重启tftp服务</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># sudo /etc/init.d/tftpd-hpa restart</span></span><br><span class="line">[ <span class="type">ok</span> ] Restarting tftpd<span class="literal">-hpa</span> (via systemctl): tftpd<span class="literal">-hpa</span>.service.</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="5-3-测试验证"><a href="#5-3-测试验证" class="headerlink" title="5.3 测试验证"></a>5.3 测试验证</h3><h4 id="1-测试tftp服务器"><a href="#1-测试tftp服务器" class="headerlink" title="1) 测试tftp服务器"></a>1) 测试tftp服务器</h4><p>可以使用三种方法，1. 输入真实的IP地址；2. 用localhost代替主机；3. 使用地址127.0.0.1，这个IP地址始终代表本机IP；</p>
+<p>tftp 192.168.1.102</p>
+<p>tftp localhost</p>
+<p>tftp 127.0.0.1</p>
+<h4 id="2-TFTP命令行的基本命令"><a href="#2-TFTP命令行的基本命令" class="headerlink" title="2) TFTP命令行的基本命令"></a>2) TFTP命令行的基本命令</h4><p>put: 将文件上传到TFTP根目录</p>
+<p>get: 取得TFTP根目录上的文件</p>
+<p>quit/q: 退出TFTP服务</p>
+<h2 id="6-设置u-boot中的内核启动参数"><a href="#6-设置u-boot中的内核启动参数" class="headerlink" title="6. 设置u-boot中的内核启动参数"></a>6. 设置u-boot中的内核启动参数</h2><h3 id="6-1-设置u-boot参数"><a href="#6-1-设置u-boot参数" class="headerlink" title="6.1 设置u-boot参数"></a>6.1 设置u-boot参数</h3><p>u-boot能够正常启动还不足以引导内核启动，需要在u-boot中设置一些启动参数，在引导内核启动时，将这些启动参数传递给内核；内核启动后挂载SD卡中的文件系统；</p>
+<p>这些启动参数，可以在u-boot启动后，手动设置，也可以在u-boot中，把内核启动参数写入vexpress_common.h头文件；</p>
+<h4 id="1）-写入u-boot头文件"><a href="#1）-写入u-boot头文件" class="headerlink" title="1） 写入u-boot头文件"></a>1） 写入u-boot头文件</h4><p>修改vexpress_common.h头文件，添加内核启动需要的参数：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># vim <span class="meta-keyword">include</span>/configs/vexpress_common.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIG_BOOTCOMMAND  \</span></span><br><span class="line">    <span class="string">"tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb;  \</span></span><br><span class="line"><span class="string">    setenv bootargs 'root=/dev/mmcblk0 rw   \</span></span><br><span class="line"><span class="string">    init=/linuxrc   \</span></span><br><span class="line"><span class="string">    ip=192.168.1.110 console=ttyAMA0';  \</span></span><br><span class="line"><span class="string">    bootm 0x60003000 - 0x60500000;"</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIG_IPADDR   192.168.1.110</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIG_SERVERIP 192.168.1.104</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIGN_NETMASK 255.255.255.0</span></span><br></pre></td></tr></table></figure>
+
+<p>参数说明：</p>
+<blockquote>
+<p>CONFIG_IPADDR： 设备的本地IP地址</p>
+<p>CONFIG_SERVERIP： TFTP下载时的服务器IP地址</p>
+<p>CONFIG_BOOTCOMMAND： 内核启动的参数设置，包含boot_args</p>
+</blockquote>
+<h4 id="2）-手动设置"><a href="#2）-手动设置" class="headerlink" title="2） 手动设置"></a>2） 手动设置</h4><p>在u-boot启动之后，手动设置环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">=&gt; setenv ipaddr 192.168.1.110</span><br><span class="line">=&gt; setenv serverip 192.168.1.102</span><br><span class="line">=&gt; setenv bootargs 'root=/dev/mmcblk0 rw init=/linuxrc ip=192.168.1.110 console=ttyAMA0'</span><br></pre></td></tr></table></figure>
+
+<p>手动设置tftp下载：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">=&gt; tftp 0x60003000 uImage	// tftp下载内核镜像</span><br><span class="line">=&gt; tftp 0x60500000 vexpress-v2p-ca9.dtb		// tftp下载设备树</span><br><span class="line">=&gt; bootm 0x60003000 - 0x60500000	// 启动内核</span><br></pre></td></tr></table></figure>
+
+<p>手动设置用来调试比较方便，但是正常使用时，还是将设置参数写入u-boot的vexpress_common.h头文件比较好，免得每次启动都需要输入这么多命令；</p>
+<h4 id="3）-设置挂载nfs网络文件系统"><a href="#3）-设置挂载nfs网络文件系统" class="headerlink" title="3） 设置挂载nfs网络文件系统"></a>3） 设置挂载nfs网络文件系统</h4><p>如果需要通过nfs挂载网络文件系统，需要在u-boot中，设置boot_args，如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta"># vim <span class="meta-keyword">include</span>/configs/vexpress_common.h</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIG_BOOTCOMMAND  \</span></span><br><span class="line">    <span class="string">"tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb;  \</span></span><br><span class="line"><span class="string">    setenv bootargs 'root=/dev/nfs rw   \</span></span><br><span class="line"><span class="string">    nfsroot=192.168.1.102:/home/xiami/qemu/nfs_root init=/linuxrc   \</span></span><br><span class="line"><span class="string">    ip=192.168.1.110 console=ttyAMA0';  \</span></span><br><span class="line"><span class="string">    bootm 0x60003000 - 0x60500000;"</span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIG_IPADDR   192.168.1.110</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIG_SERVERIP 192.168.1.104</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> CONFIGN_NETMASK 255.255.255.0</span></span><br></pre></td></tr></table></figure>
+
+
+<p>重新编译u-boot；启动Qemu验证</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">=&gt; print bootcmd</span><br><span class="line">bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; setenv bootargs 'root=/dev/nfs rw nfsroot=192.168.1.102:/home/xiami/qemu/boot-uboot/rootfs init=/linuxrc ip=192.168.1.110 console=ttyAMA0'; bootm 0x60003000 - 0x60500000;</span><br><span class="line">=&gt; print ipaddr</span><br><span class="line">ipaddr=192.168.1.110</span><br><span class="line">=&gt; print serverip</span><br><span class="line">serverip=192.168.1.102</span><br></pre></td></tr></table></figure>
+
+<p>网络还没有ping通：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">=&gt; ping 192.168.1.102</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">Using smc911x-0 device</span><br><span class="line"></span><br><span class="line">ARP Retry count exceeded; starting again</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">ping failed; host 192.168.1.102 is not alive</span><br></pre></td></tr></table></figure>
+
+<p>这部分在下一节中再讲述，此处略过；</p>
+<h3 id="6-2-启动验证"><a href="#6-2-启动验证" class="headerlink" title="6.2 启动验证"></a>6.2 启动验证</h3><h4 id="1）-启动Qemu，并检查启动参数"><a href="#1）-启动Qemu，并检查启动参数" class="headerlink" title="1） 启动Qemu，并检查启动参数"></a>1） 启动Qemu，并检查启动参数</h4><figure class="highlight powershell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># cat boot.sh</span></span><br><span class="line"><span class="comment">#! /bin/sh</span></span><br><span class="line">sudo qemu<span class="literal">-system</span><span class="literal">-arm</span> \</span><br><span class="line">	<span class="literal">-M</span> vexpress<span class="literal">-a9</span> \</span><br><span class="line">	<span class="literal">-m</span> <span class="number">512</span>M \</span><br><span class="line">	<span class="literal">-kernel</span> ./u<span class="literal">-boot</span> \</span><br><span class="line">	<span class="literal">-nographic</span> \</span><br><span class="line">	<span class="literal">-append</span> console=ttyAMA0 \</span><br><span class="line">	<span class="literal">-sd</span> rootfs.ext3 \</span><br><span class="line">	<span class="literal">-net</span> nic \</span><br><span class="line">	<span class="literal">-net</span> tap</span><br></pre></td></tr></table></figure>
+
+
+
+<p>u-boot启动后，查看u-boot中的环境变量：</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">=&gt; print bootcmd</span><br><span class="line">bootcmd=tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb; setenv bootargs 'root=/dev/mmcblk0 rw init=/linuxrc ip=192.168.1.110 console=ttyAMA0'; bootm 0x60003000 - 0x60500000;</span><br><span class="line">=&gt; print ipaddr</span><br><span class="line">ipaddr=192.168.1.110</span><br><span class="line">=&gt; print serverip</span><br><span class="line">serverip=192.168.1.102</span><br></pre></td></tr></table></figure>
+
+
+
+<p>检查tftp下载网络，在开发板的u-boot中，ping本地PC的tftp服务器，注意，不要用电脑ping开发板，因为u-boot中没有回应机制，是ping不通开发板的；</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">=&gt; ping 192.168.1.102</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">host 192.168.1.102 is alive</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="2）-启动验证"><a href="#2）-启动验证" class="headerlink" title="2） 启动验证"></a>2） 启动验证</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br></pre></td><td class="code"><pre><span class="line"># .&#x2F;boot-uboot-tftp.sh </span><br><span class="line">Booting qemu vexpress-ca9</span><br><span class="line">WARNING: Image format was not specified for &#39;rootfs.ext3&#39; and probing guessed raw.</span><br><span class="line">         Automatically detecting the format is dangerous for raw images, write operations on block 0 will be restricted.</span><br><span class="line">         Specify the &#39;raw&#39; format explicitly to remove the restrictions.</span><br><span class="line">sudo tunctl -u root -t tap0</span><br><span class="line">TUNSETIFF: Device or resource busy</span><br><span class="line">sudo ifconfig tap0 0.0.0.0 promisc up</span><br><span class="line">sudo brctl addif br0 tap0</span><br><span class="line">brctl show</span><br><span class="line">bridge name	bridge id		STP enabled	interfaces</span><br><span class="line">br0		8000.0021ccd65a96	no		enp0s25</span><br><span class="line">							tap0</span><br><span class="line"></span><br><span class="line">U-Boot 2020.01 (Mar 22 2020 - 16:51:32 +0800)</span><br><span class="line"></span><br><span class="line">DRAM:  512 MiB</span><br><span class="line">WARNING: Caches not enabled</span><br><span class="line">Flash: 128 MiB</span><br><span class="line">MMC:   MMC: 0</span><br><span class="line">*** Warning - bad CRC, using default environment</span><br><span class="line"></span><br><span class="line">In:    serial</span><br><span class="line">Out:   serial</span><br><span class="line">Err:   serial</span><br><span class="line">Net:   smc911x-0</span><br><span class="line">Hit any key to stop autoboot:  0 </span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">TFTP from server 192.168.1.102; our IP address is 192.168.1.110</span><br><span class="line">Filename &#39;uImage&#39;.</span><br><span class="line">Load address: 0x60003000</span><br><span class="line">Loading: #################################################################</span><br><span class="line">	 #################################################################</span><br><span class="line">	 #################################################################</span><br><span class="line">	 #################################################################</span><br><span class="line">	 ###########</span><br><span class="line">	 8.7 MiB&#x2F;s</span><br><span class="line">done</span><br><span class="line">Bytes transferred &#x3D; 3971576 (3c99f8 hex)</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">TFTP from server 192.168.1.102; our IP address is 192.168.1.110</span><br><span class="line">Filename &#39;vexpress-v2p-ca9.dtb&#39;.</span><br><span class="line">Load address: 0x60500000</span><br><span class="line">Loading: ##</span><br><span class="line">	 4.7 MiB&#x2F;s</span><br><span class="line">done</span><br><span class="line">Bytes transferred &#x3D; 14692 (3964 hex)</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">## Booting kernel from Legacy Image at 60003000 ...</span><br><span class="line">   Image Name:   Linux-4.14.172</span><br><span class="line">   Image Type:   ARM Linux Kernel Image (uncompressed)</span><br><span class="line">   Data Size:    3971512 Bytes &#x3D; 3.8 MiB</span><br><span class="line">   Load Address: 60003000</span><br><span class="line">   Entry Point:  60003000</span><br><span class="line">   Verifying Checksum ... OK</span><br><span class="line">## Flattened Device Tree blob at 60500000</span><br><span class="line">   Booting using the fdt blob at 0x60500000</span><br><span class="line">   Loading Kernel Image</span><br><span class="line">   Loading Device Tree to 7fe81000, end 7fe87963 ... OK</span><br><span class="line"></span><br><span class="line">Starting kernel ...</span><br><span class="line"></span><br><span class="line">Booting Linux on physical CPU 0x0</span><br><span class="line">Linux version 4.14.172 (xiami@xiami) (gcc version 7.5.0 (Ubuntu&#x2F;Linaro 7.5.0-3ubuntu1~18.04)) #1 SMP Sun Mar 15 12:27:54 CST 2020</span><br><span class="line">CPU: ARMv7 Processor [410fc090] revision 0 (ARMv7), cr&#x3D;10c5387d</span><br><span class="line">CPU: PIPT &#x2F; VIPT nonaliasing data cache, VIPT nonaliasing instruction cache</span><br><span class="line">OF: fdt: Machine model: V2P-CA9</span><br><span class="line">Memory policy: Data cache writeback</span><br><span class="line">CPU: All CPU(s) started in SVC mode.</span><br><span class="line">percpu: Embedded 15 pages&#x2F;cpu s32396 r8192 d20852 u61440</span><br><span class="line">Built 1 zonelists, mobility grouping on.  Total pages: 130048</span><br><span class="line">Kernel command line: root&#x3D;&#x2F;dev&#x2F;mmcblk0 rw       init&#x3D;&#x2F;linuxrc       ip&#x3D;192.168.1.110 console&#x3D;ttyAMA0</span><br><span class="line">log_buf_len individual max cpu contribution: 4096 bytes</span><br><span class="line">log_buf_len total cpu_extra contributions: 12288 bytes</span><br><span class="line">log_buf_len min size: 16384 bytes</span><br><span class="line">log_buf_len: 32768 bytes</span><br><span class="line">early log buf free: 14980(91%)</span><br><span class="line">PID hash table entries: 2048 (order: 1, 8192 bytes)</span><br><span class="line">Dentry cache hash table entries: 65536 (order: 6, 262144 bytes)</span><br><span class="line">Inode-cache hash table entries: 32768 (order: 5, 131072 bytes)</span><br><span class="line">Memory: 509616K&#x2F;524288K available (6144K kernel code, 403K rwdata, 1372K rodata, 1024K init, 161K bss, 14672K reserved, 0K cma-reserved)</span><br><span class="line">Virtual kernel memory layout:</span><br><span class="line">    vector  : 0xffff0000 - 0xffff1000   (   4 kB)</span><br><span class="line">    fixmap  : 0xffc00000 - 0xfff00000   (3072 kB)</span><br><span class="line">    vmalloc : 0xa0800000 - 0xff800000   (1520 MB)</span><br><span class="line">    lowmem  : 0x80000000 - 0xa0000000   ( 512 MB)</span><br><span class="line">    modules : 0x7f000000 - 0x80000000   (  16 MB)</span><br><span class="line">      .text : 0x80008000 - 0x80700000   (7136 kB)</span><br><span class="line">      .init : 0x80900000 - 0x80a00000   (1024 kB)</span><br><span class="line">      .data : 0x80a00000 - 0x80a64f90   ( 404 kB)</span><br><span class="line">       .bss : 0x80a6bd00 - 0x80a94468   ( 162 kB)</span><br><span class="line">SLUB: HWalign&#x3D;64, Order&#x3D;0-3, MinObjects&#x3D;0, CPUs&#x3D;4, Nodes&#x3D;1</span><br><span class="line">Hierarchical RCU implementation.</span><br><span class="line">	RCU event tracing is enabled.</span><br><span class="line">	RCU restricting CPUs from NR_CPUS&#x3D;8 to nr_cpu_ids&#x3D;4.</span><br><span class="line"></span><br><span class="line">......</span><br><span class="line"></span><br><span class="line">IP-Config: Guessing netmask 255.255.255.0</span><br><span class="line">IP-Config: Complete:</span><br><span class="line">     device&#x3D;eth0, hwaddr&#x3D;52:54:00:12:34:56, ipaddr&#x3D;192.168.1.110, mask&#x3D;255.255.255.0, gw&#x3D;255.255.255.255</span><br><span class="line">     host&#x3D;192.168.1.110, domain&#x3D;, nis-domain&#x3D;(none)</span><br><span class="line">     bootserver&#x3D;255.255.255.255, rootserver&#x3D;255.255.255.255, rootpath&#x3D;</span><br><span class="line">ALSA device list:</span><br><span class="line">  #0: ARM AC&#39;97 Interface PL041 rev0 at 0x10004000, irq 30</span><br><span class="line">EXT4-fs (mmcblk0): mounting ext3 file system using the ext4 subsystem</span><br><span class="line">random: fast init done</span><br><span class="line">EXT4-fs (mmcblk0): recovery complete</span><br><span class="line">EXT4-fs (mmcblk0): mounted filesystem with ordered data mode. Opts: (null)</span><br><span class="line">VFS: Mounted root (ext3 filesystem) on device 179:0.</span><br><span class="line">Freeing unused kernel memory: 1024K</span><br><span class="line">random: crng init done</span><br><span class="line">Hello Linux Qemu!</span><br><span class="line"></span><br><span class="line">Please press Enter to activate this console. </span><br><span class="line">&#x2F; #</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; reset</span><br><span class="line">resetting ...</span><br><span class="line"></span><br><span class="line"></span><br><span class="line">U-Boot 2017.05 (Jul 24 2019 - 21:52:28 +0800)</span><br><span class="line"></span><br><span class="line">DRAM:  512 MiB</span><br><span class="line">WARNING: Caches not enabled</span><br><span class="line">Flash: 128 MiB</span><br><span class="line">MMC:   MMC: 0</span><br><span class="line">*** Warning - bad CRC, using default environment</span><br><span class="line"></span><br><span class="line">In:    serial</span><br><span class="line">Out:   serial</span><br><span class="line">Err:   serial</span><br><span class="line">Net:   smc911x-0</span><br><span class="line">Hit any key to stop autoboot:  0 </span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">TFTP from server 192.168.1.104; our IP address is 192.168.1.110</span><br><span class="line">Filename &#39;uImage&#39;.</span><br><span class="line">Load address: 0x60003000</span><br><span class="line">Loading: #################################################################</span><br><span class="line">	 #################################################################</span><br><span class="line">	 #################################################################</span><br><span class="line">	 ##################################################</span><br><span class="line">	 1.3 MiB&#x2F;s</span><br><span class="line">done</span><br><span class="line">Bytes transferred &#x3D; 3581920 (36a7e0 hex)</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">TFTP from server 192.168.1.104; our IP address is 192.168.1.110</span><br><span class="line">Filename &#39;vexpress-v2p-ca9.dtb&#39;.</span><br><span class="line">Load address: 0x60500000</span><br><span class="line">Loading: #</span><br><span class="line">	 250 KiB&#x2F;s</span><br><span class="line">done</span><br><span class="line">Bytes transferred &#x3D; 14360 (3818 hex)</span><br><span class="line">smc911x: MAC 52:54:00:12:34:56</span><br><span class="line">## Booting kernel from Legacy Image at 60003000 ...</span><br><span class="line">   Image Name:   Linux-4.4.157</span><br><span class="line">   Image Type:   ARM Linux Kernel Image (uncompressed)</span><br><span class="line">   Data Size:    3581856 Bytes &#x3D; 3.4 MiB</span><br><span class="line">   Load Address: 60003000</span><br><span class="line">   Entry Point:  60003000</span><br><span class="line">   Verifying Checksum ... OK</span><br><span class="line">## Flattened Device Tree blob at 60500000</span><br><span class="line">   Booting using the fdt blob at 0x60500000</span><br><span class="line">   Loading Kernel Image ... OK</span><br><span class="line">   Loading Device Tree to 7fed4000, end 7feda817 ... OK</span><br></pre></td></tr></table></figure>
+
+<p>至此，通过u-boot加载kernel，并挂载SD卡文件系统已经成功；</p>
+<h3 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h3><p>SD卡中rootfs目录是一个简易的根文件系统，可以将它制作成一个镜像文件，将镜像文件烧写到开发板，或者通过Qemu中的u-boot启动Linux内核后挂载到镜像文件上。也可以设置为通过NFS网络文件系统启动，参考下一篇文章《<a href="https://www.jianshu.com/p/cf46f7225db6">Qemu搭建ARM vexpress开发环境(三)—-NFS网络根文件系统</a>》。</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Qemu/" rel="tag"># Qemu</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/08/11/Qemu%E6%90%AD%E5%BB%BAARM-vexpress%E5%BC%80%E5%8F%91%E7%8E%AF%E5%A2%83(%E4%B8%80)/" rel="prev" title="Qemu搭建ARM vexpress开发环境(一)">
+      <i class="fa fa-chevron-left"></i> Qemu搭建ARM vexpress开发环境(一)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/04/06/Linux-kernel%E4%B8%AD%E7%9A%84I2C%E5%AD%90%E7%B3%BB%E7%BB%9F/" rel="next" title="Linux kernel中的I2C子系统">
+      Linux kernel中的I2C子系统 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#目录"><span class="nav-text">目录</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-简述"><span class="nav-text">1. 简述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-准备u-boot"><span class="nav-text">2. 准备u-boot</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-下载u-boot"><span class="nav-text">2.1 下载u-boot</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-解压u-boot"><span class="nav-text">2.2 解压u-boot</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-3-编译u-boot"><span class="nav-text">2.3 编译u-boot</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-1-配置时碰到的问题"><span class="nav-text">2.3.1 配置时碰到的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#配置命令"><span class="nav-text">配置命令</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-2-生成配置文件"><span class="nav-text">2.3.2 生成配置文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-3-编译"><span class="nav-text">2.3.3 编译</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-4-简化编译过程"><span class="nav-text">2.3.4 简化编译过程</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-4-启动u-boot"><span class="nav-text">2.4 启动u-boot</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-准备内核"><span class="nav-text">3. 准备内核</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-指定加载地址"><span class="nav-text">3.1 指定加载地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-编译uImage"><span class="nav-text">3.2 编译uImage</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Qemu网络功能设置"><span class="nav-text">4. Qemu网络功能设置</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-配置Qemu与主机的网络连接"><span class="nav-text">4.1 配置Qemu与主机的网络连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-2-配置Ubuntu主机"><span class="nav-text">4.2 配置Ubuntu主机</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-安装工具"><span class="nav-text">1) 安装工具</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-配置网络"><span class="nav-text">2) 配置网络</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-添加网络配置脚本"><span class="nav-text">3) 添加网络配置脚本</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-3-关闭防火墙"><span class="nav-text">4.3 关闭防火墙</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-关闭防火墙"><span class="nav-text">1) 关闭防火墙</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-查看当前防火墙状态"><span class="nav-text">2) 查看当前防火墙状态</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-4-重启系统，使配置生效"><span class="nav-text">4.4 重启系统，使配置生效</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-5-查看Qemu的网络环境"><span class="nav-text">4.5 查看Qemu的网络环境</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#5-安装TFTP服务器"><span class="nav-text">5. 安装TFTP服务器</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-安装TFTP工具"><span class="nav-text">5.1 安装TFTP工具</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-配置"><span class="nav-text">5.2 配置</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-修改配置文件，设置TFTP服务器目录"><span class="nav-text">1) 修改配置文件，设置TFTP服务器目录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-Linux主机上创建tftp目录"><span class="nav-text">2) Linux主机上创建tftp目录</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-重启tftp服务"><span class="nav-text">3) 重启tftp服务</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-3-测试验证"><span class="nav-text">5.3 测试验证</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-测试tftp服务器"><span class="nav-text">1) 测试tftp服务器</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-TFTP命令行的基本命令"><span class="nav-text">2) TFTP命令行的基本命令</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#6-设置u-boot中的内核启动参数"><span class="nav-text">6. 设置u-boot中的内核启动参数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-设置u-boot参数"><span class="nav-text">6.1 设置u-boot参数</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1）-写入u-boot头文件"><span class="nav-text">1） 写入u-boot头文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2）-手动设置"><span class="nav-text">2） 手动设置</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3）-设置挂载nfs网络文件系统"><span class="nav-text">3） 设置挂载nfs网络文件系统</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-启动验证"><span class="nav-text">6.2 启动验证</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1）-启动Qemu，并检查启动参数"><span class="nav-text">1） 启动Qemu，并检查启动参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2）-启动验证"><span class="nav-text">2） 启动验证</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#7-总结"><span class="nav-text">7. 总结</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">micro虾米</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">15</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">6</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">micro虾米</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '1ec7eee73ee4f91e15a1',
+      clientSecret: '971b3c9439c2a8fa2fcb12307657ad50aee6ed0c',
+      repo        : 'mshrimp_blog_talk',
+      owner       : 'mshrimp',
+      admin       : ['mshrimp'],
+      id          : 'f4ece5d98ebc294d9b21a252fcc47d98',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

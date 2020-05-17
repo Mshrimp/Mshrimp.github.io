@@ -614,17 +614,17 @@ Linux内核启动的第二阶段也就是常说的C语言阶段，从start_kerne
 
 
 ```mermaid
-
 graph TB
-
 	A(start_kernel)-->B(一系列的初始化操作)
-
 	subgraph start_kernel
-
-	B(一系列的初始化操作)-->C(setup_arch)-->D(一系列的初始化操作)-->E(rest_init)
-
+	B(一系列的初始化操作)
+	-->
+	C(setup_arch)
+	-->
+	D(一系列的初始化操作)
+	-->
+	E(rest_init)
 	end
-
 ```
 
 

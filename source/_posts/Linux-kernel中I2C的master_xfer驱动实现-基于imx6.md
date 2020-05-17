@@ -6,11 +6,11 @@ tags: i2c
 
 
 
-
+未完成
 
 在I2C驱动中，每个适配器i2c_adapter都有自己的I2C通信方法，在struct i2c_algorithm结构中的master_xfer()函数中实现；i2c_algorithm结构中的关键函数master_xfer()用于产生I2C访问周期需要的信号，以struct i2c_msg结构的格式进行数据传送；
 
-未完成
+
 
 
 

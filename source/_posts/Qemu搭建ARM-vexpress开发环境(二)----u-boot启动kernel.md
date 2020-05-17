@@ -1,6 +1,6 @@
 ---
 title: Qemu搭建ARM vexpress开发环境(二)----u-boot启动kernel
-date: 2019-08-20 21:00:00
+date: 2019-08-18 21:00:00
 tags: Qemu
 
 ---
