@@ -280,7 +280,7 @@
 
 
 
-<h2 id="4-配置并编译Linux内核"><a href="#4-配置并编译Linux内核" class="headerlink" title="4. 配置并编译Linux内核"></a>4. 配置并编译Linux内核</h2><h3 id="4-1-下载Linux内核"><a href="#4-1-下载Linux内核" class="headerlink" title="4.1 下载Linux内核"></a>4.1 下载Linux内核</h3><p>通过众所周知的内核下载网站<a href="http://www.kernel.org下载需要的内核版本，这里我下载的是相对来说最新的长期支持的内核版本linux-4.4.157。">www.kernel.org下载需要的内核版本，这里我下载的是相对来说最新的长期支持的内核版本linux-4.4.157。</a></p>
+<h2 id="4-配置并编译Linux内核"><a href="#4-配置并编译Linux内核" class="headerlink" title="4. 配置并编译Linux内核"></a>4. 配置并编译Linux内核</h2><h3 id="4-1-下载Linux内核"><a href="#4-1-下载Linux内核" class="headerlink" title="4.1 下载Linux内核"></a>4.1 下载Linux内核</h3><p>通过众所周知的内核下载网站<a href="http://www.kernel.org下载需要的内核版本，这里我下载的是相对来说最新的长期支持的内核版本linux-4.4.157。" target="_blank" rel="noopener">www.kernel.org下载需要的内核版本，这里我下载的是相对来说最新的长期支持的内核版本linux-4.4.157。</a></p>
 <h3 id="4-2-解压Linux内核"><a href="#4-2-解压Linux内核" class="headerlink" title="4.2 解压Linux内核"></a>4.2 解压Linux内核</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> tar -xvf linux-4.4.157.tar.xz</span></span><br></pre></td></tr></table></figure>
 
 
@@ -314,7 +314,7 @@
 
 <p>最后的Kernel panic是因为没有挂载根文件系统，下一布制作一个简易文件系统。</p>
 <h2 id="5-制作简易根文件系统"><a href="#5-制作简易根文件系统" class="headerlink" title="5. 制作简易根文件系统"></a>5. 制作简易根文件系统</h2><p>使用busybox制作简易的根文件系统</p>
-<h3 id="5-1-下载busybox工具"><a href="#5-1-下载busybox工具" class="headerlink" title="5.1 下载busybox工具"></a>5.1 下载busybox工具</h3><p>从<a href="https://busybox.net/downloads/下载最新的busybox。">https://busybox.net/downloads/下载最新的busybox。</a></p>
+<h3 id="5-1-下载busybox工具"><a href="#5-1-下载busybox工具" class="headerlink" title="5.1 下载busybox工具"></a>5.1 下载busybox工具</h3><p>从<a href="https://busybox.net/downloads/下载最新的busybox。" target="_blank" rel="noopener">https://busybox.net/downloads/下载最新的busybox。</a></p>
 <p>同样，建议在windows系统下使用迅雷下载，先找到合适的busybox版本，再用右键，选择用迅雷下载，这样速度会很快；</p>
 <h3 id="5-2-解压busybox"><a href="#5-2-解压busybox" class="headerlink" title="5.2 解压busybox"></a>5.2 解压busybox</h3><figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> tar -xvf busybox-1.31.1.tar.bz2</span></span><br></pre></td></tr></table></figure>
 
@@ -444,7 +444,7 @@
 <p>如下可以采用脚本运行：</p>
 <figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> cat kill_qemu.sh </span></span><br><span class="line"><span class="meta">#</span><span class="bash">! /bin/sh</span></span><br><span class="line">ps -a | grep qemu-system-arm | awk '&#123;print $1&#125;' | xargs sudo kill -9</span><br></pre></td></tr></table></figure>
 
-<p>本文讲述了Qemu环境启动Linux内核，并挂载SD卡中的根文件系统的一些操作步骤。如果需要在Qemu环境下以ARM开发板的正常启动流程来加载Linux内核并挂载根文件系统，可以参考下一篇文章《<a href="https://www.jianshu.com/p/8619a6739040">Qemu搭建ARM vexpress开发环境(二)—-通过u-boot启动Linux内核</a>》。</p>
+<p>本文讲述了Qemu环境启动Linux内核，并挂载SD卡中的根文件系统的一些操作步骤。如果需要在Qemu环境下以ARM开发板的正常启动流程来加载Linux内核并挂载根文件系统，可以参考下一篇文章《<a href="https://www.jianshu.com/p/8619a6739040" target="_blank" rel="noopener">Qemu搭建ARM vexpress开发环境(二)—-通过u-boot启动Linux内核</a>》。</p>
 
     </div>
 

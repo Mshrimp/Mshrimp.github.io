@@ -792,7 +792,7 @@
 
 <h3 id="8-总结"><a href="#8-总结" class="headerlink" title="8. 总结"></a>8. 总结</h3><p>I2C总线维护两个链表，一个是I2C驱动链表，一个是I2C设备链表，每当注册一个驱动（或设备），就会将其添加到I2C总线上相对应的I2C驱动链表（或I2C设备链表），然后遍历I2C总线的I2C设备（或I2C驱动）链表的所有设备（或驱动），通过I2C总线的匹配函数判断是否匹配，如果匹配，就调用驱动的probe函数，然后就可以在probe函数中注册字符设备，创建设备节点，实现设备操作集fops等，为应用调用提供接口；</p>
 <p>参考资料</p>
-<p><a href="https://blog.csdn.net/shichaog/article/details/41169981">https://blog.csdn.net/shichaog/article/details/41169981</a></p>
+<p><a href="https://blog.csdn.net/shichaog/article/details/41169981" target="_blank" rel="noopener">https://blog.csdn.net/shichaog/article/details/41169981</a></p>
 <p>《Linux设备驱动开发详解》</p>
 <p>《精通linux设备驱动程序开发》</p>
 <p><a href="#目录">回到目录</a></p>

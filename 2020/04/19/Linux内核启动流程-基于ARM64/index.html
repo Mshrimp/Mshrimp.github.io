@@ -409,8 +409,8 @@
 
 
 
-<h4 id="2-3-参考资料"><a href="#2-3-参考资料" class="headerlink" title="2.3 参考资料"></a>2.3 参考资料</h4><p><a href="https://blog.csdn.net/xiaohua0877/article/details/78615776">https://blog.csdn.net/xiaohua0877/article/details/78615776</a></p>
-<p><a href="http://www.wowotech.net/sort/armv8a_arch">http://www.wowotech.net/sort/armv8a_arch</a></p>
+<h4 id="2-3-参考资料"><a href="#2-3-参考资料" class="headerlink" title="2.3 参考资料"></a>2.3 参考资料</h4><p><a href="https://blog.csdn.net/xiaohua0877/article/details/78615776" target="_blank" rel="noopener">https://blog.csdn.net/xiaohua0877/article/details/78615776</a></p>
+<p><a href="http://www.wowotech.net/sort/armv8a_arch" target="_blank" rel="noopener">http://www.wowotech.net/sort/armv8a_arch</a></p>
 <h3 id="3-内核启动第二阶段"><a href="#3-内核启动第二阶段" class="headerlink" title="3. 内核启动第二阶段"></a>3. 内核启动第二阶段</h3><p>Linux内核启动的第二阶段也就是常说的C语言阶段，从start_kernel()函数开始；start_kernel()函数是所有Linux平台进入系统内核初始化后的入口函数；主要完成剩余的与硬件平台相关的初始化工作，这些初始化操作，有的是公共的，有的是需要配置才会执行的；内核工作需要的模块的初始化依次被调用，如：内存管理、调度系统、异常处理等；</p>
 <pre class="mermaid">graph TB
     A(start_kernel)-->B(一系列的初始化操作)
