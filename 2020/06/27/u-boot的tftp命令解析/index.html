@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="u-boot中的tftp命令，采用UDP协议，tftp服务器使用UDP 69号端口，传送的数据包最大为512字节，双方采用超时重传机制；">
+<meta property="og:type" content="article">
+<meta property="og:title" content="u-boot中的tftp命令解析">
+<meta property="og:url" content="http://mshrimp.github.io/2020/06/27/u-boot%E7%9A%84tftp%E5%91%BD%E4%BB%A4%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="Mshrimp blog">
+<meta property="og:description" content="u-boot中的tftp命令，采用UDP协议，tftp服务器使用UDP 69号端口，传送的数据包最大为512字节，双方采用超时重传机制；">
+<meta property="og:image" content="http://mshrimp.github.io/2020/06/27/u-boot%E7%9A%84tftp%E5%91%BD%E4%BB%A4%E8%A7%A3%E6%9E%90/tftp%E6%B5%81%E7%A8%8B.jpg">
+<meta property="article:published_time" content="2020-06-27T03:54:24.000Z">
+<meta property="article:modified_time" content="2020-06-27T05:42:35.052Z">
+<meta property="article:author" content="micro虾米">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://mshrimp.github.io/2020/06/27/u-boot%E7%9A%84tftp%E5%91%BD%E4%BB%A4%E8%A7%A3%E6%9E%90/tftp%E6%B5%81%E7%A8%8B.jpg">
+
+<link rel="canonical" href="http://mshrimp.github.io/2020/06/27/u-boot%E7%9A%84tftp%E5%91%BD%E4%BB%A4%E8%A7%A3%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>u-boot中的tftp命令解析 | Mshrimp blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Mshrimp blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">micro虾米</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2020/06/27/u-boot%E7%9A%84tftp%E5%91%BD%E4%BB%A4%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="micro虾米">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mshrimp blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          u-boot中的tftp命令解析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-06-27 11:54:24 / Modified: 13:42:35" itemprop="dateCreated datePublished" datetime="2020-06-27T11:54:24+08:00">2020-06-27</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>u-boot中的tftp命令，采用UDP协议，tftp服务器使用UDP 69号端口，传送的数据包最大为512字节，双方采用超时重传机制；</p>
+<a id="more"></a>
+
+
+
+<h4 id="tftp命令"><a href="#tftp命令" class="headerlink" title="tftp命令"></a>tftp命令</h4><p>命令：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tftp Address FileName</span><br><span class="line">    Address: 用来保存文件的地址</span><br><span class="line">    FileName: 传送的文件名</span><br></pre></td></tr></table></figure>
+
+
+
+<p>应用举例：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; setenv serverip 192.168.1.100</span><br><span class="line">&#x3D;&gt; setenv ipaddr 192.168.1.110</span><br></pre></td></tr></table></figure>
+
+<p>tftp下载：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; tftp 0xa0000000 kernel.bin</span><br></pre></td></tr></table></figure>
+
+<p>tftp上传：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; tftp 0xa0000000 kernel.bin 0x10000000</span><br></pre></td></tr></table></figure>
+
+
+
+<p>u-boot中的bootcmd命令：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&#x3D;&gt; print bootcmd</span><br><span class="line">bootcmd&#x3D;tftp 0x60003000 uImage; tftp 0x60500000 vexpress-v2p-ca9.dtb;      setenv bootargs &#39;root&#x3D;&#x2F;dev&#x2F;mmcblk0 rw       init&#x3D;&#x2F;linuxrc       ip&#x3D;192.168.1.110 console&#x3D;ttyAMA0&#39;;      bootm 0x60003000 - 0x60500000;</span><br></pre></td></tr></table></figure>
+
+<p>tftp下载过程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">smc911x: MAC **:**:**:**:**:**</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC **:**:**:**:**:**</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">TFTP from server 192.168.1.100; our IP address is 192.168.1.110</span><br><span class="line">Filename &#39;uImage&#39;.</span><br><span class="line">Load address: 0x60003000</span><br><span class="line">Loading: #################################################################</span><br><span class="line">	 #################################################################</span><br><span class="line">	 #################################################################</span><br><span class="line">	 #############################################</span><br><span class="line">	 7.6 MiB&#x2F;s</span><br><span class="line">done</span><br><span class="line">Bytes transferred &#x3D; 3512664 (359958 hex)</span><br><span class="line"></span><br><span class="line">smc911x: MAC **:**:**:**:**:**</span><br><span class="line">smc911x: MAC **:**:**:**:**:**</span><br><span class="line">smc911x: detected LAN9118 controller</span><br><span class="line">smc911x: phy initialized</span><br><span class="line">smc911x: MAC **:**:**:**:**:**</span><br><span class="line">Using smc911x-0 device</span><br><span class="line">TFTP from server 192.168.1.100; our IP address is 192.168.1.110</span><br><span class="line">Filename &#39;vexpress-v2p-ca9.dtb&#39;.</span><br><span class="line">Load address: 0x60500000</span><br><span class="line">Loading: ##</span><br><span class="line">	 4.7 MiB&#x2F;s</span><br><span class="line">done</span><br><span class="line">Bytes transferred &#x3D; 14772 (39b4 hex)</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="tftp参数"><a href="#tftp参数" class="headerlink" title="tftp参数"></a>tftp参数</h4><p>tftp需要的参数：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>tftp_remote_ip</td>
+</tr>
+<tr>
+<td>net_ip</td>
+</tr>
+<tr>
+<td>net_netmask</td>
+</tr>
+<tr>
+<td>net_gateway</td>
+</tr>
+<tr>
+<td>tftp_filename</td>
+</tr>
+<tr>
+<td>tftp_state</td>
+</tr>
+<tr>
+<td>tftp_block_size</td>
+</tr>
+<tr>
+<td>timeout_ms</td>
+</tr>
+<tr>
+<td>time_count_max</td>
+</tr>
+<tr>
+<td>tftp_handler</td>
+</tr>
+<tr>
+<td>tftp_remote_port</td>
+</tr>
+<tr>
+<td>tftp_our_port</td>
+</tr>
+</tbody></table>
+<p>在tftp下载时，会先设置好这些tftp参数，然后开始向tftp服务器发送请求命令；</p>
+<h4 id="tftp客户端状态"><a href="#tftp客户端状态" class="headerlink" title="tftp客户端状态"></a>tftp客户端状态</h4><p>通过tftp_state变量来描述：</p>
+<table>
+<thead>
+<tr>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>STATE_SEND_RRQ</td>
+<td>发出读取请求</td>
+</tr>
+<tr>
+<td>STATE_DATA</td>
+<td>正在接收数据</td>
+</tr>
+<tr>
+<td>STATE_TOO_LARGE</td>
+<td>文件太大</td>
+</tr>
+<tr>
+<td>STATE_BAD_MAGIC</td>
+<td>Magic错误</td>
+</tr>
+<tr>
+<td>STATE_OACK</td>
+<td>收到OACK应答</td>
+</tr>
+<tr>
+<td>STATE_RECV_WRQ</td>
+<td>同STATE_DATA</td>
+</tr>
+<tr>
+<td>STATE_SEND_WRQ</td>
+<td>同STATE_SEND_RRQ</td>
+</tr>
+</tbody></table>
+<h4 id="tftp数据包类型"><a href="#tftp数据包类型" class="headerlink" title="tftp数据包类型"></a>tftp数据包类型</h4><table>
+<thead>
+<tr>
+<th>类型</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>TFTP_RRQ</td>
+<td>请求读取文件</td>
+</tr>
+<tr>
+<td>TFTP_WRQ</td>
+<td>请求写文件</td>
+</tr>
+<tr>
+<td>TFTP_DATA</td>
+<td>数据包</td>
+</tr>
+<tr>
+<td>TFTP_ACK</td>
+<td>确认应答包</td>
+</tr>
+<tr>
+<td>TFTP_ERROR</td>
+<td>错误信息包</td>
+</tr>
+<tr>
+<td>TFTP_OACK</td>
+<td>服务器超时未收到客户端的ACK时，主动发送一个OACK包</td>
+</tr>
+</tbody></table>
+<h4 id="tftp主要的函数"><a href="#tftp主要的函数" class="headerlink" title="tftp主要的函数"></a>tftp主要的函数</h4><p>tftp功能实现代码位于net/tftp.c</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">tftp_send</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>根据tftp_state变量的值，发送不同的tftp数据包；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">store_block</span><span class="params">(<span class="keyword">int</span> block, uchar *src, <span class="keyword">unsigned</span> <span class="keyword">int</span> len)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>根据load_addr地址，将src开始，长度为len的block个数据块写入flash或内存中；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">tftp_handler</span><span class="params">(uchar *pkt, <span class="keyword">unsigned</span> dest, struct in_addr sip,</span></span></span><br><span class="line"><span class="function"><span class="params">              <span class="keyword">unsigned</span> src, <span class="keyword">unsigned</span> len)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>处理收到的tftp数据包的函数；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">tftp_timeout_handler</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>超时处理函数；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">tftp_start</span><span class="params">(<span class="keyword">enum</span> <span class="keyword">proto_t</span> protocol)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>初始化各个tftp参数，并发送tftp读请求；</p>
+<h4 id="tftp下载流程"><a href="#tftp下载流程" class="headerlink" title="tftp下载流程"></a>tftp下载流程</h4><ol>
+<li><p>首先，由客户端初始化各tftp参数，并发出读写请求；</p>
+</li>
+<li><p>服务器收到请求并同意，打开连接，发送第一个数据包；</p>
+</li>
+<li><p>客户端收到数据包后发回确认，服务器在发送下一个数据包前必须确认收到客户端对上一个数据包的确认；</p>
+</li>
+<li><p>如果数据包在传输过程中丢失，服务器不会收到客户端的确认，服务器在超时后重新传输最后一个未被确认的数据包；</p>
+</li>
+<li><p>发送的数据包为512字节，如果数据包小于512字节，则表示该数据包是最后一个；如果传输的数据是512字节的整数倍，最后会再发送一个空数据包；</p>
+</li>
+</ol>
+<p><img src="/2020/06/27/u-boot%E7%9A%84tftp%E5%91%BD%E4%BB%A4%E8%A7%A3%E6%9E%90/tftp%E6%B5%81%E7%A8%8B.jpg" alt="tftp流程"></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/05/31/busybox%E5%8A%A0%E8%BD%BDinittab%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/" rel="prev" title="busybox加载inittab过程分析">
+      <i class="fa fa-chevron-left"></i> busybox加载inittab过程分析
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#tftp命令"><span class="nav-text">tftp命令</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tftp参数"><span class="nav-text">tftp参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tftp客户端状态"><span class="nav-text">tftp客户端状态</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tftp数据包类型"><span class="nav-text">tftp数据包类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tftp主要的函数"><span class="nav-text">tftp主要的函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tftp下载流程"><span class="nav-text">tftp下载流程</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">micro虾米</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">18</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">7</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">micro虾米</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '1ec7eee73ee4f91e15a1',
+      clientSecret: '971b3c9439c2a8fa2fcb12307657ad50aee6ed0c',
+      repo        : 'mshrimp_blog_talk',
+      owner       : 'mshrimp',
+      admin       : ['mshrimp'],
+      id          : 'af5fa93e372124d57b8799ae62f3e036',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
