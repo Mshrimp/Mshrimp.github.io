@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="TTY 是 Teletypewriter的缩写（Teleprinter、TeletypewriterTele-Type，缩写为 TTY），中文电传打字机简称电传，是远距离打印交换的编写形式； 在linux中tty表示各种终端，通常是和硬件相对应，tty用来指任何的串口设备，如：输入设备键盘鼠标、输出设备显示器、虚拟的pty等；">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux-kernel中的tty驱动">
+<meta property="og:url" content="http://mshrimp.github.io/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/index.html">
+<meta property="og:site_name" content="Mshrimp blog">
+<meta property="og:description" content="TTY 是 Teletypewriter的缩写（Teleprinter、TeletypewriterTele-Type，缩写为 TTY），中文电传打字机简称电传，是远距离打印交换的编写形式； 在linux中tty表示各种终端，通常是和硬件相对应，tty用来指任何的串口设备，如：输入设备键盘鼠标、输出设备显示器、虚拟的pty等；">
+<meta property="og:image" content="http://mshrimp.github.io/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/tty%E5%B1%82%E6%AC%A1%E5%85%B3%E7%B3%BB.jpg">
+<meta property="og:image" content="http://mshrimp.github.io/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/tty%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B-1598176659467.png">
+<meta property="article:published_time" content="2020-08-02T09:54:21.000Z">
+<meta property="article:modified_time" content="2020-08-23T10:01:33.406Z">
+<meta property="article:author" content="micro虾米">
+<meta property="article:tag" content="tty">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://mshrimp.github.io/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/tty%E5%B1%82%E6%AC%A1%E5%85%B3%E7%B3%BB.jpg">
+
+<link rel="canonical" href="http://mshrimp.github.io/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>linux-kernel中的tty驱动 | Mshrimp blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Mshrimp blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">micro虾米</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="micro虾米">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mshrimp blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux-kernel中的tty驱动
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-02 17:54:21" itemprop="dateCreated datePublished" datetime="2020-08-02T17:54:21+08:00">2020-08-02</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-23 18:01:33" itemprop="dateModified" datetime="2020-08-23T18:01:33+08:00">2020-08-23</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>TTY 是 Teletypewriter的缩写（Teleprinter、TeletypewriterTele-Type，缩写为 TTY），中文电传打字机简称电传，是远距离打印交换的编写形式；</p>
+<p>在linux中tty表示各种终端，通常是和硬件相对应，tty用来指任何的串口设备，如：输入设备键盘鼠标、输出设备显示器、虚拟的pty等；</p>
+<a id="more"></a>
+
+
+
+
+<h3 id="0-简介"><a href="#0-简介" class="headerlink" title="0. 简介"></a>0. 简介</h3><p>tty驱动、uart驱动存在密切联系，tty设备包括uart，uart设备的工作依赖于tty设备，uart是tty的上层，内核中有完整的tty驱动，uart设备可以使用tty驱动进行封装；而内核中也有完整的uart驱动，两者相互独立又密切相关；本文主要讲解tty驱动相关的内容，以控制台驱动为例讲述tty驱动的应用，关于uart驱动方面内容，请参考下一文uart驱动；</p>
+<p>tty驱动程序的核心在标准字符设备驱动层之下；</p>
+<p>linux内核中的tty层次结构，包含：tty核心、tty线路规程、tty驱动；</p>
+<ol>
+<li>tty核心(tty_core)：整个tty设备的抽象，对用户提供统一的接口，用户空间通过设备文件与tty_core交互；tty_core根据用户空间操作类型，选择将数据交给line discipline和tty_driver；</li>
+</ol>
+<ol start="2">
+<li>tty线路规程(line discipline)：对传输数据的格式化，把从用户或硬件接收的数据格式化，这种格式化使用协议完成转换，如：蓝牙；处理之后，将数据交给tty_driver；</li>
+</ol>
+<ol start="3">
+<li>tty驱动(tty_driver)：tty设备对应的驱动，将字符转换成硬件可以理解的字符，将其传给硬件设备；并从硬件接收数据；</li>
+</ol>
+<p><img src="/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/tty%E5%B1%82%E6%AC%A1%E5%85%B3%E7%B3%BB.jpg" alt="tty层次关系"></p>
+<p>tty核心和线路规程由内核提供，驱动工程师只需要完成tty驱动部分代码就可以使用tty了；</p>
+<p>多数时候tty核心和tty驱动之间的数据传输会经历tty线路规程的转换，但是tty驱动和tty核心之间也可以直接传输数据；tty核心根据操作类型选择和线路规程和tty驱动交互；如：设置硬件的ioctl直接交给tty_driver处理；而read/write操作交给线路规程处理；</p>
+<p>1) 发送数据流程：tty核心从用户空间获取到将要发送给tty设备的数据，tty核心将数据传递给tty线路规程驱动，然后数据被传递到tty驱动，tty驱动将数据转换为可以发送给硬件的格式；</p>
+<p>2) 接收数据流程：tty硬件将接收到的数据上交给tty驱动，进入tty线路规程驱动，再进入tty核心，被传递给用户空间；</p>
+<p>tty驱动程序有三种类型：控制台、串口和pty；控制台和pty驱动程序已经在内核中稳定使用，使用tty核心与用户和系统交互的新驱动都可以看做是串口驱动程序；</p>
+<p>tty驱动代码位于drivers/tty目录；</p>
+<h3 id="1-tty核心"><a href="#1-tty核心" class="headerlink" title="1. tty核心"></a>1. tty核心</h3><p>tty核心是所有tty类型驱动的顶层架构，向应用层提供了统一的接口；用户态的open、close、read、write系统调用首先到达tty核心；</p>
+<p>tty核心在tty_io.c文件中由内核实现，定义了tty设备需要的核心数据结构，和一些需要操作；</p>
+<h4 id="1-1-tty重要数据结构"><a href="#1-1-tty重要数据结构" class="headerlink" title="1.1 tty重要数据结构"></a>1.1 tty重要数据结构</h4><p><strong>1) tty_driver</strong></p>
+<p>tty驱动程序的主要数据结构是struct tty_driver，规定了tty驱动程序和高层之间的编程接口，用来向tty核心注册和注销驱动程序；操作包含在头文件&lt;linux/tty_driver.h&gt;中；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// linux/tty_driver.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> &#123;</span></span><br><span class="line">    <span class="keyword">int</span> magic;      <span class="comment">/* magic number for this structure */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kref</span> <span class="title">kref</span>;</span>   <span class="comment">/* Reference management */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">cdev</span> **<span class="title">cdevs</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">module</span>   *<span class="title">owner</span>;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>  *driver_name;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>  *name;</span><br><span class="line">    <span class="keyword">int</span> name_base;  <span class="comment">/* offset of printed name */</span></span><br><span class="line">    <span class="keyword">int</span> major;      <span class="comment">/* major device number */</span></span><br><span class="line">    <span class="keyword">int</span> minor_start;    <span class="comment">/* start of minor device number */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span>    num;    <span class="comment">/* number of devices allocated */</span></span><br><span class="line">    short   type;       <span class="comment">/* type of tty driver */</span></span><br><span class="line">    short   subtype;    <span class="comment">/* subtype of tty driver */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ktermios</span> <span class="title">init_termios</span>;</span> <span class="comment">/* Initial termios */</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span>   flags;      <span class="comment">/* tty driver flags */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">proc_dir_entry</span> *<span class="title">proc_entry</span>;</span> <span class="comment">/* /proc fs entry */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">other</span>;</span> <span class="comment">/* only used for the PTY driver */</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Pointer to the tty data structures</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> **<span class="title">ttys</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_port</span> **<span class="title">ports</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ktermios</span> **<span class="title">termios</span>;</span></span><br><span class="line">    <span class="keyword">void</span> *driver_state;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Driver methods</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">tty_operations</span> *<span class="title">ops</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">tty_drivers</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>tty设备的所有操作都包含在tty_driver结构体中，内核提供alloc_tty_driver()函数来分配tty_driver结构体，参数是该驱动支持的tty设备的数量；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 分配tty驱动程序</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">normal</span>;</span></span><br><span class="line">normal = alloc_tty_driver(nr);</span><br></pre></td></tr></table></figure>
+
+
+<p>alloc_tty_driver()函数的实现如下：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> struct tty_driver *<span class="title">alloc_tty_driver</span><span class="params">(<span class="keyword">unsigned</span> <span class="keyword">int</span> lines)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">ret</span> = <span class="title">tty_alloc_driver</span>(<span class="title">lines</span>, 0);</span></span><br><span class="line">    <span class="keyword">if</span> (IS_ERR(ret))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> tty_alloc_driver(lines, flags) \</span></span><br><span class="line">        __tty_alloc_driver(lines, THIS_MODULE, flags)</span><br><span class="line"></span><br><span class="line"><span class="comment">// tty_io.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *__<span class="title">tty_alloc_driver</span>(<span class="title">unsigned</span> <span class="title">int</span> <span class="title">lines</span>, <span class="title">struct</span> <span class="title">module</span> *<span class="title">owner</span>,</span></span><br><span class="line"><span class="class">         <span class="title">unsigned</span> <span class="title">long</span> <span class="title">flags</span>)</span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">	<span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">driver</span>;</span></span><br><span class="line"></span><br><span class="line">	driver = kzalloc(<span class="keyword">sizeof</span>(struct tty_driver), GFP_KERNEL);</span><br><span class="line">    <span class="keyword">if</span> (!driver)</span><br><span class="line">        <span class="keyword">return</span> ERR_PTR(-ENOMEM);</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>申请成功后，alloc_tty_driver()函数将申请到的tty_driver结构体作为返回值返回，之后，需要对tty_driver进行初始化，再通过调用tty_register_driver()来注册进内核；</p>
+<p><strong>2) tty_operations</strong></p>
+<p>tty_operations结构中包含所有的回调函数，被tty驱动程序设置，并被tty核心调用；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// linux/tty_driver.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_operations</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> * (*<span class="title">lookup</span>)(<span class="title">struct</span> <span class="title">tty_driver</span> *<span class="title">driver</span>,</span></span><br><span class="line"><span class="class">            <span class="title">struct</span> <span class="title">inode</span> *<span class="title">inode</span>, <span class="title">int</span> <span class="title">idx</span>);</span></span><br><span class="line">    <span class="keyword">int</span>  (*install)(struct tty_driver *driver, struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">void</span> (*<span class="built_in">remove</span>)(struct tty_driver *driver, struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">int</span>  (*<span class="built_in">open</span>)(struct tty_struct * tty, struct file * filp);</span><br><span class="line">    <span class="keyword">void</span> (*<span class="built_in">close</span>)(struct tty_struct * tty, struct file * filp);</span><br><span class="line">    <span class="keyword">void</span> (*<span class="built_in">shutdown</span>)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">void</span> (*cleanup)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">int</span>  (*<span class="built_in">write</span>)(struct tty_struct * tty,</span><br><span class="line">              <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *buf, <span class="keyword">int</span> count);</span><br><span class="line">    <span class="keyword">int</span>  (*put_char)(struct tty_struct *tty, <span class="keyword">unsigned</span> <span class="keyword">char</span> ch);</span><br><span class="line">    <span class="keyword">void</span> (*flush_chars)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">int</span>  (*write_room)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">int</span>  (*chars_in_buffer)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">int</span>  (*ioctl)(struct tty_struct *tty,</span><br><span class="line">            <span class="keyword">unsigned</span> <span class="keyword">int</span> cmd, <span class="keyword">unsigned</span> <span class="keyword">long</span> arg);</span><br><span class="line">    <span class="keyword">long</span> (*compat_ioctl)(struct tty_struct *tty,</span><br><span class="line">                 <span class="keyword">unsigned</span> <span class="keyword">int</span> cmd, <span class="keyword">unsigned</span> <span class="keyword">long</span> arg);</span><br><span class="line">    <span class="keyword">void</span> (*set_termios)(struct tty_struct *tty, struct ktermios * old);</span><br><span class="line">    <span class="keyword">void</span> (*throttle)(struct tty_struct * tty);</span><br><span class="line">    <span class="keyword">void</span> (*unthrottle)(struct tty_struct * tty);</span><br><span class="line">    <span class="keyword">void</span> (*<span class="built_in">stop</span>)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">void</span> (*start)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">void</span> (*hangup)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">int</span> (*break_ctl)(struct tty_struct *tty, <span class="keyword">int</span> state);</span><br><span class="line">    <span class="keyword">void</span> (*flush_buffer)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">void</span> (*set_ldisc)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">void</span> (*wait_until_sent)(struct tty_struct *tty, <span class="keyword">int</span> timeout);</span><br><span class="line">    <span class="keyword">void</span> (*send_xchar)(struct tty_struct *tty, <span class="keyword">char</span> ch);</span><br><span class="line">    <span class="keyword">int</span> (*tiocmget)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">int</span> (*tiocmset)(struct tty_struct *tty,</span><br><span class="line">            <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="built_in">set</span>, <span class="keyword">unsigned</span> <span class="keyword">int</span> <span class="built_in">clear</span>);</span><br><span class="line">    <span class="keyword">int</span> (*resize)(struct tty_struct *tty, struct winsize *ws);</span><br><span class="line">    <span class="keyword">int</span> (*set_termiox)(struct tty_struct *tty, struct termiox *tnew);</span><br><span class="line">	......</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>3) tty_struct</strong></p>
+<p>tty核心使用tty_struct结构保存当前特定tty端口的状态；除了个别成员外基本上所有成员都只能被tty核心使用；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// linux/tty_driver.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> &#123;</span></span><br><span class="line">    <span class="keyword">int</span> magic;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">kref</span> <span class="title">kref</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">device</span> *<span class="title">dev</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">driver</span>;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">tty_operations</span> *<span class="title">ops</span>;</span></span><br><span class="line">    <span class="keyword">int</span> index;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Protects ldisc changes: Lock tty not pty */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ld_semaphore</span> <span class="title">ldisc_sem</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc</span> *<span class="title">ldisc</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Termios values are protected by the termios rwsem */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">ktermios</span> <span class="title">termios</span>, <span class="title">termios_locked</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">termiox</span> *<span class="title">termiox</span>;</span>    <span class="comment">/* May be NULL for unsupported */</span></span><br><span class="line">    <span class="keyword">char</span> name[<span class="number">64</span>];</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">link</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">fasync_struct</span> *<span class="title">fasync</span>;</span></span><br><span class="line">    <span class="keyword">int</span> alt_speed;      <span class="comment">/* For magic substitution of 38400 bps */</span></span><br><span class="line">    <span class="keyword">wait_queue_head_t</span> write_wait;</span><br><span class="line">    <span class="keyword">wait_queue_head_t</span> read_wait;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N_TTY_BUF_SIZE 4096</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> *write_buf;</span><br><span class="line">    <span class="keyword">int</span> write_cnt;</span><br><span class="line">    <span class="comment">/* If the tty has a pending do_SAK, queue it here - akpm */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">work_struct</span> <span class="title">SAK_work</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_port</span> *<span class="title">port</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>tty端口的状态都包含在tty_struct结构体中，内核提供alloc_tty_struct()函数来分配tty_struct结构体，并对成员进行初始化操作，参数是该驱动的tty_driver和设备的索引号；该函数在tty核心中实现并调用，不需要在tty驱动中明确调用；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 分配tty驱动程序</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span>;</span></span><br><span class="line">tty = alloc_tty_struct(driver, idx);</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="1-2-tty的注册和卸载"><a href="#1-2-tty的注册和卸载" class="headerlink" title="1.2 tty的注册和卸载"></a>1.2 tty的注册和卸载</h4><p><strong>1) 注册</strong></p>
+<p>tty驱动的注册，由tty_register_driver()函数完成，用于将串口驱动tty_driver注册到内核；注册时会分配主设备号和次设备号，主设备号对应驱动程序，告知内核需要使用哪个驱动程序驱动该设备，次设备号对应具体的设备；</p>
+<p>tty_register_driver()函数用来向内核注册tty设备，根据tty_driver的所有次设备号，创建不同的sysfs文件；会使用fs/char_dev.c中提供的字符设备接口注册字符设备；使用fs/proc/proc_tty.c中的函数创建/proc/tty文件；在使用tty_register_driver()函数注册tty驱动之前，需要先对申请到的tty_driver结构体成员进行初始化；tty_register_driver()函数的参数是已经初始化过的tty_driver结构体指针；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// drivers/tty/tty_io.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tty_register_driver</span><span class="params">(struct tty_driver *driver)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	alloc_chrdev_region();</span><br><span class="line">    register_chrdev_region();</span><br><span class="line">    tty_cdev_add();</span><br><span class="line">    list_add(&amp;driver-&gt;tty_drivers, &amp;tty_drivers);</span><br><span class="line">    <span class="comment">// 注册所控制的设备</span></span><br><span class="line">    <span class="keyword">if</span> (!(driver-&gt;flags &amp; TTY_DRIVER_DYNAMIC_DEV)) &#123;</span><br><span class="line">        <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; driver-&gt;num; i++) &#123;</span><br><span class="line">            d = tty_register_device(driver, i, <span class="literal">NULL</span>);</span><br><span class="line">            <span class="keyword">if</span> (IS_ERR(d)) &#123;</span><br><span class="line">                error = PTR_ERR(d);</span><br><span class="line">                <span class="keyword">goto</span> err_unreg_devs;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在tty_cdev_add()函数中，将字符设备操作集指定为tty_fops，之后将tty_driver添加到tty_driver结构体中的tty_drivers链表中，可以通过设备号找到对应的driver；最后通过tty_register_device()函数注册tty驱动所控制的硬件设备；</p>
+<p><strong>2) 卸载</strong></p>
+<p>tty驱动的卸载，由tty_unregister_driver()函数完成，用于注销已注册的tty_driver；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// drivers/tty/tty_io.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tty_unregister_driver</span><span class="params">(struct tty_driver *driver)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    unregister_chrdev_region(MKDEV(driver-&gt;major, driver-&gt;minor_start),</span><br><span class="line">                driver-&gt;num);</span><br><span class="line">	list_del(&amp;driver-&gt;tty_drivers);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>从注册过程中可以得知，tty设备所有的操作都包含在tty_fops结构体中；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// drivers/tty/tty_io.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="keyword">const</span> <span class="class"><span class="keyword">struct</span> <span class="title">file_operations</span> <span class="title">tty_fops</span> = &#123;</span></span><br><span class="line">    .llseek     = no_llseek,</span><br><span class="line">    .<span class="built_in">read</span>       = tty_read,</span><br><span class="line">    .<span class="built_in">write</span>      = tty_write,</span><br><span class="line">    .poll       = tty_poll,</span><br><span class="line">    .unlocked_ioctl = tty_ioctl,</span><br><span class="line">    .compat_ioctl   = tty_compat_ioctl,</span><br><span class="line">    .<span class="built_in">open</span>       = tty_open,</span><br><span class="line">    .<span class="built_in">release</span>    = tty_release,</span><br><span class="line">    .fasync     = tty_fasync,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>特定的tty设备驱动的主要工作是填充tty_driver结构体中的成员；</p>
+<h4 id="1-3-tty的打开和关闭"><a href="#1-3-tty的打开和关闭" class="headerlink" title="1.3 tty的打开和关闭"></a>1.3 tty的打开和关闭</h4><p>tty设备的打开和关闭操作，在tty_io.c中实现通过tty_open和tty_release函数实现；tty_open和tty_release函数保持对tty打开的设备计数；</p>
+<p><strong>1) open</strong></p>
+<p>用户态使用open函数打开设备节点时，对应tty_fops结构体中的tty_open函数被调用；tty驱动程序一定要设置open成员操作，否则用户态调用open时，将返回-ENODEV；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">tty_open</span><span class="params">(struct inode *inode, struct file *filp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">driver</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="keyword">int</span> index;</span><br><span class="line">    <span class="keyword">dev_t</span> device = inode-&gt;i_rdev;</span><br><span class="line"></span><br><span class="line">    nonseekable_open(inode, filp);</span><br><span class="line"></span><br><span class="line">retry_open:</span><br><span class="line">    retval = tty_alloc_file(filp);</span><br><span class="line">    <span class="keyword">if</span> (retval)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    tty = tty_open_current_tty(device, filp);</span><br><span class="line">    <span class="keyword">if</span> (!tty) &#123;</span><br><span class="line">        mutex_lock(&amp;tty_mutex);</span><br><span class="line">        driver = tty_lookup_driver(device, filp, &amp;noctty, &amp;index);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/* check whether we're reopening an existing tty */</span></span><br><span class="line">        tty = tty_driver_lookup_tty(driver, inode, index);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (tty) &#123;</span><br><span class="line">            mutex_unlock(&amp;tty_mutex);</span><br><span class="line">            retval = tty_lock_interruptible(tty);</span><br><span class="line"></span><br><span class="line">            <span class="comment">/* safe to drop the kref from tty_driver_lookup_tty() */</span></span><br><span class="line">            tty_kref_put(tty);</span><br><span class="line">            retval = tty_reopen(tty);</span><br><span class="line"></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123; <span class="comment">/* Returns with the tty_lock held for now */</span></span><br><span class="line">            tty = tty_init_dev(driver, index);</span><br><span class="line">            mutex_unlock(&amp;tty_mutex);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        tty_driver_kref_put(driver);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    tty_add_file(tty, filp);</span><br><span class="line">	......</span><br><span class="line">    <span class="keyword">if</span> (tty-&gt;ops-&gt;<span class="built_in">open</span>)</span><br><span class="line">        retval = tty-&gt;ops-&gt;<span class="built_in">open</span>(tty, filp);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        retval = -ENODEV;</span><br><span class="line">    filp-&gt;f_flags = saved_flags;</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>tty_alloc_file()函数</p>
+<p>每一个打开的tty都有一个私有数据tty_file_private结构，在tty_alloc_file()函数中用private_data指针指向该结构；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tty_alloc_file</span><span class="params">(struct file *file)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_file_private</span> *<span class="title">priv</span>;</span></span><br><span class="line"></span><br><span class="line">    priv = kmalloc(<span class="keyword">sizeof</span>(*priv), GFP_KERNEL);</span><br><span class="line">    <span class="keyword">if</span> (!priv)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    file-&gt;private_data = priv;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// linux/tty.h</span></span><br><span class="line"><span class="comment">/* Each of a tty's open files has private_data pointing to tty_file_private */</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_file_private</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">file</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">list_head</span> <span class="title">list</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>tty_lookup_driver()函数查找tty_driver链表，找到注册时添加的tty_driver，然后调用tty_driver的ops-&gt;open函数打开具体的tty设备；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">driver</span> = <span class="title">NULL</span>;</span></span><br><span class="line">driver = tty_lookup_driver(device, filp, &amp;noctty, &amp;index);</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> struct tty_driver *<span class="title">tty_lookup_driver</span><span class="params">(<span class="keyword">dev_t</span> device, struct file *filp,</span></span></span><br><span class="line"><span class="function"><span class="params">        <span class="keyword">int</span> *noctty, <span class="keyword">int</span> *index)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">	......</span><br><span class="line">    <span class="keyword">default</span>:</span><br><span class="line">        driver = get_tty_driver(device, index);</span><br><span class="line">        <span class="keyword">if</span> (!driver)</span><br><span class="line">            <span class="keyword">return</span> ERR_PTR(-ENODEV);</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> driver;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> struct tty_driver *<span class="title">get_tty_driver</span><span class="params">(<span class="keyword">dev_t</span> device, <span class="keyword">int</span> *index)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">p</span>;</span></span><br><span class="line"></span><br><span class="line">    list_for_each_entry(p, &amp;tty_drivers, tty_drivers) &#123;</span><br><span class="line">        <span class="keyword">dev_t</span> base = MKDEV(p-&gt;major, p-&gt;minor_start);</span><br><span class="line">        <span class="keyword">if</span> (device &lt; base || device &gt;= base + p-&gt;num)</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        *index = device - base;</span><br><span class="line">        <span class="keyword">return</span> tty_driver_kref_get(p);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>tty_reopen()</p>
+<p>tty_init_dev()</p>
+<p><strong>2) release</strong></p>
+<p>tty_release()函数通过tty-&gt;ops-&gt;close操作来关闭tty设备；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tty_release</span><span class="params">(struct inode *inode, struct file *filp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span> = <span class="title">file_tty</span>(<span class="title">filp</span>);</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">o_tty</span> = <span class="title">NULL</span>;</span></span><br><span class="line">    <span class="keyword">long</span>    timeout = <span class="number">0</span>;</span><br><span class="line">	......</span><br><span class="line">    <span class="keyword">if</span> (tty-&gt;ops-&gt;<span class="built_in">close</span>)</span><br><span class="line">        tty-&gt;ops-&gt;<span class="built_in">close</span>(tty, filp);</span><br><span class="line"></span><br><span class="line">    tty_del_file(filp);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * Ask the line discipline code to release its structures</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    tty_ldisc_release(tty);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Wait for pending work before tty destruction commmences */</span></span><br><span class="line">    tty_flush_works(tty);</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="1-4-tty的读写"><a href="#1-4-tty的读写" class="headerlink" title="1.4 tty的读写"></a>1.4 tty的读写</h4><p><strong>1) write</strong></p>
+<p>在用户态调用write系统调用函数将数据发送给硬件时，内核将数据和大小发送给tty驱动程序的write操作；</p>
+<p>由于tty硬件速度和缓冲区大小等原因，当write时写操作程序处理的数据不能同时发送出去，write函数将返回发送给硬件的字符数；用户态可以通过write系统条用函数的返回值，判断是否写入了所有的数据；</p>
+<p>tty设备文件的写操作通过tty_fops结构体中的tty_write函数实现；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">tty_write</span><span class="params">(struct file *file, <span class="keyword">const</span> <span class="keyword">char</span> __user *buf,</span></span></span><br><span class="line"><span class="function"><span class="params">                        <span class="keyword">size_t</span> count, <span class="keyword">loff_t</span> *ppos)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span> = <span class="title">file_tty</span>(<span class="title">file</span>);</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc</span> *<span class="title">ld</span>;</span></span><br><span class="line">    <span class="keyword">ssize_t</span> ret;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tty_paranoia_check(tty, file_inode(file), <span class="string">"tty_write"</span>))</span><br><span class="line">        <span class="keyword">return</span> -EIO;</span><br><span class="line">    <span class="keyword">if</span> (!tty || !tty-&gt;ops-&gt;<span class="built_in">write</span> ||</span><br><span class="line">        (test_bit(TTY_IO_ERROR, &amp;tty-&gt;flags)))</span><br><span class="line">            <span class="keyword">return</span> -EIO;</span><br><span class="line">    <span class="comment">/* Short term debug to catch buggy drivers */</span></span><br><span class="line">    <span class="keyword">if</span> (tty-&gt;ops-&gt;write_room == <span class="literal">NULL</span>)</span><br><span class="line">        printk(KERN_ERR <span class="string">"tty driver %s lacks a write_room method.\n"</span>,</span><br><span class="line">            tty-&gt;driver-&gt;name);</span><br><span class="line">    ld = tty_ldisc_ref_wait(tty);</span><br><span class="line">    <span class="keyword">if</span> (!ld-&gt;ops-&gt;<span class="built_in">write</span>)</span><br><span class="line">        ret = -EIO;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ret = do_tty_write(ld-&gt;ops-&gt;<span class="built_in">write</span>, tty, file, buf, count);</span><br><span class="line">    tty_ldisc_deref(ld);</span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>tty_write()函数通过file_tty(file)从file的私有数据中获取tty_struct结构；并通过tty_ldisc_ref_wait(tty)获取线路规程tty_ldisc结构指针，在do_tty_write(ld-&gt;ops-&gt;write, tty, file, buf, count)函数中，使用tty_ldisc_ops结构中的ld-&gt;ops-&gt;write函数，进行具体的写入操作；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">ssize_t</span> <span class="title">do_tty_write</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">ssize_t</span> (*<span class="built_in">write</span>)(struct tty_struct *, struct file *, <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *, <span class="keyword">size_t</span>),</span></span></span><br><span class="line"><span class="function"><span class="params">    struct tty_struct *tty,</span></span></span><br><span class="line"><span class="function"><span class="params">    struct file *file,</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">char</span> __user *buf,</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">size_t</span> count)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    chunk = <span class="number">2048</span>;</span><br><span class="line">    <span class="keyword">if</span> (test_bit(TTY_NO_WRITE_SPLIT, &amp;tty-&gt;flags))</span><br><span class="line">        chunk = <span class="number">65536</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (;;) &#123;</span><br><span class="line">        <span class="keyword">if</span> (copy_from_user(tty-&gt;write_buf, buf, <span class="built_in">size</span>))</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        ret = <span class="built_in">write</span>(tty, file, tty-&gt;write_buf, <span class="built_in">size</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在调用do_tty_write()函数前后，会分别使用tty_ldisc_ref_wait()和tty_ldisc_deref()函数增加和减少ldsic的引用计数；因为内部分别调用了ldsem_down_read和ldsem_up_read函数操作&amp;ld-&gt;tty-&gt;ldisc_sem锁；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ldsem_down_read(&amp;tty-&gt;ldisc_sem, MAX_SCHEDULE_TIMEOUT);</span><br><span class="line">ldsem_up_read(&amp;ld-&gt;tty-&gt;ldisc_sem);</span><br></pre></td></tr></table></figure>
+
+
+<p>在do_tty_write()函数中，默认一次写入数据大小为2048字节，如果设置了TTY_NO_WRITE_SPLIT，可以一次写入65536字节数据；</p>
+<p>tty-&gt;write_buf，是写操作的临时缓冲区，存放通过copy_from_user从用户空间获取的数据；</p>
+<p>tty-&gt;write_cnt，是临时缓冲区的大小；</p>
+<p>tty_write通过ld-&gt;ops-&gt;write操作来完成数据的写入操作；</p>
+<p><strong>2) read</strong></p>
+<p>tty设备文件的写操作通过tty_fops结构体中的tty_read函数实现；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">tty_read</span><span class="params">(struct file *file, <span class="keyword">char</span> __user *buf, <span class="keyword">size_t</span> count,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">loff_t</span> *ppos)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">inode</span> *<span class="title">inode</span> = <span class="title">file_inode</span>(<span class="title">file</span>);</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span> = <span class="title">file_tty</span>(<span class="title">file</span>);</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc</span> *<span class="title">ld</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tty_paranoia_check(tty, inode, <span class="string">"tty_read"</span>))</span><br><span class="line">        <span class="keyword">return</span> -EIO;</span><br><span class="line">    <span class="keyword">if</span> (!tty || (test_bit(TTY_IO_ERROR, &amp;tty-&gt;flags)))</span><br><span class="line">        <span class="keyword">return</span> -EIO;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* We want to wait for the line discipline to sort out in this</span></span><br><span class="line"><span class="comment">       situation */</span></span><br><span class="line">    ld = tty_ldisc_ref_wait(tty);</span><br><span class="line">    <span class="keyword">if</span> (ld-&gt;ops-&gt;<span class="built_in">read</span>)</span><br><span class="line">        i = ld-&gt;ops-&gt;<span class="built_in">read</span>(tty, file, buf, count);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        i = -EIO;</span><br><span class="line">    tty_ldisc_deref(ld);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (i &gt; <span class="number">0</span>)</span><br><span class="line">        tty_update_time(&amp;inode-&gt;i_atime);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>tty_read()函数通过file_tty(file)从file的私有数据中获取tty_struct结构；并通过tty_ldisc_ref_wait(tty)获取线路规程tty_ldisc结构指针，使用tty_ldisc_ops结构中的ld-&gt;ops-&gt;read函数，进行具体的读取操作；</p>
+<p>ld-&gt;ops-&gt;read(tty, file, buf, count)</p>
+<p>在读取操作前后，会分别使用tty_ldisc_ref_wait()和tty_ldisc_deref()函数增加和减少ldsic的引用计数；因为内部分别调用了ldsem_down_read和ldsem_up_read函数操作&amp;ld-&gt;tty-&gt;ldisc_sem锁；</p>
+<p>ldsem_down_read(&amp;tty-&gt;ldisc_sem, MAX_SCHEDULE_TIMEOUT);</p>
+<p>ldsem_up_read(&amp;ld-&gt;tty-&gt;ldisc_sem);</p>
+<p>tty_read通过ld-&gt;ops-&gt;read操作来完成数据的读取操作；</p>
+<h4 id="1-5-tty线路设置"><a href="#1-5-tty线路设置" class="headerlink" title="1.5 tty线路设置"></a>1.5 tty线路设置</h4><p>用户态要改变线路设置，或者获取当前的线路设置时，只需要调用多个termios用户空间库函数，或者对tty设备节点调用ioctl操作；在tty核心会把这两种操作转换为tty驱动程序的回调函数或ioctl操作；大部分temios用户空间函数会被库函数转换成对tty设备节点的ioctl调用；tty的ioctl调用会被tty核心转换成一系列的set_termios调用；所有的线路设置都封装在termios结构中；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// uapi/asm-generic/termbits.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ktermios</span> &#123;</span></span><br><span class="line">    <span class="keyword">tcflag_t</span> c_iflag;       <span class="comment">/* input mode flags */</span></span><br><span class="line">    <span class="keyword">tcflag_t</span> c_oflag;       <span class="comment">/* output mode flags */</span></span><br><span class="line">    <span class="keyword">tcflag_t</span> c_cflag;       <span class="comment">/* control mode flags */</span></span><br><span class="line">    <span class="keyword">tcflag_t</span> c_lflag;       <span class="comment">/* local mode flags */</span></span><br><span class="line">    <span class="keyword">cc_t</span> c_line;            <span class="comment">/* line discipline */</span></span><br><span class="line">    <span class="keyword">cc_t</span> c_cc[NCCS];        <span class="comment">/* control characters */</span></span><br><span class="line">    <span class="keyword">speed_t</span> c_ispeed;       <span class="comment">/* input speed */</span></span><br><span class="line">    <span class="keyword">speed_t</span> c_ospeed;       <span class="comment">/* output speed */</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>ktermios结构体用来提供一个线路设置集合，给tty设备提供一个特定的端口，用来设置波特率、数据大小、数据流控设置等；如果驱动中未初始化使用，驱动中会使用tty_std_termios结构体变量；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tty_io.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ktermios</span> <span class="title">tty_std_termios</span> = &#123;</span> <span class="comment">/* for the benefit of tty drivers  */</span></span><br><span class="line">    .c_iflag = ICRNL | IXON,</span><br><span class="line">    .c_oflag = OPOST | ONLCR,</span><br><span class="line">    .c_cflag = B38400 | CS8 | CREAD | HUPCL,</span><br><span class="line">    .c_lflag = ISIG | ICANON | ECHO | ECHOE | ECHOK |</span><br><span class="line">           ECHOCTL | ECHOKE | IEXTEN,</span><br><span class="line">    .c_cc = INIT_C_CC,</span><br><span class="line">    .c_ispeed = <span class="number">38400</span>,</span><br><span class="line">    .c_ospeed = <span class="number">38400</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>最终在内核空间tty驱动中会转换为对tty设备节点的ioctl调用；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">long</span> <span class="title">tty_ioctl</span><span class="params">(struct file *file, <span class="keyword">unsigned</span> <span class="keyword">int</span> cmd, <span class="keyword">unsigned</span> <span class="keyword">long</span> arg)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ......</span><br><span class="line">    <span class="keyword">if</span> (tty-&gt;ops-&gt;ioctl) &#123;</span><br><span class="line">        retval = tty-&gt;ops-&gt;ioctl(tty, cmd, arg);</span><br><span class="line">        <span class="keyword">if</span> (retval != -ENOIOCTLCMD)</span><br><span class="line">            <span class="keyword">return</span> retval;</span><br><span class="line">    &#125;</span><br><span class="line">    ld = tty_ldisc_ref_wait(tty);</span><br><span class="line">    retval = -EINVAL;</span><br><span class="line">    <span class="keyword">if</span> (ld-&gt;ops-&gt;ioctl) &#123;</span><br><span class="line">        retval = ld-&gt;ops-&gt;ioctl(tty, file, cmd, arg);</span><br><span class="line">        <span class="keyword">if</span> (retval == -ENOIOCTLCMD)</span><br><span class="line">            retval = -ENOTTY;</span><br><span class="line">    &#125;</span><br><span class="line">    tty_ldisc_deref(ld);</span><br><span class="line">    <span class="keyword">return</span> retval;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-tty线路规程"><a href="#2-tty线路规程" class="headerlink" title="2. tty线路规程"></a>2. tty线路规程</h3><p>tty线路规程在tty_ldisc.c文件中由内核实现；不同的tty类型设备，具有不同的线路规程；tty线路规程由内核实现，不需要驱动工程师开发；</p>
+<p>在上文tty_read和tty_write函数中可以看出，最后调用了线路规程的read和write操作；</p>
+<p>内核用tty_ldisc_ops表示设备的线路规程信息；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// linux/tty_ldisc.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc_ops</span> &#123;</span></span><br><span class="line">    <span class="keyword">int</span> magic;</span><br><span class="line">    <span class="keyword">char</span>    *name;</span><br><span class="line">    <span class="keyword">int</span> num;</span><br><span class="line">    <span class="keyword">int</span> flags;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * The following routines are called from above.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">int</span> (*<span class="built_in">open</span>)(struct tty_struct *);</span><br><span class="line">    <span class="keyword">void</span>    (*<span class="built_in">close</span>)(struct tty_struct *);</span><br><span class="line">    <span class="keyword">void</span>    (*flush_buffer)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">ssize_t</span> (*chars_in_buffer)(struct tty_struct *tty);</span><br><span class="line">    <span class="keyword">ssize_t</span> (*<span class="built_in">read</span>)(struct tty_struct *tty, struct file *file,</span><br><span class="line">            <span class="keyword">unsigned</span> <span class="keyword">char</span> __user *buf, <span class="keyword">size_t</span> nr);</span><br><span class="line">    <span class="keyword">ssize_t</span> (*<span class="built_in">write</span>)(struct tty_struct *tty, struct file *file,</span><br><span class="line">             <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> nr);</span><br><span class="line">    <span class="keyword">int</span> (*ioctl)(struct tty_struct *tty, struct file *file,</span><br><span class="line">             <span class="keyword">unsigned</span> <span class="keyword">int</span> cmd, <span class="keyword">unsigned</span> <span class="keyword">long</span> arg);</span><br><span class="line">    <span class="keyword">long</span>    (*compat_ioctl)(struct tty_struct *tty, struct file *file,</span><br><span class="line">                <span class="keyword">unsigned</span> <span class="keyword">int</span> cmd, <span class="keyword">unsigned</span> <span class="keyword">long</span> arg);</span><br><span class="line">    <span class="keyword">void</span>    (*set_termios)(struct tty_struct *tty, struct ktermios *old);</span><br><span class="line">    <span class="function"><span class="keyword">unsigned</span> <span class="title">int</span> <span class="params">(*poll)</span><span class="params">(struct tty_struct *, struct file *,</span></span></span><br><span class="line"><span class="function"><span class="params">                 struct poll_table_struct *)</span></span>;</span><br><span class="line">    <span class="keyword">int</span> (*hangup)(struct tty_struct *tty);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * The following routines are called from below.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">void</span>    (*receive_buf)(struct tty_struct *, <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *cp,</span><br><span class="line">                   <span class="keyword">char</span> *fp, <span class="keyword">int</span> count);</span><br><span class="line">    <span class="keyword">void</span>    (*write_wakeup)(struct tty_struct *);</span><br><span class="line">    <span class="keyword">void</span>    (*dcd_change)(struct tty_struct *, <span class="keyword">unsigned</span> <span class="keyword">int</span>);</span><br><span class="line">    <span class="keyword">void</span>    (*fasync)(struct tty_struct *tty, <span class="keyword">int</span> on);</span><br><span class="line">    <span class="keyword">int</span> (*receive_buf2)(struct tty_struct *, <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *cp,</span><br><span class="line">                <span class="keyword">char</span> *fp, <span class="keyword">int</span> count);</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span>  <span class="title">module</span> *<span class="title">owner</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> refcount;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>tty_ldisc_ops结构体中不仅有功上层调用的函数指针成员，如：open、read、write等，还有供下层往上层调用的函数指针成员，如：receive_buf、receive_buf2、write_wakeup等；</p>
+<p>内核中有一个tty_ldiscs_ops结构体指针数组tty_ldiscs[NR_LDISCS]；NR_LDISCS的值是30，系统在初始化或者安装驱动模块时通过tty_register_ldisc()函数将有关的tty_ldisc_ops结构体注册登记到tty_ldiscs[NR_LDISCS]指针数组中；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// uapi/linux/tty.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> NR_LDISCS       30</span></span><br><span class="line"><span class="comment">// tty_ldisc.c</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc_ops</span> *<span class="title">tty_ldiscs</span>[<span class="title">NR_LDISCS</span>];</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>控制终端在内核启动时进行初始化，并给显示提供驱动服务，本节以控制终端为例进行说明，控制台对应的tty_ldisc_ops的是tty_ldiscs指针数组中序号为N_TTY的tty_ldisc_N_TTY结构，其中包含了该线路规程的大部分操作；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc_ops</span> <span class="title">tty_ldisc_N_TTY</span> = &#123;</span></span><br><span class="line">    .magic           = TTY_LDISC_MAGIC,</span><br><span class="line">    .name            = <span class="string">"n_tty"</span>,</span><br><span class="line">    .<span class="built_in">open</span>            = n_tty_open,</span><br><span class="line">    .<span class="built_in">close</span>           = n_tty_close,</span><br><span class="line">    .flush_buffer    = n_tty_flush_buffer,</span><br><span class="line">    .chars_in_buffer = n_tty_chars_in_buffer,</span><br><span class="line">    .<span class="built_in">read</span>            = n_tty_read,</span><br><span class="line">    .<span class="built_in">write</span>           = n_tty_write,</span><br><span class="line">    .ioctl           = n_tty_ioctl,</span><br><span class="line">    .set_termios     = n_tty_set_termios,</span><br><span class="line">    .poll            = n_tty_poll,</span><br><span class="line">    .receive_buf     = n_tty_receive_buf,</span><br><span class="line">    .write_wakeup    = n_tty_write_wakeup,</span><br><span class="line">    .fasync      = n_tty_fasync,</span><br><span class="line">    .receive_buf2    = n_tty_receive_buf2,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="2-1-注册和卸载"><a href="#2-1-注册和卸载" class="headerlink" title="2.1 注册和卸载"></a>2.1 注册和卸载</h4><p><strong>1) 注册</strong></p>
+<p>tty_register_ldisc()函数用来向内核注册一个新的线路规程，要注册的线路规程，将以索引的形式添加到tty_ldiscs_ops结构体指针数组tty_ldiscs[NR_LDISCS]中；</p>
+<p>一个串口可以对应多个已被注册的线路规程，最后调用到哪个线路规程，需要用户在打开串口后使用ioctl()选择；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tty_ldisc.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tty_register_ldisc</span><span class="params">(<span class="keyword">int</span> disc, struct tty_ldisc_ops *new_ldisc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (disc &lt; N_TTY || disc &gt;= NR_LDISCS)</span><br><span class="line">        <span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">    raw_spin_lock_irqsave(&amp;tty_ldiscs_lock, flags);</span><br><span class="line">    tty_ldiscs[disc] = new_ldisc;</span><br><span class="line">    new_ldisc-&gt;num = disc;</span><br><span class="line">    new_ldisc-&gt;refcount = <span class="number">0</span>;</span><br><span class="line">    raw_spin_unlock_irqrestore(&amp;tty_ldiscs_lock, flags);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(tty_register_ldisc);</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>在内核启动中kernel_start()函数中，通过console_init()函数初始化控制终端，之后显示屏或者串口打印信息才能够正常打印出来；console_init()函数是通过tty_ldisc_begin()来注册默认的线路规程tty_ldisc_N_TTY的；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> __init <span class="title">console_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">initcall_t</span> *call;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Setup the default TTY line discipline. */</span></span><br><span class="line">    tty_ldisc_begin();</span><br><span class="line"></span><br><span class="line">    call = __con_initcall_start;</span><br><span class="line">    <span class="keyword">while</span> (call &lt; __con_initcall_end) &#123;</span><br><span class="line">        (*call)();</span><br><span class="line">        call++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>tty_ldisc_begin()函数用来设置默认的tty线路规程，通过tty_register_ldisc()注册tty_ldisc_ops结构的tty_ldisc_N_TTY；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// uapi/linux/tty.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N_TTY       0</span></span><br><span class="line"></span><br><span class="line"><span class="comment">// tty_ldisc.c</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">tty_ldisc_begin</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/* Setup the default TTY line discipline. */</span></span><br><span class="line">    (<span class="keyword">void</span>) tty_register_ldisc(N_TTY, &amp;tty_ldisc_N_TTY);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>2) 卸载</strong></p>
+<p>tty_unregister_ldisc()函数从内核注销一个线路规程；根据索引将要卸载的线路规程，在tty_ldiscs_ops结构体指针数组tty_ldiscs[NR_LDISCS]中指向NULL；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tty_ldisc.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">tty_unregister_ldisc</span><span class="params">(<span class="keyword">int</span> disc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">long</span> flags;</span><br><span class="line">    <span class="keyword">int</span> ret = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (disc &lt; N_TTY || disc &gt;= NR_LDISCS)</span><br><span class="line">        <span class="keyword">return</span> -EINVAL;</span><br><span class="line"></span><br><span class="line">    raw_spin_lock_irqsave(&amp;tty_ldiscs_lock, flags);</span><br><span class="line">    <span class="keyword">if</span> (tty_ldiscs[disc]-&gt;refcount)</span><br><span class="line">        ret = -EBUSY;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        tty_ldiscs[disc] = <span class="literal">NULL</span>;</span><br><span class="line">    raw_spin_unlock_irqrestore(&amp;tty_ldiscs_lock, flags);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> ret;</span><br><span class="line">&#125;</span><br><span class="line">EXPORT_SYMBOL(tty_unregister_ldisc);</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="2-2-打开和关闭"><a href="#2-2-打开和关闭" class="headerlink" title="2.2 打开和关闭"></a>2.2 打开和关闭</h4><p><strong>1) open</strong></p>
+<p>在tty核心的打开操作中会调用打开线路规程，该操作主要是申请一些资源，并对一些线路规程的数据进行初始化；申请n_tty_data结构体，read_buf成员作为读取缓冲区；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">n_tty_open</span><span class="params">(struct tty_struct *tty)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Currently a malloc failure here can panic */</span></span><br><span class="line">    ldata = vzalloc(<span class="keyword">sizeof</span>(*ldata));</span><br><span class="line">    <span class="keyword">if</span> (!ldata)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    ldata-&gt;overrun_time = jiffies;</span><br><span class="line">    mutex_init(&amp;ldata-&gt;atomic_read_lock);</span><br><span class="line">    mutex_init(&amp;ldata-&gt;output_lock);</span><br><span class="line"></span><br><span class="line">    tty-&gt;disc_data = ldata;</span><br><span class="line">    tty-&gt;closing = <span class="number">0</span>; </span><br><span class="line">    <span class="comment">/* indicate buffer work may resume */</span></span><br><span class="line">    clear_bit(TTY_LDISC_HALTED, &amp;tty-&gt;flags);</span><br><span class="line">    n_tty_set_termios(tty, <span class="literal">NULL</span>);</span><br><span class="line">    tty_unthrottle(tty);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>n_tty_data结构体中的read_buf缓冲区是线性数组，但是却是作为环形缓冲区使用的；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> &#123;</span></span><br><span class="line">    <span class="comment">/* producer-published */</span></span><br><span class="line">    <span class="keyword">size_t</span> read_head;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* shared by producer and consumer */</span></span><br><span class="line">    <span class="keyword">char</span> read_buf[N_TTY_BUF_SIZE];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* consumer-published */</span></span><br><span class="line">    <span class="keyword">size_t</span> read_tail;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tty-&gt;read_buf[]	<span class="comment">// 环形缓冲区；</span></span><br><span class="line">tty-&gt;read_tail	<span class="comment">// 指向缓冲区当前可以读取的第一个字符；</span></span><br><span class="line">tty-&gt;read_head	<span class="comment">// 指向缓冲区当前可以写入的第一个地址；</span></span><br></pre></td></tr></table></figure>
+
+<p>tty_unthrottle()函数，打开缓冲区阀门，使缓冲区能够接收到硬件发送过来的数据；</p>
+<p><strong>2) close</strong></p>
+<p>同样线路规程的关闭操作中，主要是释放申请的变量资源；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">n_tty_close</span><span class="params">(struct tty_struct *tty)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span> = <span class="title">tty</span>-&gt;<span class="title">disc_data</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (tty-&gt;link)</span><br><span class="line">        n_tty_packet_mode_flush(tty);</span><br><span class="line"></span><br><span class="line">    vfree(ldata);</span><br><span class="line">    tty-&gt;disc_data = <span class="literal">NULL</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="2-3-写入和读取"><a href="#2-3-写入和读取" class="headerlink" title="2.3 写入和读取"></a>2.3 写入和读取</h4><p>从上文tty核心中的读写函数可以看出，tty_read和tty_write函数内部调用的是线路规程的read和write操作；</p>
+<p><strong>1) write</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tty_io.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">tty_write</span><span class="params">(struct file *file, <span class="keyword">const</span> <span class="keyword">char</span> __user *buf,</span></span></span><br><span class="line"><span class="function"><span class="params">                        <span class="keyword">size_t</span> count, <span class="keyword">loff_t</span> *ppos)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span> = <span class="title">file_tty</span>(<span class="title">file</span>);</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc</span> *<span class="title">ld</span>;</span></span><br><span class="line"></span><br><span class="line">    ld = tty_ldisc_ref_wait(tty);</span><br><span class="line">    <span class="keyword">if</span> (!ld-&gt;ops-&gt;<span class="built_in">write</span>)</span><br><span class="line">        ret = -EIO;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        ret = do_tty_write(ld-&gt;ops-&gt;<span class="built_in">write</span>, tty, file, buf, count);</span><br><span class="line">    tty_ldisc_deref(ld);</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在tty_write()函数中，通过tty_ldisc_ref_wait()函数从tty_struct结构体中获取到tty_ldisc结构指针，在do_tty_write(ld-&gt;ops-&gt;write, tty, file, buf, count)函数中，使用tty_ldisc_ops结构中的ld-&gt;ops-&gt;write函数完成tty的write操作；</p>
+<p>tty_ldisc_ref_wait()和tty_ldisc_deref()函数增加和减少ldsic的引用计数；因为内部分别调用了ldsem_down_read和ldsem_up_read函数操作&amp;ld-&gt;tty-&gt;ldisc_sem锁；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ldsem_down_read(&amp;tty-&gt;ldisc_sem, MAX_SCHEDULE_TIMEOUT);</span><br><span class="line">ldsem_up_read(&amp;ld-&gt;tty-&gt;ldisc_sem);</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>在默认的终端设备中，ld-&gt;ops-&gt;write对应的是tty_ldisc_N_TTY结构中的n_tty_write()函数；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">n_tty_write</span><span class="params">(struct tty_struct *tty, struct file *file,</span></span></span><br><span class="line"><span class="function"><span class="params">               <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *buf, <span class="keyword">size_t</span> nr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *b = buf;</span><br><span class="line">    <span class="keyword">int</span> c;</span><br><span class="line">	......</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span> = <span class="title">tty</span>-&gt;<span class="title">disc_data</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (nr &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        mutex_lock(&amp;ldata-&gt;output_lock);</span><br><span class="line">        c = tty-&gt;ops-&gt;<span class="built_in">write</span>(tty, b, nr);</span><br><span class="line">        mutex_unlock(&amp;ldata-&gt;output_lock);</span><br><span class="line">        <span class="keyword">if</span> (c &lt; <span class="number">0</span>) &#123;</span><br><span class="line">            retval = c;</span><br><span class="line">            <span class="keyword">goto</span> break_out;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (!c)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        b += c;</span><br><span class="line">        nr -= c;</span><br><span class="line">    &#125;</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>n_tty_write()函数中通过tty-&gt;ops-&gt;write(tty, b, nr)将数据写入控制终端；</p>
+<p>以串口uart驱动为例；tty-&gt;ops-&gt;write，是tty_struct结构体中tty_operations中的write函数uart_write；而tty_operations结构体是在uart_register_driver()时，对tty_driver结构体初始化时，使用tty_set_operations()函数设置的；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// serial_core.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">uart_register_driver</span><span class="params">(struct uart_driver *drv)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">normal</span>;</span></span><br><span class="line">    normal = alloc_tty_driver(drv-&gt;nr);</span><br><span class="line">    <span class="keyword">if</span> (!normal)</span><br><span class="line">        <span class="keyword">goto</span> out_kfree;</span><br><span class="line">    ......</span><br><span class="line">    tty_set_operations(normal, &amp;uart_ops);</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>tty_set_operations()函数就是将tty_operations结构体赋值给tty_driver结构体中的ops指针；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tty_io.c</span></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">tty_set_operations</span><span class="params">(struct tty_driver *driver,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">const</span> struct tty_operations *op)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    driver-&gt;ops = op;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>至于uart_write()函数的实现，在下一文uart驱动中进行说明，此处略过；</p>
+<p><strong>2) read</strong></p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tty_io.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">tty_read</span><span class="params">(struct file *file, <span class="keyword">char</span> __user *buf, <span class="keyword">size_t</span> count,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">loff_t</span> *ppos)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span> = <span class="title">file_tty</span>(<span class="title">file</span>);</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc</span> *<span class="title">ld</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* We want to wait for the line discipline to sort out in this</span></span><br><span class="line"><span class="comment">       situation */</span></span><br><span class="line">    ld = tty_ldisc_ref_wait(tty);</span><br><span class="line">    <span class="keyword">if</span> (ld-&gt;ops-&gt;<span class="built_in">read</span>)</span><br><span class="line">        i = ld-&gt;ops-&gt;<span class="built_in">read</span>(tty, file, buf, count);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        i = -EIO;</span><br><span class="line">    tty_ldisc_deref(ld);</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在tty核心层的tty_read()函数中，通过tty_ldisc_ref_wait()函数从tty_struct结构体中获取到tty_ldisc结构指针，直接使用tty_ldisc_ops结构中的ld-&gt;ops-&gt;read函数完成tty的read操作，从而进入到驱动的下一层，tty线路规程；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ld-&gt;ops-&gt;<span class="built_in">read</span>(tty, file, buf, count)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc_ops</span> <span class="title">tty_ldisc_N_TTY</span> = &#123;</span></span><br><span class="line">    .name            = <span class="string">"n_tty"</span>,</span><br><span class="line">    .<span class="built_in">read</span>            = n_tty_read,</span><br><span class="line">    .<span class="built_in">write</span>           = n_tty_write,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>在控制台中，ld-&gt;ops-&gt;read对应的是tty_ldisc_N_TTY结构中的n_tty_read()函数；n_tty_read()函数与n_tty_write()不同，不是通过下一层的read函数实现（如：uart_write），n_tty_read()函数是从缓冲区中读取数据的，函数实现比较长，n_tty_read()函数的详细，请参考下一文；</p>
+<p>在n_tty_read()函数中进行一些校验和读取进程的休眠和唤醒操作，最终通过canon_copy_from_read_buf()函数或canon_copy_from_read_buf()函数，将数据从缓冲区中读取到用户空间；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">n_tty_read</span><span class="params">(struct tty_struct *tty, struct file *file,</span></span></span><br><span class="line"><span class="function"><span class="params">             <span class="keyword">unsigned</span> <span class="keyword">char</span> __user *buf, <span class="keyword">size_t</span> nr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    	......</span><br><span class="line">        <span class="keyword">if</span> (ldata-&gt;icanon &amp;&amp; !L_EXTPROC(tty)) &#123;</span><br><span class="line">            retval = canon_copy_from_read_buf(tty, &amp;b, &amp;nr);</span><br><span class="line">            <span class="keyword">if</span> (retval)</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">int</span> uncopied;</span><br><span class="line"></span><br><span class="line">            uncopied = copy_from_read_buf(tty, &amp;b, &amp;nr);</span><br><span class="line">            uncopied += copy_from_read_buf(tty, &amp;b, &amp;nr);</span><br><span class="line">            <span class="keyword">if</span> (uncopied) &#123;</span><br><span class="line">                retval = -EFAULT;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h3 id="3-tty驱动"><a href="#3-tty驱动" class="headerlink" title="3. tty驱动"></a>3. tty驱动</h3><p>具体的tty设备的驱动程序，由驱动开发者来实现；本文以创建一个小型tty驱动程序为例，能够加载、卸载，并对其进行读写操作；</p>
+<p>终端设备驱动都围绕tty_driver结构开始；终端设备驱动应包含：</p>
+<ol>
+<li><p>终端设备驱动模块加载函数和卸载函数，完成注册和注销tty_driver，初始化和释放终端设备对应的tty_driver结构体成员及硬件资源；</p>
+</li>
+<li><p>实现tty_operations结构体中的成员函数，主要实现open()、close()、read()、write()、tiocmget()、tiocmset()函数等；</p>
+</li>
+</ol>
+<h4 id="3-1-模块加载和卸载"><a href="#3-1-模块加载和卸载" class="headerlink" title="3.1 模块加载和卸载"></a>3.1 模块加载和卸载</h4><p>tty驱动的模块加载函数中通常需要分配和初始化tty_driver结构体，并申请必要的硬件资源；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">tiny_init</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">tiny_tty_driver</span>;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> i;</span><br><span class="line"></span><br><span class="line">    tiny_tty_driver = alloc_tty_driver(TINY_TTY_MINORS);</span><br><span class="line">    <span class="keyword">if</span> (!tiny_tty_driver)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    tiny_tty_driver-&gt;driver_name = <span class="string">"tiny_tty"</span>;</span><br><span class="line">    tiny_tty_driver-&gt;name        = <span class="string">"ttty"</span>;</span><br><span class="line">    tiny_tty_driver-&gt;major       = TINY_MAJOR;</span><br><span class="line">    tiny_tty_driver-&gt;minor_start = TINY_MINOR;</span><br><span class="line">    tiny_tty_driver-&gt;type        = TTY_DRIVER_TYPE_SERIAL;</span><br><span class="line">    tiny_tty_driver-&gt;subtype     = SERIAL_TYPE_NORMAL;</span><br><span class="line">    tiny_tty_driver-&gt;init_termios    = tty_std_termios;</span><br><span class="line">    tiny_tty_driver-&gt;init_termios.c_cflag = B9600 | CS8 | CREAD | HUPCL | CLOCAL;</span><br><span class="line">    tiny_tty_driver-&gt;init_termios.c_ispeed = <span class="number">9600</span>;</span><br><span class="line">    tiny_tty_driver-&gt;flags       = TTY_DRIVER_REAL_RAW | TTY_DRIVER_DYNAMIC_DEV;</span><br><span class="line">    tty_set_operations(tiny_tty_driver, &amp;tty_serial_ops);</span><br><span class="line"></span><br><span class="line">    retval = tty_register_driver(tiny_tty_driver);</span><br><span class="line">	<span class="keyword">if</span> (retval) &#123;</span><br><span class="line">        put_tty_driver(tiny_tty_driver);</span><br><span class="line">		<span class="keyword">return</span> retval;        </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; TINY_TTY_MINORS; i++) &#123;</span><br><span class="line">        tty_register_device(tiny_tty_driver, i, <span class="literal">NULL</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    ......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">struct</span> <span class="title">tty_operations</span> <span class="title">tiny_serial_ops</span> = &#123;</span></span><br><span class="line">    .<span class="built_in">open</span> = tiny_open,</span><br><span class="line">    .<span class="built_in">close</span> = tiny_close,</span><br><span class="line">    .<span class="built_in">write</span> = tiny_write,</span><br><span class="line">    .write_room = tiny_write_room,</span><br><span class="line">    .set_termios = tiny_set_termios,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+<p>tty驱动的模块卸载函数，完成加载函数相反的工作；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">tiny_exit</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_driver</span> *<span class="title">tiny_tty_driver</span> = <span class="title">get_tty_driver</span>();</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">int</span> i;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; TINY_TTY_MINORS; i++) &#123;</span><br><span class="line">        tty_unregister_device(tiny_tty_driver, i);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    tty_unregister_driver(tiny_tty_driver);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="3-2-模块的打开和关闭"><a href="#3-2-模块的打开和关闭" class="headerlink" title="3.2 模块的打开和关闭"></a>3.2 模块的打开和关闭</h4><p><strong>1) open</strong></p>
+<p>在用户态使用open()系统调用函数操作tty驱动创建的设备节点时，tty核心tty_driver的file_operations结构体中的open()成员函数被调用；用户在执行open()函数后，可以得到一个表示该文件的句柄，用来表示该文件；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">tiny_open</span><span class="params">(struct tty_struct *tty, struct file *filp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line"> 	<span class="class"><span class="keyword">struct</span> <span class="title">tiny_serial</span> *<span class="title">tiny</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timer_list</span> *<span class="title">timer</span>;</span></span><br><span class="line">    </span><br><span class="line">    tty-&gt;driver_data = <span class="literal">NULL</span>;</span><br><span class="line">    index = tty-&gt;index;</span><br><span class="line">    tiny = tiny_table[index];</span><br><span class="line">    <span class="keyword">if</span> (tiny == <span class="literal">NULL</span>) &#123;</span><br><span class="line">        tiny = kmalloc(<span class="keyword">sizeof</span>(*tiny), GFP_KERNEL);</span><br><span class="line">        <span class="keyword">if</span> (!tiny) &#123;</span><br><span class="line">            <span class="keyword">return</span> -ENOMEM;</span><br><span class="line">        &#125;</span><br><span class="line">        init_MUTEX(&amp;tiny-&gt;sem);</span><br><span class="line">        tiny-&gt;open_count = <span class="number">0</span>;</span><br><span class="line">        tiny-&gt;timer = <span class="literal">NULL</span>;</span><br><span class="line">        </span><br><span class="line">        tiny_table[index] = tiny;</span><br><span class="line">    &#125;</span><br><span class="line">    down(&amp;tiny-&gt;sem);</span><br><span class="line">    </span><br><span class="line">    tty-&gt;driver_data = tiny;</span><br><span class="line">    tiny-&gt;tty = tty;</span><br><span class="line">    ......    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>tty-&gt;driver_data保存了tiny_serial结构，该结构包含tiny模块所需要的一些成员，保存在tty_struct结构体的driver_data指针，以后在tiny模块中别的函数也可以很方便地使用；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tiny_serial</span> &#123;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span>;</span>	<span class="comment">// 指向该设备的tty指针</span></span><br><span class="line">    <span class="keyword">int</span> open_count;	<span class="comment">// 该端口被打开的次数</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">semaphore</span> <span class="title">sem</span>;</span>	<span class="comment">// 锁，可以锁住该结构</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">timer_list</span> *<span class="title">timer</span>;</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+<p>为了能使多个进程读写数据，tty驱动程序的open和close函数可能会被多次调用，因此需要使用open_count在open和close时进行计数；当端口第一次被打开时，可以对所需要的任何硬件初始化及分配所需要的内存，当端口最后一次被关闭时，可以关闭所有硬件，并清理掉所有分配的内存；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">tiny-&gt;open_count++;</span><br><span class="line"><span class="keyword">if</span> (tiny-&gt;open_count == <span class="number">1</span>) &#123;</span><br><span class="line">       <span class="comment">// 该端口第一次打开</span></span><br><span class="line">       <span class="comment">// 对所需要的任何硬件初始化及分配所需要的内存</span></span><br><span class="line">   &#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p><strong>2) close</strong></p>
+<p>在open()时生成的文件句柄，在用户态使用close()系统调用操作该文件句柄时，tty_driver驱动中file_operations结构体中的close()成员函数被调用，此时设备将被关闭；和open()函数对应，close()函数可能多次调用，在close()中需要open_count进行计数；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">tiny_close</span><span class="params">(struct tty_struct *tty, struct file *filp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tiny_serial</span> *<span class="title">tiny</span>;</span></span><br><span class="line">    </span><br><span class="line">    tiny = tty-&gt;driver_data;</span><br><span class="line">    <span class="keyword">if</span> (!tiny) &#123;</span><br><span class="line">        <span class="keyword">return</span>;        </span><br><span class="line">    &#125;</span><br><span class="line">    down(&amp;tiny-&gt;sem);</span><br><span class="line">    <span class="keyword">if</span> (!tiny-&gt;open_count) &#123;</span><br><span class="line">        <span class="keyword">goto</span> <span class="built_in">exit</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    tiny-&gt;open_count--;</span><br><span class="line">    <span class="keyword">if</span> (tiny-&gt;open_count &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// 最后一个用户已经关闭端口</span></span><br><span class="line">        <span class="comment">// 关闭所有硬件，并清理掉所有分配的内存</span></span><br><span class="line">        </span><br><span class="line">        del_timer(tiny-&gt;timer);</span><br><span class="line">    &#125;</span><br><span class="line"><span class="built_in">exit</span>:</span><br><span class="line">    up(&amp;tiny-&gt;sem);</span><br><span class="line">	<span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="3-3-数据的发送和接收"><a href="#3-3-数据的发送和接收" class="headerlink" title="3.3 数据的发送和接收"></a>3.3 数据的发送和接收</h4><p><strong>1) write</strong></p>
+<p>在用户态使用write()系统调用发送数据给终端设备时，通过write–&gt;tty核心–&gt;tty线路规程调用–&gt;tty驱动，最终通过tty驱动程序中file_operations结构体中的write()成员函数来完成发送；</p>
+<p>有时由于tty硬件速度或缓存大小的原因，write()函数被调用时，写操作程序所处理的数据不能同时都发送出去，write()函数将返回发送给硬件的字符数；用户空间可以检查write()函数返回值判断是否写入了所有数据；</p>
+<p>tiny驱动并没有链接真正的硬件，只是在内核调试日志中记录需要写入的数据；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">tiny_write</span><span class="params">(struct tty_struct *tty,</span></span></span><br><span class="line"><span class="function"><span class="params">                    <span class="keyword">const</span> <span class="keyword">unsigned</span> <span class="keyword">char</span> *buf, <span class="keyword">int</span> count)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tiny_serial</span> *<span class="title">tiny</span>;</span></span><br><span class="line">    <span class="keyword">int</span> i;</span><br><span class="line">    </span><br><span class="line">    tiny = tty-&gt;driver_data;</span><br><span class="line">    <span class="keyword">if</span> (!tiny) &#123;</span><br><span class="line">        <span class="keyword">return</span> -ENODEV;        </span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    down(&amp;tiny-&gt;sem);</span><br><span class="line">    <span class="keyword">if</span> (!tiny-&gt;open_count) &#123;</span><br><span class="line">        <span class="keyword">goto</span> <span class="built_in">exit</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">for</span> (i = <span class="number">0</span>; i &lt; count; i++) &#123;</span><br><span class="line">        printk(<span class="string">"%02x "</span>, buf[i]);</span><br><span class="line">    &#125;</span><br><span class="line">    printk(<span class="string">"\n"</span>);</span><br><span class="line"><span class="built_in">exit</span>:</span><br><span class="line">    up(&amp;tiny-&gt;sem);</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">return</span> i;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>tty子系统将数据传送到tty设备之外时可以使用write()函数；</p>
+<p><strong>2) read</strong></p>
+<p>tty_driver结构中没有提供read()函数，因为发送数据是用户主动发起的，而接收数据则是用户态读取一片缓冲区中已放好的数据；在tty核心中提供了缓冲逻辑，tty驱动中并不是必须实现自身的缓冲逻辑；</p>
+<h4 id="3-4-串口驱动举例"><a href="#3-4-串口驱动举例" class="headerlink" title="3.4 串口驱动举例"></a>3.4 串口驱动举例</h4><p>tty类型的驱动，以串口驱动为例，在serial_core.c文件中实现；</p>
+<p>参考下一文—-uart驱动；</p>
+<h3 id="4-总结"><a href="#4-总结" class="headerlink" title="4. 总结"></a>4. 总结</h3><p><img src="/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/tty%E8%AF%BB%E5%86%99%E8%BF%87%E7%A8%8B%E4%B8%AD%E7%9A%84%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E6%B5%81%E7%A8%8B-1598176659467.png" alt="tty读写过程中的函数调用流程"></p>
+<h3 id="5-参考资料"><a href="#5-参考资料" class="headerlink" title="5. 参考资料"></a>5. 参考资料</h3><p>《Linux内核情景分析》—-控制态驱动</p>
+<p>《Linux设备驱动程序》</p>
+<p>笔记计划：</p>
+<ol>
+<li>tty驱动–&gt;控制台驱动</li>
+</ol>
+<ol start="2">
+<li>uart驱动–&gt;8250驱动</li>
+</ol>
+<ol start="3">
+<li>键盘驱动–&gt;PS/2键盘    –&gt;usb键盘</li>
+<li>usb转串口驱动</li>
+</ol>
+<p><a href="#目录">回到目录</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/tty/" rel="tag"># tty</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/06/27/u-boot%E7%9A%84tftp%E5%91%BD%E4%BB%A4%E8%A7%A3%E6%9E%90/" rel="prev" title="u-boot中的tftp命令解析">
+      <i class="fa fa-chevron-left"></i> u-boot中的tftp命令解析
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/08/09/%E6%8E%A7%E5%88%B6%E5%8F%B0%E9%A9%B1%E5%8A%A8%E4%B8%ADtty-read%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/" rel="next" title="控制台驱动中tty_read函数的实现过程">
+      控制台驱动中tty_read函数的实现过程 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#0-简介"><span class="nav-text">0. 简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-tty核心"><span class="nav-text">1. tty核心</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-1-tty重要数据结构"><span class="nav-text">1.1 tty重要数据结构</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-2-tty的注册和卸载"><span class="nav-text">1.2 tty的注册和卸载</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-3-tty的打开和关闭"><span class="nav-text">1.3 tty的打开和关闭</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-4-tty的读写"><span class="nav-text">1.4 tty的读写</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-5-tty线路设置"><span class="nav-text">1.5 tty线路设置</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-tty线路规程"><span class="nav-text">2. tty线路规程</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#2-1-注册和卸载"><span class="nav-text">2.1 注册和卸载</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-2-打开和关闭"><span class="nav-text">2.2 打开和关闭</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-3-写入和读取"><span class="nav-text">2.3 写入和读取</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-tty驱动"><span class="nav-text">3. tty驱动</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#3-1-模块加载和卸载"><span class="nav-text">3.1 模块加载和卸载</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-2-模块的打开和关闭"><span class="nav-text">3.2 模块的打开和关闭</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-3-数据的发送和接收"><span class="nav-text">3.3 数据的发送和接收</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-4-串口驱动举例"><span class="nav-text">3.4 串口驱动举例</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-总结"><span class="nav-text">4. 总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-参考资料"><span class="nav-text">5. 参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">micro虾米</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">micro虾米</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '1ec7eee73ee4f91e15a1',
+      clientSecret: '971b3c9439c2a8fa2fcb12307657ad50aee6ed0c',
+      repo        : 'mshrimp_blog_talk',
+      owner       : 'mshrimp',
+      admin       : ['mshrimp'],
+      id          : 'f89ffcdc9a01146f408cf9d47fc5edca',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="在Linux系统的可执行文件（ELF文件）中，开头时一个文件头，用来描述程序的布局，整个文件的属性等信息，包括文件是否可执行、静态还是动态链接及入口地址等信息； 程序文件中包含了程序头，程序的入口地址等信息不需要写死，调用代码可以通用，根据实际情况加载；此时的文件不是纯碎的二进制可执行文件了，因为包含的程序头不是可执行代码；将这种包含程序头的文件读入到内存后，从程序头中读取入口地址，跳转到入口地址">
+<meta property="og:type" content="article">
+<meta property="og:title" content="linux中ELF格式二进制程序">
+<meta property="og:url" content="http://mshrimp.github.io/2020/09/13/linux%E4%B8%ADELF%E6%A0%BC%E5%BC%8F%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%A8%8B%E5%BA%8F/index.html">
+<meta property="og:site_name" content="Mshrimp blog">
+<meta property="og:description" content="在Linux系统的可执行文件（ELF文件）中，开头时一个文件头，用来描述程序的布局，整个文件的属性等信息，包括文件是否可执行、静态还是动态链接及入口地址等信息； 程序文件中包含了程序头，程序的入口地址等信息不需要写死，调用代码可以通用，根据实际情况加载；此时的文件不是纯碎的二进制可执行文件了，因为包含的程序头不是可执行代码；将这种包含程序头的文件读入到内存后，从程序头中读取入口地址，跳转到入口地址">
+<meta property="article:published_time" content="2020-09-13T04:09:31.000Z">
+<meta property="article:modified_time" content="2020-09-13T06:19:24.274Z">
+<meta property="article:author" content="micro虾米">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://mshrimp.github.io/2020/09/13/linux%E4%B8%ADELF%E6%A0%BC%E5%BC%8F%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%A8%8B%E5%BA%8F/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>linux中ELF格式二进制程序 | Mshrimp blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Mshrimp blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">micro虾米</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2020/09/13/linux%E4%B8%ADELF%E6%A0%BC%E5%BC%8F%E4%BA%8C%E8%BF%9B%E5%88%B6%E7%A8%8B%E5%BA%8F/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="micro虾米">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mshrimp blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          linux中ELF格式二进制程序
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-09-13 12:09:31 / Modified: 14:19:24" itemprop="dateCreated datePublished" datetime="2020-09-13T12:09:31+08:00">2020-09-13</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在Linux系统的可执行文件（ELF文件）中，开头时一个文件头，用来描述程序的布局，整个文件的属性等信息，包括文件是否可执行、静态还是动态链接及入口地址等信息；</p>
+<p>程序文件中包含了程序头，程序的入口地址等信息不需要写死，调用代码可以通用，根据实际情况加载；此时的文件不是纯碎的二进制可执行文件了，因为包含的程序头不是可执行代码；将这种包含程序头的文件读入到内存后，从程序头中读取入口地址，跳转到入口地址执行；</p>
+<a id="more"></a>
+
+<h3 id="目录"><a href="#目录" class="headerlink" title="目录"></a>目录</h3><p>[TOC]</p>
+<h3 id="0-简介"><a href="#0-简介" class="headerlink" title="0. 简介"></a>0. 简介</h3><h4 id="0-1-文件格式"><a href="#0-1-文件格式" class="headerlink" title="0.1 文件格式"></a>0.1 文件格式</h4><p>linux系统中用C语言编写完代码，使用编译器gcc编译生成的是ELF格式的二进制文件；</p>
+<p>ELF指：Executable and Linkable Format，可执行链接格式；本文中的目标文件指各种类型符合ELF规范的我呢见，如：二进制可执行文件、Linux下的.o目标文件和.so动态库文件；</p>
+<p>可执行文件（Executable file）：经过编译链接后，可以直接运行的程序文件；</p>
+<p>共享目标文件（Shared object file）：动态链接库，在可执行文件被加载的过程中动态链接，成为程序代码的一部分；</p>
+<p>可重定位文件（Relocatable file）：可重定位文件即目标文件，是源文件编译后但未完成链接的半成品，被用于与其他目标文件合并链接，以构建出二进制可执行文件或动态链接库；</p>
+<p>核心转储文件（Core dump file）：当进程意外终止时，系统可以将该进程的地址空间的内容及终止时的一些信息转储到核心转储文件；</p>
+<h4 id="0-2-段和节"><a href="#0-2-段和节" class="headerlink" title="0.2 段和节"></a>0.2 段和节</h4><p>程序中的段（Segment）和节（Secton）是真正的程序体；段包括代码段和数据段等，段是由节组成的，多个节经过链接后被合并为一个段；</p>
+<p>段和节的信息用header描述，程序头是program header，节头是section header；段和节的大小和数量都是不固定的，需要用专门的数据结构来描述，即程序头表（program header table）和节头表（section header table），这是两个数组，元素分别是程序头（program header）和节头（section header）；程序头表（program header table）中的元素全是程序头（program header），节头表（section header table）中的元素全是节头（section header）；程序头表是用来描述段（Segment）的，成为段头表；段是程序本身的组成部分；</p>
+<p>由于段和节的大小和数量都是不固定的，程序头表和节头表的大小也不固定，两个表在程序文件中的位置也不固定；需要在一个固定的位置，用一个固定大小的数据结构来描述程序头表和节头表的大小和位置信息，即位于文件最开始部分的ELF header；</p>
+<h3 id="1-ELF-header"><a href="#1-ELF-header" class="headerlink" title="1. ELF header"></a>1. ELF header</h3><p>ELF文件分为文件头和文件体两部分；先用ELF header从文件全局概要出程序中程序头表、节头表的位置和大小等信息；然后从程序头表和节头表中分别解析出各个段和节的位置和大小等信息；</p>
+<p>可执行文件和待重定位文件，文件最开头的部分是ELF header；程序头表对于可执行文件是必须的，而对于待重定位文件是可选的；</p>
+<p>ELF文件头用Elf32_Ehdr和Elf64_Ehdr结构体表示；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EI_NIDENT   16</span></span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">elf32_hdr</span>&#123;</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">char</span> e_ident[EI_NIDENT];</span><br><span class="line">  Elf32_Half    e_type;</span><br><span class="line">  Elf32_Half    e_machine;</span><br><span class="line">  Elf32_Word    e_version;</span><br><span class="line">  Elf32_Addr    e_entry;  <span class="comment">/* Entry point */</span></span><br><span class="line">  Elf32_Off e_phoff;</span><br><span class="line">  Elf32_Off e_shoff;</span><br><span class="line">  Elf32_Word    e_flags;</span><br><span class="line">  Elf32_Half    e_ehsize;</span><br><span class="line">  Elf32_Half    e_phentsize;</span><br><span class="line">  Elf32_Half    e_phnum;</span><br><span class="line">  Elf32_Half    e_shentsize;</span><br><span class="line">  Elf32_Half    e_shnum;</span><br><span class="line">  Elf32_Half    e_shstrndx;</span><br><span class="line">&#125; Elf32_Ehdr;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">elf64_hdr</span> &#123;</span></span><br><span class="line">  <span class="keyword">unsigned</span> <span class="keyword">char</span> e_ident[EI_NIDENT]; <span class="comment">/* ELF "magic number" */</span></span><br><span class="line">  Elf64_Half e_type;</span><br><span class="line">  Elf64_Half e_machine;</span><br><span class="line">  Elf64_Word e_version;</span><br><span class="line">  Elf64_Addr e_entry;       <span class="comment">/* Entry point virtual address */</span></span><br><span class="line">  Elf64_Off e_phoff;        <span class="comment">/* Program header table file offset */</span></span><br><span class="line">  Elf64_Off e_shoff;        <span class="comment">/* Section header table file offset */</span></span><br><span class="line">  Elf64_Word e_flags;</span><br><span class="line">  Elf64_Half e_ehsize;</span><br><span class="line">  Elf64_Half e_phentsize;</span><br><span class="line">  Elf64_Half e_phnum;</span><br><span class="line">  Elf64_Half e_shentsize;</span><br><span class="line">  Elf64_Half e_shnum;</span><br><span class="line">  Elf64_Half e_shstrndx;</span><br><span class="line">&#125; Elf64_Ehdr;</span><br></pre></td></tr></table></figure>
+
+
+
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>大小（32位）</th>
+<th>大小（64位）</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>e_ident</td>
+<td>16</td>
+<td>16</td>
+<td>表示ELF字符等信息，开头四个字节是固定不变的elf文件魔数，0x7f 0x45 0x4c 0x46；可用于确认文件类型是否正确；</td>
+</tr>
+<tr>
+<td>e_type</td>
+<td>2</td>
+<td>2</td>
+<td>ELF目标文件的类型；</td>
+</tr>
+<tr>
+<td>e_machine</td>
+<td>2</td>
+<td>2</td>
+<td>ELF目标文件的体系结构类型，即要在哪种硬件平台运行；</td>
+</tr>
+<tr>
+<td>e_version</td>
+<td>4</td>
+<td>4</td>
+<td>版本信息；</td>
+</tr>
+<tr>
+<td>e_entry</td>
+<td>4</td>
+<td>8</td>
+<td>操作系统运行该程序时，将控制权转交到的虚拟地址；</td>
+</tr>
+<tr>
+<td>e_phoff</td>
+<td>4</td>
+<td>8</td>
+<td>程序头表（program header table）在文件内的字节偏移量；如果没有程序头表，该值为0；</td>
+</tr>
+<tr>
+<td>e_shoff</td>
+<td>4</td>
+<td>8</td>
+<td>节头表（section header table）在文件内的字节偏移量；如果没有节头表，该值为0</td>
+</tr>
+<tr>
+<td>e_flags</td>
+<td>4</td>
+<td>4</td>
+<td>与处理器相关的标志；</td>
+</tr>
+<tr>
+<td>e_ehsize</td>
+<td>2</td>
+<td>2</td>
+<td>ELF header的大小；</td>
+</tr>
+<tr>
+<td>e_phentsize</td>
+<td>2</td>
+<td>2</td>
+<td>程序头表（program header table）中每个条目（entry）的大小，即每个用来描述段信息的数据结构的大小；struct Elf32_Phdr；</td>
+</tr>
+<tr>
+<td>e_phnum</td>
+<td>2</td>
+<td>2</td>
+<td>程序头表中条目的数量，即段的个数；</td>
+</tr>
+<tr>
+<td>e_shentsize</td>
+<td>2</td>
+<td>2</td>
+<td>节头表（section header table）中每个条目（entry）的大小，即每个用来描述节信息的数据结构的大小；</td>
+</tr>
+<tr>
+<td>e_shnum</td>
+<td>2</td>
+<td>2</td>
+<td>节头表中条目的数量，即节的个数；</td>
+</tr>
+<tr>
+<td>e_shstrndx</td>
+<td>2</td>
+<td>2</td>
+<td>string name table在节头表中的索引index；</td>
+</tr>
+</tbody></table>
+<p>e_ident[EI_NIDENT]是16字节大小的数组，用来表示ELF字符等信息，开头四个字节是固定不变的elf文件魔数，0x7f 0x45 0x4c 0x46；</p>
+<table>
+<thead>
+<tr>
+<th>e_ident数组</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>e_ident[0~3] = 0x7f E L F</td>
+<td>固定的ELF文件魔数，用于识别ELF文件</td>
+</tr>
+<tr>
+<td>e_ident[4]</td>
+<td>表示ELF文件的类型，0：不可识别类型，1：32位elf格式文件，2：64位elf格式文件</td>
+</tr>
+<tr>
+<td>e_ident[5]</td>
+<td>指定编码格式，字节序是大端还是小端，0：非法编码格式，1：小端LSB，2：大端MSB</td>
+</tr>
+<tr>
+<td>e_ident[6]</td>
+<td>ELF头的版本信息，默认为1，0：非法版本，1：当前版本</td>
+</tr>
+<tr>
+<td>e_ident[7~15]</td>
+<td>保留，置为0</td>
+</tr>
+</tbody></table>
+<p>e_type：2字节，用来指定ELF目标文件的类型；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="comment">/* These constants define the different elf file types */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ET_NONE   0		<span class="comment">// 未知目标文件格式</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ET_REL    1		<span class="comment">// 可重定位文件</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ET_EXEC   2		<span class="comment">// 可执行文件</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ET_DYN    3		<span class="comment">// 动态共享目标文件</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ET_CORE   4		<span class="comment">// core文件，程序崩溃时内存映像的转储格式</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ET_LOPROC 0xff00	<span class="comment">// 特定处理器文件的扩展下界</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> ET_HIPROC 0xffff	<span class="comment">// 特定处理器文件的扩展上界</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>e_machine：2字节，用来描述ELF目标文件的体系结构类型，即要在哪种硬件平台运行；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf-em.h</span></span><br><span class="line"><span class="comment">/* These constants define the various ELF target machines */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_NONE     0</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_M32      1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_SPARC    2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_386      3</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_68K      4</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_88K      5</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_486      6   <span class="comment">/* Perhaps disused */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_860      7</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_MIPS     8   <span class="comment">/* MIPS R3000 (officially, big-endian only) */</span></span></span><br><span class="line">                <span class="comment">/* Next two are historical and binaries and</span></span><br><span class="line"><span class="comment">                   modules of these types will be rejected by</span></span><br><span class="line"><span class="comment">                   Linux.  */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_MIPS_RS3_LE  10  <span class="comment">/* MIPS R3000 little-endian */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_MIPS_RS4_BE  10  <span class="comment">/* MIPS R4000 big-endian */</span></span></span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_PARISC   15  <span class="comment">/* HPPA */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_SPARC32PLUS  18  <span class="comment">/* Sun's "v8plus" */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> EM_PPC      20  <span class="comment">/* PowerPC */</span></span></span><br><span class="line">......</span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="2-程序头表"><a href="#2-程序头表" class="headerlink" title="2. 程序头表"></a>2. 程序头表</h3><p>程序头表（也称为段表）是一个描述文件中各个段的数组，程序头表描述了文件中各个段在文件中的偏移位置及段的属性等信息；从程序头表里可以得到每个段的所有信息，包括代码段和数据段等；各个段的内容紧跟ELF文件头保存；程序头表中各个段用Elf32_Phdr或Elf64_Phdr结构体表示；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">elf32_phdr</span>&#123;</span></span><br><span class="line">  Elf32_Word    p_type;</span><br><span class="line">  Elf32_Off p_offset;</span><br><span class="line">  Elf32_Addr    p_vaddr;</span><br><span class="line">  Elf32_Addr    p_paddr;</span><br><span class="line">  Elf32_Word    p_filesz;</span><br><span class="line">  Elf32_Word    p_memsz;</span><br><span class="line">  Elf32_Word    p_flags;</span><br><span class="line">  Elf32_Word    p_align;</span><br><span class="line">&#125; Elf32_Phdr;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">elf64_phdr</span> &#123;</span></span><br><span class="line">  Elf64_Word p_type;</span><br><span class="line">  Elf64_Word p_flags;</span><br><span class="line">  Elf64_Off p_offset;       <span class="comment">/* Segment file offset */</span></span><br><span class="line">  Elf64_Addr p_vaddr;       <span class="comment">/* Segment virtual address */</span></span><br><span class="line">  Elf64_Addr p_paddr;       <span class="comment">/* Segment physical address */</span></span><br><span class="line">  Elf64_Xword p_filesz;     <span class="comment">/* Segment size in file */</span></span><br><span class="line">  Elf64_Xword p_memsz;      <span class="comment">/* Segment size in memory */</span></span><br><span class="line">  Elf64_Xword p_align;      <span class="comment">/* Segment alignment, file &amp; memory */</span></span><br><span class="line">&#125; Elf64_Phdr;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>Elf32_Phdr或Elf64_Phdr结构体用来描述位于磁盘上的程序中的一个段；</p>
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>大小（32位）</th>
+<th>大小（64位）</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>p_type</td>
+<td>4</td>
+<td>4</td>
+<td>程序中该段的类型；</td>
+</tr>
+<tr>
+<td>p_offset</td>
+<td>4</td>
+<td>8</td>
+<td>本段在文件内的起始偏移；</td>
+</tr>
+<tr>
+<td>p_vaddr</td>
+<td>4</td>
+<td>8</td>
+<td>本段在内存中的起始虚拟地址；</td>
+</tr>
+<tr>
+<td>p_paddr</td>
+<td>4</td>
+<td>8</td>
+<td>用于与物理地址相关的系统中；</td>
+</tr>
+<tr>
+<td>p_filesz</td>
+<td>4</td>
+<td>8</td>
+<td>本段在文件中的大小；</td>
+</tr>
+<tr>
+<td>p_memsz</td>
+<td>4</td>
+<td>8</td>
+<td>本段在内存中的大小；</td>
+</tr>
+<tr>
+<td>p_flags</td>
+<td>4</td>
+<td>4</td>
+<td>与本段相关的标志；</td>
+</tr>
+<tr>
+<td>p_align</td>
+<td>4</td>
+<td>8</td>
+<td>本段在文件和内存中的对齐方式；如果为0或1，表示不对齐，否则应该为2的幂次数；</td>
+</tr>
+</tbody></table>
+<p>p_type：4字节，用来指明程序中该段的类型；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="comment">/* These constants are for the segment types stored in the image headers */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_NULL    0 <span class="comment">// 忽略 </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_LOAD    1 <span class="comment">// 可加载程序段</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_DYNAMIC 2 <span class="comment">// 动态链接信息</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_INTERP  3 <span class="comment">// 动态加载器名称</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_NOTE    4 <span class="comment">// 辅助的附加信息 </span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_SHLIB   5 <span class="comment">// 保留</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_PHDR    6 <span class="comment">// 程序头表</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_TLS     7               <span class="comment">/* Thread local storage segment */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_LOOS    0x60000000      <span class="comment">/* OS-specific */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_HIOS    0x6fffffff      <span class="comment">/* OS-specific */</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_LOPROC  0x70000000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_HIPROC  0x7fffffff</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>p_flags：4字节，用来指明与本段相关的标志；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="comment">/* These constants define the permissions on sections in the program    header, p_flags. */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PF_R        0x4  <span class="comment">// 可读</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PF_W        0x2  <span class="comment">// 可写</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PF_X        0x1  <span class="comment">// 可执行</span></span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="3-节头表"><a href="#3-节头表" class="headerlink" title="3. 节头表"></a>3. 节头表</h3><p>节头表中各个节用Elf32_Shdr或Elf64_Shdr结构体表示；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">elf32_shdr</span> &#123;</span></span><br><span class="line">  Elf32_Word    sh_name;</span><br><span class="line">  Elf32_Word    sh_type;</span><br><span class="line">  Elf32_Word    sh_flags;</span><br><span class="line">  Elf32_Addr    sh_addr;</span><br><span class="line">  Elf32_Off sh_offset;</span><br><span class="line">  Elf32_Word    sh_size;</span><br><span class="line">  Elf32_Word    sh_link;</span><br><span class="line">  Elf32_Word    sh_info;</span><br><span class="line">  Elf32_Word    sh_addralign;</span><br><span class="line">  Elf32_Word    sh_entsize;</span><br><span class="line">&#125; Elf32_Shdr;</span><br><span class="line"></span><br><span class="line"><span class="keyword">typedef</span> <span class="class"><span class="keyword">struct</span> <span class="title">elf64_shdr</span> &#123;</span></span><br><span class="line">  Elf64_Word sh_name;       <span class="comment">/* Section name, index in string tbl */</span></span><br><span class="line">  Elf64_Word sh_type;       <span class="comment">/* Type of section */</span></span><br><span class="line">  Elf64_Xword sh_flags;     <span class="comment">/* Miscellaneous section attributes */</span></span><br><span class="line">  Elf64_Addr sh_addr;       <span class="comment">/* Section virtual addr at execution */</span></span><br><span class="line">  Elf64_Off sh_offset;      <span class="comment">/* Section file offset */</span></span><br><span class="line">  Elf64_Xword sh_size;      <span class="comment">/* Size of section in bytes */</span></span><br><span class="line">  Elf64_Word sh_link;       <span class="comment">/* Index of another section */</span></span><br><span class="line">  Elf64_Word sh_info;       <span class="comment">/* Additional section information */</span></span><br><span class="line">  Elf64_Xword sh_addralign; <span class="comment">/* Section alignment */</span></span><br><span class="line">  Elf64_Xword sh_entsize;   <span class="comment">/* Entry size if section holds table */</span></span><br><span class="line">&#125; Elf64_Shdr;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>Elf32_Shdr或Elf64_Shdr结构体用来描述位于磁盘上的程序中的一个节；</p>
+<p>成员32位64位说明sh_name44节名称，值是字符串的一个索引；节名称字符串以’\0’结尾，统一存储在字符串表中，使用该字段存储节名称字符串在字符串表中的索引位置；sh_type44节的类型；sh_flags48节的标志；sh_addr48节在内存中的起始地址，指定节映射到虚拟地址空间中的位置；sh_offset48节在文件中的起始位置；sh_size48节的大小；sh_link44引用另一个节头表项，根据节类型有不同的解释；sh_info44节的附加信息，与sh_link联合使用；sh_addralign48节数据在内存中的对齐方式；sh_entsize48指定节中各数据项的长度，各数据项长度要相同；</p>
+<table>
+<thead>
+<tr>
+<th>成员</th>
+<th>大小（32位）</th>
+<th>大小（64位）</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sh_name</td>
+<td>4</td>
+<td>4</td>
+<td>节名称，值是字符串的一个索引；节名称字符串以’\0’结尾，统一存储在字符串表中，使用该字段存储节名称字符串在字符串表中的索引位置；</td>
+</tr>
+<tr>
+<td>sh_type</td>
+<td>4</td>
+<td>4</td>
+<td>节的类型；</td>
+</tr>
+<tr>
+<td>sh_flags</td>
+<td>4</td>
+<td>8</td>
+<td>节的标志；</td>
+</tr>
+<tr>
+<td>sh_addr</td>
+<td>4</td>
+<td>8</td>
+<td>节在内存中的起始地址，指定节映射到虚拟地址空间中的位置；</td>
+</tr>
+<tr>
+<td>sh_offset</td>
+<td>4</td>
+<td>8</td>
+<td>节在文件中的起始位置；</td>
+</tr>
+<tr>
+<td>sh_size</td>
+<td>4</td>
+<td>8</td>
+<td>节的大小；</td>
+</tr>
+<tr>
+<td>sh_link</td>
+<td>4</td>
+<td>4</td>
+<td>引用另一个节头表项，根据节类型有不同的解释；</td>
+</tr>
+<tr>
+<td>sh_info</td>
+<td>4</td>
+<td>4</td>
+<td>节的附加信息，与sh_link联合使用；</td>
+</tr>
+<tr>
+<td>sh_addralign</td>
+<td>4</td>
+<td>8</td>
+<td>节数据在内存中的对齐方式；sh_entsize48指定节中各数据项的长度，各数据项长度要相同；</td>
+</tr>
+</tbody></table>
+<p>sh_name</p>
+<p>节名称sh_name的值是字符串的一个索引，节名称字符串以’\0’结尾，字符串统一存放在字符串表中，使用sh_name的值作为字符串表的索引，找到对应的字符串即为节名称；</p>
+<p>字符串表中包含多个以’\0’结尾的字符串；在目标文件中，这些字符串通常是符号的名字或节的名字，需要引用某些字符串时，只需要提供该字符串在字符串表中的序号即可；</p>
+<p>字符串表中的第一个字符串（序号为0）是空串，即’\0’，可以用于表示没有名字或一个空的名字；如果字符串表为空，节头中的sh_size值为0；</p>
+<p>sh_type：节的类型；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="comment">/* sh_type */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_NULL    0 <span class="comment">// 表示该节是无效节头，没有对应的节</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_PROGBITS    1</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_SYMTAB  2</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_STRTAB  3</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_RELA    4</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_HASH    5</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_DYNAMIC 6</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_NOTE    7</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_NOBITS  8</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_REL     9</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_SHLIB   10</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_DYNSYM  11</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_NUM     12</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_LOPROC  0x70000000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_HIPROC  0x7fffffff</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_LOUSER  0x80000000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHT_HIUSER  0xffffffff</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>sh_flags：节的标志；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="comment">/* sh_flags */</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHF_WRITE   0x1  <span class="comment">// 可写</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHF_ALLOC   0x2  <span class="comment">// 该节包含内存在进程运行时需要占用内存单元</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHF_EXECINSTR   0x4 <span class="comment">// 该节内容是指令代码</span></span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> SHF_MASKPROC    0xf0000000</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="4-readelf命令"><a href="#4-readelf命令" class="headerlink" title="4. readelf命令"></a>4. readelf命令</h3><p>readelf命令用于查看ELF格式的文件信息，</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -H</span><br><span class="line">Usage: readelf &lt;option(s)&gt; elf-file(s)</span><br><span class="line"> Display information about the contents of ELF format files</span><br><span class="line"> Options are:</span><br><span class="line">  -a --all               Equivalent to: -h -l -S -s -r -d -V -A -I</span><br><span class="line">  -h --file-header       Display the ELF file header</span><br><span class="line">  -l --program-headers   Display the program headers</span><br><span class="line">     --segments          An alias <span class="keyword">for</span> --program-headers</span><br><span class="line">  -S --section-headers   Display the sections<span class="number">'</span> header</span><br><span class="line">     --sections          An alias <span class="keyword">for</span> --section-headers</span><br><span class="line">  -e --headers           Equivalent to: -h -l -S</span><br><span class="line">  ......</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>命令：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -h file <span class="comment">// 显示ELF文件头</span></span><br><span class="line">$ readelf -l file <span class="comment">// 显示所有的程序头</span></span><br><span class="line">$ readelf -S file <span class="comment">// 显示所有的节头</span></span><br><span class="line">$ readelf -e file <span class="comment">// 显示ELF文件头、程序头、节头全部的头信息，相当于同时运行参数-h、-l、-S</span></span><br></pre></td></tr></table></figure>
+
+
+
+<h3 id="5-ELF文件实例"><a href="#5-ELF文件实例" class="headerlink" title="5. ELF文件实例"></a>5. ELF文件实例</h3><p>针对32位系统，通过一个极为简单的C语言的编译和分析，进行ELF文件中各结构体成员功能分析；</p>
+<p>代码示例：</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">main</span><span class="params">(<span class="keyword">void</span>)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="5-0-生成可执行文件"><a href="#5-0-生成可执行文件" class="headerlink" title="5.0 生成可执行文件"></a>5.0 生成可执行文件</h4><p>编译为中间文件，并链接为目标文件；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">$ gcc -c -o main.o main.c</span><br><span class="line">$ ld main.o -Ttext <span class="number">0xc0001500</span> -e main -o kernel.bin</span><br></pre></td></tr></table></figure>
+
+<p>通过file命令查看main.o文件属性；main.o文件是32位大端可重定向的ELF文件，机器平台为PowerPC；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ file main.o main.o: ELF <span class="number">32</span>-<span class="built_in">bit</span> MSB relocatable, PowerPC <span class="keyword">or</span> cisco <span class="number">4500</span>, version <span class="number">1</span> (SYSV), <span class="keyword">not</span> stripped</span><br></pre></td></tr></table></figure>
+
+<p>通过file命令查看kernel.bin文件属性；kernel.bin文件是32位大端可执行的ELF文件，机器平台为PowerPC；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ file kernel.bin kernel.bin: ELF <span class="number">32</span>-<span class="built_in">bit</span> MSB executable, PowerPC <span class="keyword">or</span> cisco <span class="number">4500</span>, version <span class="number">1</span> (SYSV), statically linked, <span class="keyword">not</span> stripped</span><br></pre></td></tr></table></figure>
+
+<p>通过nm命令查看main.o文件的符号表，符号表中仅有一个main函数符号；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ nm main.o <span class="number">00000000</span> T main</span><br></pre></td></tr></table></figure>
+
+<p>通过nm查看kernel.bin文件的符号表，</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ nm kernel.bin c0011510 A __bss_start c0011510 A _edata c0011510 A _end c0001500 T main</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="5-1-ELF-header"><a href="#5-1-ELF-header" class="headerlink" title="5.1 ELF header"></a>5.1 ELF header</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ xxd -u -a -g <span class="number">1</span> -s <span class="number">0</span> -l <span class="number">0x100</span> kernel.bin</span><br><span class="line"><span class="number">0000000</span>: <span class="number">7F</span> <span class="number">45</span> <span class="number">4</span>C <span class="number">46</span> <span class="number">01</span> <span class="number">02</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  .ELF............</span><br><span class="line"><span class="number">0000010</span>: <span class="number">00</span> <span class="number">02</span> <span class="number">00</span> <span class="number">14</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span> C0 <span class="number">00</span> <span class="number">15</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">34</span>  ..............<span class="number">.4</span></span><br><span class="line"><span class="number">0000020</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">15</span> <span class="number">74</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">34</span> <span class="number">00</span> <span class="number">20</span> <span class="number">00</span> <span class="number">02</span> <span class="number">00</span> <span class="number">28</span>  ...t....<span class="number">.4</span>. ...(</span><br><span class="line"><span class="number">0000030</span>: <span class="number">00</span> <span class="number">06</span> <span class="number">00</span> <span class="number">03</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> C0 <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ................</span><br></pre></td></tr></table></figure>
+
+<p>00<del>0x0F是e_ident数组，e_ident[0]</del>e_ident[3]的四个字节是固定的ELF魔数，0x7f, 0x45, 0x4c, 0x46；e_ident[4] = 1表示文件是32位的ELF文件，e_ident[5] = 2表示文件时大端字节序，e_ident[6] = 1表示默认版本，e_ident[7]~e_ident[15]的9个字节置为0；</p>
+<p>0x10~0x11是e_type，2个字节，e_type = 0x00 02，表示类型是ET_EXEC，即可执行文件；</p>
+<p>0x12~0x13是e_machine，2个字节，e_machine = 0x00 14，表示机器是EM_PPC，即power pc硬件平台；</p>
+<p>0x14~0x17是e_version，4个字节，e_version = 0x00 00 00 01，表示版本信息；</p>
+<p>0x18~0x1B是e_entry，4个字节，e_entry = 0xC0 00 15 00，表示程序的虚拟入口地址；</p>
+<p>0x1C~0x1F是e_phoff ，4个字节，e_phoff = 0x00 00 00 34，表示程序头表在文件中的偏移量；</p>
+<p>0x20~0x23是e_shoff，4个字节，e_shoff = 0x00 00 15 74，表示节头表在文件内的偏移量；</p>
+<p>0x24~0x27是e_flags，4个字节，e_flags = 0x00 00 00 00，表示属性；</p>
+<p>0x28~0x29是e_ehsize，2个字节，e_ehsize = 0x00 34，表示ELF header大小是0x34字节；程序头表紧跟ELF header之后；</p>
+<p>0x2A~0x2B是e_phentsize，2个字节，e_phentsize = 0x00 20，表示program header结构ELF32_Phdr的大小，此处为0x20；</p>
+<p>0x2C~0x2D是e_phnum，2个字节，e_phnum = 0x00 02，表示程序头表中段的个数，此处为2个段；</p>
+<p>0x2E~0x2F是e_shentsize，2个字节，e_shentsize = 0x00 28，表示节头表中节的大小，此处为0x28；</p>
+<p>0x30~0x31是e_shnum，2个字节，e_shnum = 0x00 06，表示节头表中节的个数，此处为6个节；</p>
+<p>0x32~0x33是e_shstrndx，2个字节，e_shstrndx = 0x00 03，表示string name table在节头表中的索引为3；</p>
+<h4 id="5-2-程序头表"><a href="#5-2-程序头表" class="headerlink" title="5.2 程序头表"></a>5.2 程序头表</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">$ xxd -u -a -g <span class="number">1</span> -s <span class="number">0</span> -l <span class="number">0x100</span> kernel.bin ......</span><br><span class="line"><span class="number">0000030</span>: <span class="number">00</span> <span class="number">06</span> <span class="number">00</span> <span class="number">03</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> C0 <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ................</span><br><span class="line"><span class="number">0000040</span>: C0 <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">15</span> <span class="number">10</span> <span class="number">00</span> <span class="number">00</span> <span class="number">15</span> <span class="number">10</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">05</span>  ................</span><br><span class="line"><span class="number">0000050</span>: <span class="number">00</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">64</span> <span class="number">74</span> E5 <span class="number">51</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ....dt.Q........</span><br><span class="line"><span class="number">0000060</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">06</span>  ................</span><br><span class="line"><span class="number">0000070</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">04</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ................</span><br></pre></td></tr></table></figure>
+
+<p>在ELF header中，程序头表偏移e_phoff = 0x00 00 00 34，所以程序头表的偏移位置为0x34，程序头表中段的大小e_phentsize = 0x00 20，段的个数e_phnum = 0x00 02，表示程序头表中有两个段，每个段大小0x20字节；ELF header大小e_ehsize = 0x00 34，程序头表紧跟ELF header之后；0x34~0x73之间共0x40个字节，是两个程序头的内容，从0x34地址开始，按照Elf32_Phdr结构分析；</p>
+<p>第一个段头在0x34~0x53，共0x20个字节；</p>
+<p>0x34~0x37是p_type，4个字节，p_type = 0x00 00 00 01，表示类型为PT_LOAD，为可加载程序段；</p>
+<p>0x38~0x3B是p_offset，4个字节，p_offset = 0x00 00 00 00，表示本段在文件内的偏移量；</p>
+<p>0x3C~0x3F是p_vaddr，4个字节，p_vaddr = 0xC0 00 00 00，表示本段被加载到内存后的起始虚拟地址；</p>
+<p>0x40~0x43是p_paddr，4个字节，p_paddr = 0xC0 00 00 00，保留，和p_vaddr一致；</p>
+<p>0x44~0x47是p_filesz，4个字节，p_filesz = 0x00 00 15 10，表示本段在文件中的大小；</p>
+<p>0x48~0x4B是p_memsz，4个字节，p_memsz = 0x00 00 15 10，表示本段在内存中的大小；</p>
+<p>0x4C~0x4F是p_flags，4个字节，p_flags = 0x00 00 00 05，表示本段的属性，5 = 4 + 1 = PF_R + PF_X，此处为可读和可执行权限；</p>
+<p>0x50~0x53是p_align，4个字节，p_align = 0x00 01 00 00，表示本段的对齐方式，此处为64K对齐；</p>
+<p>第二个段头在0x54~0x73，共0x20个字节；</p>
+<p>0x54~0x57是p_type，4个字节，p_type = 0x64 74 E5 51，表示类型为PT_GNU_STACK，为GNU的栈段；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/uapi/linux/elf.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_LOOS    0x60000000</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> PT_GNU_STACK    (PT_LOOS + 0x474e551)</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>之后的分析省略；</p>
+<h4 id="5-3-节头表"><a href="#5-3-节头表" class="headerlink" title="5.3 节头表"></a>5.3 节头表</h4><p>在ELF header中，节头表偏移e_shoff = 0x00 00 15 74，所以节头表的偏移位置为0x1574，节头表中段的大小e_shentsize = 0x00 28，段的个数e_shnum = 0x00 06，表示节头表中有六个节，每个节0x28字节；0x1574~0x1663共0xF0个字节，是六个节头的内容，从0x1574地址开始，按照Elf32_Shdr结构分析；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">$ xxd -u -g <span class="number">1</span> -s <span class="number">0x1570</span> -l <span class="number">0x100</span> kernel.bin</span><br><span class="line"><span class="number">0001570</span>: <span class="number">74</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  t...............</span><br><span class="line"><span class="number">0001580</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ................</span><br><span class="line"><span class="number">0001590</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">1B</span>  ................</span><br><span class="line"><span class="number">00015</span>a0: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">06</span> C0 <span class="number">00</span> <span class="number">15</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">15</span> <span class="number">00</span>  ................</span><br><span class="line"><span class="number">00015b</span>0: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">10</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">04</span>  ................</span><br><span class="line"><span class="number">00015</span>c0: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">21</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  .......!........</span><br><span class="line"><span class="number">00015</span>d0: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">15</span> <span class="number">10</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">38</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ..........<span class="number">.8</span>....</span><br><span class="line"><span class="number">00015e0</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">11</span>  ................</span><br><span class="line"><span class="number">00015f</span>0: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">03</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">15</span> <span class="number">48</span>  ...............H</span><br><span class="line"><span class="number">0001600</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">2</span>A <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span>  ...*............</span><br><span class="line"><span class="number">0001610</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">02</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ................</span><br><span class="line"><span class="number">0001620</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">16</span> <span class="number">64</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">80</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">05</span>  .......d........</span><br><span class="line"><span class="number">0001630</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">04</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">04</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">10</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">09</span>  ................</span><br><span class="line"><span class="number">0001640</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">03</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">16</span> E4  ................</span><br><span class="line"><span class="number">0001650</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">25</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">01</span>  ...%............</span><br><span class="line"><span class="number">0001660</span>: <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span>  ................</span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>第一个节头在0x1574~0x159B，共0x28个字节；</p>
+<p>0x1574~0x1577是sh_name，4个字节，sh_name = 0x00 00 00 00，表示节名称是在字符串表索引值为0x00的字符串，该字符串为空；</p>
+<p>0x1578~0x157B是sh_type，4个字节，sh_type = 0x00 00 00 00，表示该节是一个无效的节头，没有对应的节；该节中其他成员也无意义；</p>
+<p>第二个节头在0x159C~0x15C3，共0x28个字节；</p>
+<p>0x159C~0x159F是sh_name，4个字节，sh_name = 0x00 00 00 1B，表示节名称是在字符串表索引值为0x1B的字符串；该字符串为”.text”；</p>
+<p>0x15A0~0x15A3是sh_type，4个字节，sh_type = 0x00 00 00 01，表示</p>
+<p>0x15A4~0x15A7是sh_flags，4个字节，sh_flags = 0x00 00 00 06，0x06 = 0x04 + 0x02 = SHF_EXECINSTR + SHF_ALLOC，表示该节内容是指令代码，并且包含内存在进程运行时需要占用内存单元；</p>
+<p>0x15A8~0x15AB是sh_addr，4个字节，sh_addr = 0xC0 00 15 00，表示该节在内存中的起始地址，节映射到虚拟地址空间中的位置；</p>
+<p>0x15AC~0x15AF是sh_offset，4个字节，sh_offset = 0x00 00 15 00，表示该节在文件中的起始位置；</p>
+<p>0x15B0~0x15B3是sh_size，4个字节，sh_size = 0x00 00 00 10，表示该节的大小；</p>
+<p>0x15B4~0x15B7是sh_link，4个字节，sh_link = 00 00 00 00</p>
+<p>0x15B8~0x15BB是sh_info，4个字节，sh_info = 0x00 00 00 00</p>
+<p>0x15BC~0x15BF是sh_addralign，4个字节，sh_addralign = 0x00 00 00 04，表示该节的数据在内存中以16字节对齐；</p>
+<p>0x15C0~0x15C3是sh_entsize，4个字节，sh_entsize = 0x00 00 00 00</p>
+<p>以后各节的解析省略；</p>
+<h4 id="5-4-readelf查看结果"><a href="#5-4-readelf查看结果" class="headerlink" title="5.4 readelf查看结果"></a>5.4 readelf查看结果</h4><p>1) 显示程序的ELF文件头</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -h kernel.bin</span><br><span class="line">ELF Header:</span><br><span class="line">  Magic:   <span class="number">7f</span> <span class="number">45</span> <span class="number">4</span>c <span class="number">46</span> <span class="number">01</span> <span class="number">02</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span></span><br><span class="line">  Class:                             ELF32</span><br><span class="line">  Data:                              <span class="number">2'</span>s complement, big endian</span><br><span class="line">  Version:                           <span class="number">1</span> (current)</span><br><span class="line">  OS/ABI:                            UNIX - System V</span><br><span class="line">  ABI Version:                       <span class="number">0</span></span><br><span class="line">  Type:                              EXEC (Executable file)</span><br><span class="line">  Machine:                           PowerPC</span><br><span class="line">  Version:                           <span class="number">0x1</span></span><br><span class="line">  Entry <span class="built_in">point</span> address:               <span class="number">0xc0001500</span></span><br><span class="line">  Start of program headers:          <span class="number">52</span> (bytes into file)</span><br><span class="line">  Start of section headers:          <span class="number">5492</span> (bytes into file)</span><br><span class="line">  Flags:                             <span class="number">0x0</span></span><br><span class="line">  Size of <span class="keyword">this</span> header:               <span class="number">52</span> (bytes)</span><br><span class="line">  Size of program headers:           <span class="number">32</span> (bytes)</span><br><span class="line">  Number of program headers:         <span class="number">2</span></span><br><span class="line">  Size of section headers:           <span class="number">40</span> (bytes)</span><br><span class="line">  Number of section headers:         <span class="number">6</span></span><br><span class="line">  Section header <span class="built_in">string</span> table index: <span class="number">3</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>2) 显示程序所有的程序头</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -l kernel.bin</span><br><span class="line"><span class="function">Elf file type is <span class="title">EXEC</span> <span class="params">(Executable file)</span></span></span><br><span class="line"><span class="function">Entry <span class="built_in">point</span> 0xc0001500</span></span><br><span class="line">There are 2 program headers, starting at offset 52</span><br><span class="line">Program Headers:</span><br><span class="line">  Type           Offset     VirtAddr   PhysAddr</span><br><span class="line">                 FileSiz    MemSiz     Flg   Align</span><br><span class="line">  LOAD           <span class="number">0x00000000</span> <span class="number">0xc0000000</span> <span class="number">0xc0000000</span></span><br><span class="line">                 <span class="number">0x00001510</span> <span class="number">0x00001510</span> R E   <span class="number">0x10000</span></span><br><span class="line">  GNU_STACK      <span class="number">0x00000000</span> <span class="number">0x00000000</span> <span class="number">0x00000000</span></span><br><span class="line">                 <span class="number">0x00000000</span> <span class="number">0x00000000</span> RW    <span class="number">0x4</span></span><br><span class="line"></span><br><span class="line">Section to Segment mapping:</span><br><span class="line">  Segment Sections...</span><br><span class="line">    <span class="number">00</span>     .<span class="built_in">text</span></span><br><span class="line">    <span class="number">01</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>3) 显示程序所有的节头</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -S kernel.bin</span><br><span class="line">There are <span class="number">6</span> section headers, starting at offset <span class="number">0x1574</span>:</span><br><span class="line"></span><br><span class="line">Section Headers:</span><br><span class="line">  [Nr] Name              Type            Addr     Off</span><br><span class="line">       Size   ES Flg Lk Inf Al</span><br><span class="line">  [ <span class="number">0</span>]                   <span class="literal">NULL</span>            <span class="number">00000000</span> <span class="number">000000</span></span><br><span class="line">       <span class="number">000000</span> <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">0</span></span><br><span class="line">  [ <span class="number">1</span>] .<span class="built_in">text</span>             PROGBITS        c0001500 <span class="number">001500</span></span><br><span class="line">       <span class="number">000010</span> <span class="number">00</span>  AX  <span class="number">0</span>   <span class="number">0</span>  <span class="number">4</span></span><br><span class="line">  [ <span class="number">2</span>] .comment          PROGBITS        <span class="number">00000000</span> <span class="number">001510</span></span><br><span class="line">       <span class="number">000038</span> <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">1</span></span><br><span class="line">  [ <span class="number">3</span>] .shstrtab         STRTAB          <span class="number">00000000</span> <span class="number">001548</span></span><br><span class="line">       <span class="number">00002</span>a <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">1</span></span><br><span class="line">  [ <span class="number">4</span>] .symtab           SYMTAB          <span class="number">00000000</span> <span class="number">001664</span></span><br><span class="line">       <span class="number">000080</span> <span class="number">10</span>      <span class="number">5</span>   <span class="number">4</span>  <span class="number">4</span></span><br><span class="line">  [ <span class="number">5</span>] .strtab           STRTAB          <span class="number">00000000</span> <span class="number">0016e4</span></span><br><span class="line">       <span class="number">000025</span> <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">1</span></span><br><span class="line">Key to Flags:</span><br><span class="line">  W (<span class="built_in">write</span>), A (alloc), X (execute), M (merge), S (strings)   I (info),</span><br><span class="line">  L (link order), G (group), T (TLS), E (exclude), x (unknown) </span><br><span class="line">  O (extra OS processing required) o (OS specific), p (processor specific)</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+<p>4) 综合显示程序所有的头信息，包含ELF文件头、程序头、节头信息；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br></pre></td><td class="code"><pre><span class="line">$ readelf -e kernel.bin</span><br><span class="line">ELF Header:</span><br><span class="line">  Magic:   <span class="number">7f</span> <span class="number">45</span> <span class="number">4</span>c <span class="number">46</span> <span class="number">01</span> <span class="number">02</span> <span class="number">01</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span> <span class="number">00</span></span><br><span class="line">  Class:                             ELF32</span><br><span class="line">  Data:                              <span class="number">2'</span>s complement, big endian</span><br><span class="line">  Version:                           <span class="number">1</span> (current)</span><br><span class="line">  OS/ABI:                            UNIX - System V</span><br><span class="line">  ABI Version:                       <span class="number">0</span></span><br><span class="line">  Type:                              EXEC (Executable file)</span><br><span class="line">  Machine:                           PowerPC</span><br><span class="line">  Version:                           <span class="number">0x1</span></span><br><span class="line">  Entry <span class="built_in">point</span> address:               <span class="number">0xc0001500</span></span><br><span class="line">  Start of program headers:          <span class="number">52</span> (bytes into file)</span><br><span class="line">  Start of section headers:          <span class="number">5492</span> (bytes into file)</span><br><span class="line">  Flags:                             <span class="number">0x0</span></span><br><span class="line">  Size of <span class="keyword">this</span> header:               <span class="number">52</span> (bytes)</span><br><span class="line">  Size of program headers:           <span class="number">32</span> (bytes)</span><br><span class="line">  Number of program headers:         <span class="number">2</span></span><br><span class="line">  Size of section headers:           <span class="number">40</span> (bytes)</span><br><span class="line">  Number of section headers:         <span class="number">6</span></span><br><span class="line">  Section header <span class="built_in">string</span> table index: <span class="number">3</span></span><br><span class="line"></span><br><span class="line">There are <span class="number">6</span> section headers, starting at offset <span class="number">0x1574</span>:</span><br><span class="line"></span><br><span class="line">Section Headers:</span><br><span class="line">  [Nr] Name              Type            Addr     Off</span><br><span class="line">       Size   ES Flg Lk Inf Al</span><br><span class="line">  [ <span class="number">0</span>]                   <span class="literal">NULL</span>            <span class="number">00000000</span> <span class="number">000000</span></span><br><span class="line">       <span class="number">000000</span> <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">0</span></span><br><span class="line">  [ <span class="number">1</span>] .<span class="built_in">text</span>             PROGBITS        c0001500 <span class="number">001500</span></span><br><span class="line">       <span class="number">000010</span> <span class="number">00</span>  AX  <span class="number">0</span>   <span class="number">0</span>  <span class="number">4</span></span><br><span class="line">  [ <span class="number">2</span>] .comment          PROGBITS        <span class="number">00000000</span> <span class="number">001510</span></span><br><span class="line">       <span class="number">000038</span> <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">1</span></span><br><span class="line">  [ <span class="number">3</span>] .shstrtab         STRTAB          <span class="number">00000000</span> <span class="number">001548</span></span><br><span class="line">       <span class="number">00002</span>a <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">1</span></span><br><span class="line">  [ <span class="number">4</span>] .symtab           SYMTAB          <span class="number">00000000</span> <span class="number">001664</span></span><br><span class="line">       <span class="number">000080</span> <span class="number">10</span>      <span class="number">5</span>   <span class="number">4</span>  <span class="number">4</span></span><br><span class="line">  [ <span class="number">5</span>] .strtab           STRTAB          <span class="number">00000000</span> <span class="number">0016e4</span></span><br><span class="line">       <span class="number">000025</span> <span class="number">00</span>      <span class="number">0</span>   <span class="number">0</span>  <span class="number">1</span></span><br><span class="line">Key to Flags:</span><br><span class="line">  W (<span class="built_in">write</span>), A (alloc), X (execute), M (merge), S (strings)   I (info),</span><br><span class="line">  L (link order), G (group), T (TLS), E (exclude), x (unknown) </span><br><span class="line">  O (extra OS processing required) o (OS specific), p (processor specific)</span><br><span class="line"></span><br><span class="line"><span class="function">Elf file type is <span class="title">EXEC</span> <span class="params">(Executable file)</span></span></span><br><span class="line"><span class="function">Entry <span class="built_in">point</span> 0xc0001500</span></span><br><span class="line">There are 2 program headers, starting at offset 52</span><br><span class="line">Program Headers:</span><br><span class="line">  Type           Offset     VirtAddr   PhysAddr</span><br><span class="line">                 FileSiz    MemSiz     Flg   Align</span><br><span class="line">  LOAD           <span class="number">0x00000000</span> <span class="number">0xc0000000</span> <span class="number">0xc0000000</span></span><br><span class="line">                 <span class="number">0x00001510</span> <span class="number">0x00001510</span> R E   <span class="number">0x10000</span></span><br><span class="line">  GNU_STACK      <span class="number">0x00000000</span> <span class="number">0x00000000</span> <span class="number">0x00000000</span></span><br><span class="line">                 <span class="number">0x00000000</span> <span class="number">0x00000000</span> RW    <span class="number">0x4</span></span><br><span class="line"></span><br><span class="line">Section to Segment mapping:</span><br><span class="line">  Segment Sections...</span><br><span class="line">    <span class="number">00</span>     .<span class="built_in">text</span></span><br><span class="line">    <span class="number">01</span></span><br></pre></td></tr></table></figure>
+
+
+
+
+<p>通过readelf命令查看的结果，和按照ELF文件分析的结果，对比结果一致；</p>
+<h3 id="6-总结"><a href="#6-总结" class="headerlink" title="6. 总结"></a>6. 总结</h3><h3 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h3><p>《操作系统真象还原》</p>
+<p>程序编译-汇编-链接的理解！—03-ELF头和节头表</p>
+<p>ELF文件-节和节头</p>
+<p><a href="#目录">回到目录</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/09/%E6%8E%A7%E5%88%B6%E5%8F%B0%E9%A9%B1%E5%8A%A8%E4%B8%ADtty-read%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/" rel="prev" title="控制台驱动中tty_read函数的实现过程">
+      <i class="fa fa-chevron-left"></i> 控制台驱动中tty_read函数的实现过程
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#目录"><span class="nav-text">目录</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#0-简介"><span class="nav-text">0. 简介</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#0-1-文件格式"><span class="nav-text">0.1 文件格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#0-2-段和节"><span class="nav-text">0.2 段和节</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-ELF-header"><span class="nav-text">1. ELF header</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-程序头表"><span class="nav-text">2. 程序头表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-节头表"><span class="nav-text">3. 节头表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-readelf命令"><span class="nav-text">4. readelf命令</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-ELF文件实例"><span class="nav-text">5. ELF文件实例</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#5-0-生成可执行文件"><span class="nav-text">5.0 生成可执行文件</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-1-ELF-header"><span class="nav-text">5.1 ELF header</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-2-程序头表"><span class="nav-text">5.2 程序头表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-3-节头表"><span class="nav-text">5.3 节头表</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-4-readelf查看结果"><span class="nav-text">5.4 readelf查看结果</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-总结"><span class="nav-text">6. 总结</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参考资料"><span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">micro虾米</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">micro虾米</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '1ec7eee73ee4f91e15a1',
+      clientSecret: '971b3c9439c2a8fa2fcb12307657ad50aee6ed0c',
+      repo        : 'mshrimp_blog_talk',
+      owner       : 'mshrimp',
+      admin       : ['mshrimp'],
+      id          : '6550599b946100eb7b07a9f6019e0822',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>

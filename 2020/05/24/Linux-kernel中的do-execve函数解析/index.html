@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="未完成 简述在Linux系统中提供了exec开头的一系列函数，这些函数能通过内核调用用户空间的程序，能用可执行文件所描述的上下文代替进程的上下文；这些函数都是以exec前缀开始的，这些exec函数都是调用execve()系统调用实现的；而在内核态的sys_execve()函数，是调用do_execve()函数实现的；">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux-kernel中的do_execve函数解析">
+<meta property="og:url" content="http://mshrimp.github.io/2020/05/24/Linux-kernel%E4%B8%AD%E7%9A%84do-execve%E5%87%BD%E6%95%B0%E8%A7%A3%E6%9E%90/index.html">
+<meta property="og:site_name" content="Mshrimp blog">
+<meta property="og:description" content="未完成 简述在Linux系统中提供了exec开头的一系列函数，这些函数能通过内核调用用户空间的程序，能用可执行文件所描述的上下文代替进程的上下文；这些函数都是以exec前缀开始的，这些exec函数都是调用execve()系统调用实现的；而在内核态的sys_execve()函数，是调用do_execve()函数实现的；">
+<meta property="article:published_time" content="2020-05-24T02:59:03.000Z">
+<meta property="article:modified_time" content="2020-05-24T12:32:12.720Z">
+<meta property="article:author" content="micro虾米">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://mshrimp.github.io/2020/05/24/Linux-kernel%E4%B8%AD%E7%9A%84do-execve%E5%87%BD%E6%95%B0%E8%A7%A3%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>Linux-kernel中的do_execve函数解析 | Mshrimp blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Mshrimp blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">micro虾米</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2020/05/24/Linux-kernel%E4%B8%AD%E7%9A%84do-execve%E5%87%BD%E6%95%B0%E8%A7%A3%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="micro虾米">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mshrimp blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Linux-kernel中的do_execve函数解析
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2020-05-24 10:59:03 / Modified: 20:32:12" itemprop="dateCreated datePublished" datetime="2020-05-24T10:59:03+08:00">2020-05-24</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>未完成</p>
+<h4 id="简述"><a href="#简述" class="headerlink" title="简述"></a>简述</h4><p>在Linux系统中提供了exec开头的一系列函数，这些函数能通过内核调用用户空间的程序，能<strong>用可执行文件所描述的上下文代替进程的上下文</strong>；这些函数都是以exec前缀开始的，这些exec函数都是调用execve()系统调用实现的；而在内核态的sys_execve()函数，是调用do_execve()函数实现的；</p>
+<a id="more"></a>
+
+<pre class="mermaid">graph TB
+    exec类(exec类函数)-->execve("execve()")
+    -->sys_execve("sys_execve()")
+    -->do_execve("do_execve()")</pre>
+
+
+
+<p>内核中实际执行execv()或execve()系统调用的是do_execve()函数；而do_execve()函数进一步通过do_execveat_common()函数</p>
+<p>do_execve()函数在fs/exec.c文件中定义；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// fs/exec.c</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">do_execve</span><span class="params">(struct filename *filename,</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">char</span> __user *<span class="keyword">const</span> __user *__argv,</span></span></span><br><span class="line"><span class="function"><span class="params">    <span class="keyword">const</span> <span class="keyword">char</span> __user *<span class="keyword">const</span> __user *__envp)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">user_arg_ptr</span> <span class="title">argv</span> = &#123;</span> .ptr.native = __argv &#125;;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">user_arg_ptr</span> <span class="title">envp</span> = &#123;</span> .ptr.native = __envp &#125;;</span><br><span class="line">    <span class="keyword">return</span> do_execveat_common(AT_FDCWD, filename, argv, envp, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<pre class="mermaid">graph TB
+    do_execve(do_execve)-->do_execveat_common(do_execveat_common)</pre>
+
+
+
+<h4 id="参数"><a href="#参数" class="headerlink" title="参数"></a>参数</h4><p>do_execve()函数的参数：</p>
+<table>
+<thead>
+<tr>
+<th>参数</th>
+<th>类型</th>
+<th>描述</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>filename</td>
+<td>struct filename</td>
+<td>可执行程序的名称信息</td>
+</tr>
+<tr>
+<td>__argv</td>
+<td>const char __user *const __user *</td>
+<td>可执行程序的参数信息</td>
+</tr>
+<tr>
+<td>__envp</td>
+<td>const char __user *const __user *</td>
+<td>环境变量信息</td>
+</tr>
+</tbody></table>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// include/linux/fs.h</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">filename</span> &#123;</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      *name;  <span class="comment">/* pointer to actual string */</span></span><br><span class="line">    <span class="keyword">const</span> __user <span class="keyword">char</span>   *uptr;  <span class="comment">/* original userland pointer */</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">audit_names</span>  *<span class="title">aname</span>;</span></span><br><span class="line">    <span class="keyword">int</span>         refcnt;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span>      iname[];</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br><span class="line">127</span><br><span class="line">128</span><br><span class="line">129</span><br><span class="line">130</span><br><span class="line">131</span><br><span class="line">132</span><br><span class="line">133</span><br><span class="line">134</span><br><span class="line">135</span><br><span class="line">136</span><br><span class="line">137</span><br><span class="line">138</span><br><span class="line">139</span><br><span class="line">140</span><br><span class="line">141</span><br><span class="line">142</span><br><span class="line">143</span><br><span class="line">144</span><br><span class="line">145</span><br><span class="line">146</span><br><span class="line">147</span><br><span class="line">148</span><br><span class="line">149</span><br><span class="line">150</span><br><span class="line">151</span><br><span class="line">152</span><br><span class="line">153</span><br><span class="line">154</span><br><span class="line">155</span><br><span class="line">156</span><br><span class="line">157</span><br><span class="line">158</span><br><span class="line">159</span><br><span class="line">160</span><br><span class="line">161</span><br><span class="line">162</span><br><span class="line">163</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// fs/exec.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">do_execveat_common</span><span class="params">(<span class="keyword">int</span> fd, struct filename *filename,</span></span></span><br><span class="line"><span class="function"><span class="params">                  struct user_arg_ptr argv,</span></span></span><br><span class="line"><span class="function"><span class="params">                  struct user_arg_ptr envp,</span></span></span><br><span class="line"><span class="function"><span class="params">                  <span class="keyword">int</span> flags)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">char</span> *pathbuf = <span class="literal">NULL</span>;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">linux_binprm</span> *<span class="title">bprm</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">file</span> *<span class="title">file</span>;</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">files_struct</span> *<span class="title">displaced</span>;</span></span><br><span class="line">    <span class="keyword">int</span> retval;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (IS_ERR(filename)) &#123;</span><br><span class="line">        printk(<span class="string">"%s, %d, filename error\n"</span>, __func__, __LINE__);</span><br><span class="line">        <span class="keyword">return</span> PTR_ERR(filename);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * We move the actual failure in case of RLIMIT_NPROC excess from</span></span><br><span class="line"><span class="comment">     * set*uid() to execve() because too many poorly written programs</span></span><br><span class="line"><span class="comment">     * don't check setuid() return code.  Here we additionally recheck</span></span><br><span class="line"><span class="comment">     * whether NPROC limit is still exceeded.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> ((current-&gt;flags &amp; PF_NPROC_EXCEEDED) &amp;&amp;</span><br><span class="line">        atomic_read(&amp;current_user()-&gt;processes) &gt; rlimit(RLIMIT_NPROC)) &#123;</span><br><span class="line">        retval = -EAGAIN;</span><br><span class="line">        <span class="keyword">goto</span> out_ret;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* We're below the limit (still or again), so we don't want to make</span></span><br><span class="line"><span class="comment">     * further execve() calls fail. */</span></span><br><span class="line">    current-&gt;flags &amp;= ~PF_NPROC_EXCEEDED;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用unshare_files()为进程复制一份文件表</span></span><br><span class="line">    retval = unshare_files(&amp;displaced);</span><br><span class="line">    <span class="keyword">if</span> (retval)</span><br><span class="line">        <span class="keyword">goto</span> out_ret;</span><br><span class="line"></span><br><span class="line">    retval = -ENOMEM;</span><br><span class="line">    <span class="comment">// 调用kzalloc()在堆上分配一份structlinux_binprm结构体</span></span><br><span class="line">    bprm = kzalloc(<span class="keyword">sizeof</span>(*bprm), GFP_KERNEL);</span><br><span class="line">    <span class="keyword">if</span> (!bprm)</span><br><span class="line">        <span class="keyword">goto</span> out_files;</span><br><span class="line"></span><br><span class="line">    retval = prepare_bprm_creds(bprm);</span><br><span class="line">    <span class="keyword">if</span> (retval)</span><br><span class="line">        <span class="keyword">goto</span> out_free;</span><br><span class="line"></span><br><span class="line">    check_unsafe_exec(bprm);</span><br><span class="line">    current-&gt;in_execve = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用do_open_execat()查找并打开二进制文件</span></span><br><span class="line">    file = do_open_execat(fd, filename, flags);</span><br><span class="line">    retval = PTR_ERR(file);</span><br><span class="line">    <span class="keyword">if</span> (IS_ERR(file)) &#123;</span><br><span class="line">        printk(<span class="string">"%s, %d, file error\n"</span>, __func__, __LINE__);</span><br><span class="line">        <span class="keyword">goto</span> out_unmark;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用sched_exec()找到最小负载的CPU，用来执行该二进制文件</span></span><br><span class="line">    sched_exec();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 根据获取的信息，填充struct linux_binprm结构体中的file、filename、interp成员</span></span><br><span class="line">    bprm-&gt;file = file;</span><br><span class="line">    <span class="keyword">if</span> (fd == AT_FDCWD || filename-&gt;name[<span class="number">0</span>] == <span class="string">'/'</span>) &#123;</span><br><span class="line">        bprm-&gt;filename = filename-&gt;name;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (filename-&gt;name[<span class="number">0</span>] == <span class="string">'\0'</span>)</span><br><span class="line">            pathbuf = kasprintf(GFP_TEMPORARY, <span class="string">"/dev/fd/%d"</span>, fd);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            pathbuf = kasprintf(GFP_TEMPORARY, <span class="string">"/dev/fd/%d/%s"</span>,</span><br><span class="line">                        fd, filename-&gt;name);</span><br><span class="line">        <span class="keyword">if</span> (!pathbuf) &#123;</span><br><span class="line">            retval = -ENOMEM;</span><br><span class="line">            <span class="keyword">goto</span> out_unmark;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">/*</span></span><br><span class="line"><span class="comment">         * Record that a name derived from an O_CLOEXEC fd will be</span></span><br><span class="line"><span class="comment">         * inaccessible after exec. Relies on having exclusive access to</span></span><br><span class="line"><span class="comment">         * current-&gt;files (due to unshare_files above).</span></span><br><span class="line"><span class="comment">         */</span></span><br><span class="line">        <span class="keyword">if</span> (close_on_exec(fd, rcu_dereference_raw(current-&gt;files-&gt;fdt)))</span><br><span class="line">            bprm-&gt;interp_flags |= BINPRM_FLAGS_PATH_INACCESSIBLE;</span><br><span class="line">        bprm-&gt;filename = pathbuf;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    bprm-&gt;interp = bprm-&gt;filename;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用bprm_mm_init()创建进程的内存地址空间，并调用init_new_context()检查当前进程是否使用自定义的局部描述符表；如果是，那么分配和准备一个新的LDT；</span></span><br><span class="line">    retval = bprm_mm_init(bprm);</span><br><span class="line">    <span class="keyword">if</span> (retval)</span><br><span class="line">        <span class="keyword">goto</span> out_unmark;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 填充struct linux_binprm结构体中的命令行参数argv,环境变量envp</span></span><br><span class="line">    bprm-&gt;argc = count(argv, MAX_ARG_STRINGS);</span><br><span class="line">    <span class="keyword">if</span> ((retval = bprm-&gt;argc) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    bprm-&gt;envc = count(envp, MAX_ARG_STRINGS);</span><br><span class="line">    <span class="keyword">if</span> ((retval = bprm-&gt;envc) &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用prepare_binprm()检查该二进制文件的可执行权限；最后，kernel_read()读取二进制文件的头128字节（这些字节用于识别二进制文件的格式及其他信息，后续会使用到）</span></span><br><span class="line">    retval = prepare_binprm(bprm);</span><br><span class="line">    <span class="keyword">if</span> (retval &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用copy_strings_kernel()从内核空间获取二进制文件的路径名称</span></span><br><span class="line">    retval = copy_strings_kernel(<span class="number">1</span>, &amp;bprm-&gt;filename, bprm);</span><br><span class="line">    <span class="keyword">if</span> (retval &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    bprm-&gt;exec = bprm-&gt;p;</span><br><span class="line">    <span class="comment">// 调用copy_string()从用户空间拷贝环境变量</span></span><br><span class="line">    retval = copy_strings(bprm-&gt;envc, envp, bprm);</span><br><span class="line">    <span class="keyword">if</span> (retval &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 调用copy_string()从用户空间拷贝命令行参数</span></span><br><span class="line">    retval = copy_strings(bprm-&gt;argc, argv, bprm);</span><br><span class="line">    <span class="keyword">if</span> (retval &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    would_dump(bprm, bprm-&gt;file);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 至此，二进制文件已经被打开，struct linux_binprm结构体中也记录了重要信息；下面需要识别该二进制文件的格式并最终运行该文件；</span></span><br><span class="line">    retval = exec_binprm(bprm);</span><br><span class="line">    <span class="keyword">if</span> (retval &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">goto</span> out;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* execve succeeded */</span></span><br><span class="line">    current-&gt;fs-&gt;in_exec = <span class="number">0</span>;</span><br><span class="line">    current-&gt;in_execve = <span class="number">0</span>;</span><br><span class="line">    acct_update_integrals(current);</span><br><span class="line">    task_numa_free(current);</span><br><span class="line">    free_bprm(bprm);</span><br><span class="line">    kfree(pathbuf);</span><br><span class="line">    putname(filename);</span><br><span class="line">    <span class="keyword">if</span> (displaced)</span><br><span class="line">        put_files_struct(displaced);</span><br><span class="line">    <span class="keyword">return</span> retval;</span><br><span class="line"></span><br><span class="line">out:</span><br><span class="line">    <span class="keyword">if</span> (bprm-&gt;mm) &#123;</span><br><span class="line">        acct_arg_size(bprm, <span class="number">0</span>);</span><br><span class="line">        mmput(bprm-&gt;mm);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">out_unmark:</span><br><span class="line">    current-&gt;fs-&gt;in_exec = <span class="number">0</span>;</span><br><span class="line">    current-&gt;in_execve = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">out_free:</span><br><span class="line">    free_bprm(bprm);</span><br><span class="line">    kfree(pathbuf);</span><br><span class="line"></span><br><span class="line">out_files:</span><br><span class="line">    <span class="keyword">if</span> (displaced)</span><br><span class="line">        reset_files_struct(displaced);</span><br><span class="line">out_ret:</span><br><span class="line">    putname(filename);</span><br><span class="line">    <span class="keyword">return</span> retval;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
+
+<h4 id="参考资料"><a href="#参考资料" class="headerlink" title="参考资料"></a>参考资料</h4><p><a href="https://blog.csdn.net/gatieme/article/details/51594439" target="_blank" rel="noopener">https://blog.csdn.net/gatieme/article/details/51594439</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/05/17/platform%E6%80%BB%E7%BA%BF%E8%AE%BE%E5%A4%87%E9%A9%B1%E5%8A%A8%E6%A8%A1%E5%9E%8B/" rel="prev" title="platform总线设备驱动模型">
+      <i class="fa fa-chevron-left"></i> platform总线设备驱动模型
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2020/05/31/busybox%E5%8A%A0%E8%BD%BDinittab%E8%BF%87%E7%A8%8B%E5%88%86%E6%9E%90/" rel="next" title="busybox加载inittab过程分析">
+      busybox加载inittab过程分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#简述"><span class="nav-text">简述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参数"><span class="nav-text">参数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#参考资料"><span class="nav-text">参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">micro虾米</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">21</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">micro虾米</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '1ec7eee73ee4f91e15a1',
+      clientSecret: '971b3c9439c2a8fa2fcb12307657ad50aee6ed0c',
+      repo        : 'mshrimp_blog_talk',
+      owner       : 'mshrimp',
+      admin       : ['mshrimp'],
+      id          : '6f52a423d8579c6c640c91fe063eb422',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
