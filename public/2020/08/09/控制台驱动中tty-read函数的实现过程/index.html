@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 4.2.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"mshrimp.github.io","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="tty核心中的读写函数tty_read和tty_write，内部调用的是线路规程的read和write操作；本文先忽略tty的写入操作，将重点解析tty线路规程中的n_tty_read()函数的操作；">
+<meta property="og:type" content="article">
+<meta property="og:title" content="控制台驱动中tty_read函数的实现过程">
+<meta property="og:url" content="http://mshrimp.github.io/2020/08/09/%E6%8E%A7%E5%88%B6%E5%8F%B0%E9%A9%B1%E5%8A%A8%E4%B8%ADtty-read%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/index.html">
+<meta property="og:site_name" content="Mshrimp blog">
+<meta property="og:description" content="tty核心中的读写函数tty_read和tty_write，内部调用的是线路规程的read和write操作；本文先忽略tty的写入操作，将重点解析tty线路规程中的n_tty_read()函数的操作；">
+<meta property="article:published_time" content="2020-08-09T10:02:25.000Z">
+<meta property="article:modified_time" content="2020-08-23T10:04:08.176Z">
+<meta property="article:author" content="micro虾米">
+<meta property="article:tag" content="tty">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="http://mshrimp.github.io/2020/08/09/%E6%8E%A7%E5%88%B6%E5%8F%B0%E9%A9%B1%E5%8A%A8%E4%B8%ADtty-read%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'default'
+  };
+</script>
+
+  <title>控制台驱动中tty_read函数的实现过程 | Mshrimp blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Mshrimp blog</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+      <p class="site-subtitle" itemprop="description">micro虾米</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="default">
+    <link itemprop="mainEntityOfPage" href="http://mshrimp.github.io/2020/08/09/%E6%8E%A7%E5%88%B6%E5%8F%B0%E9%A9%B1%E5%8A%A8%E4%B8%ADtty-read%E5%87%BD%E6%95%B0%E7%9A%84%E5%AE%9E%E7%8E%B0%E8%BF%87%E7%A8%8B/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="micro虾米">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Mshrimp blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          控制台驱动中tty_read函数的实现过程
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2020-08-09 18:02:25" itemprop="dateCreated datePublished" datetime="2020-08-09T18:02:25+08:00">2020-08-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2020-08-23 18:04:08" itemprop="dateModified" datetime="2020-08-23T18:04:08+08:00">2020-08-23</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>tty核心中的读写函数tty_read和tty_write，内部调用的是线路规程的read和write操作；本文先忽略tty的写入操作，将重点解析tty线路规程中的n_tty_read()函数的操作；</p>
+<a id="more"></a>
+
+
+
+
+<h4 id="0-简述"><a href="#0-简述" class="headerlink" title="0. 简述"></a>0. 简述</h4><p>tty核心中的读写函数tty_read和tty_write，内部调用的是线路规程的read和write操作；</p>
+<p>tty_write()函数通过ld-&gt;ops-&gt;write()从tty核心进入到下一层的线路规程，调用n_tty_write()函数，通过tty-&gt;ops-&gt;write()函数继续进入到下一层uart驱动，使用uart_write()函数将数据从用户空间写入到终端；</p>
+<p>tty_read()函数通过ld-&gt;ops-&gt;read()从tty核心进入到下一层的线路规程，调用n_tty_read()函数；在n_tty_read()函数中不需要通过下一层的uart_read()函数读取，而是从线路规程的数据环形缓冲区中读取数据到用户空间；</p>
+<p>本文先忽略tty的写入操作，将重点解析tty线路规程中的n_tty_read()函数的操作；</p>
+<h4 id="1-tty-read"><a href="#1-tty-read" class="headerlink" title="1. tty_read"></a>1. tty_read</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// tty_io.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">tty_read</span><span class="params">(struct file *file, <span class="keyword">char</span> __user *buf, <span class="keyword">size_t</span> count,</span></span></span><br><span class="line"><span class="function"><span class="params">            <span class="keyword">loff_t</span> *ppos)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_struct</span> *<span class="title">tty</span> = <span class="title">file_tty</span>(<span class="title">file</span>);</span></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc</span> *<span class="title">ld</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* We want to wait for the line discipline to sort out in this</span></span><br><span class="line"><span class="comment">       situation */</span></span><br><span class="line">    ld = tty_ldisc_ref_wait(tty);</span><br><span class="line">    <span class="keyword">if</span> (ld-&gt;ops-&gt;<span class="built_in">read</span>)</span><br><span class="line">        i = ld-&gt;ops-&gt;<span class="built_in">read</span>(tty, file, buf, count);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        i = -EIO;</span><br><span class="line">    tty_ldisc_deref(ld);</span><br><span class="line">	......</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在tty核心层的tty_read()函数中，通过tty_ldisc_ref_wait()函数从tty_struct结构体中获取到tty_ldisc结构指针，直接使用tty_ldisc_ops结构中的ld-&gt;ops-&gt;read函数完成tty的read操作，从而进入到驱动的下一层，tty线路规程；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ld-&gt;ops-&gt;<span class="built_in">read</span>(tty, file, buf, count)</span><br></pre></td></tr></table></figure>
+
+
+
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">tty_ldisc_ops</span> <span class="title">tty_ldisc_N_TTY</span> = &#123;</span></span><br><span class="line">    .name            = <span class="string">"n_tty"</span>,</span><br><span class="line">    .<span class="built_in">read</span>            = n_tty_read,</span><br><span class="line">    .<span class="built_in">write</span>           = n_tty_write,</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="2-控制台读取"><a href="#2-控制台读取" class="headerlink" title="2. 控制台读取"></a>2. 控制台读取</h4><p>在控制台中，ld-&gt;ops-&gt;read对应的是tty_ldisc_N_TTY结构中的n_tty_read()函数；n_tty_read()函数与n_tty_write()不同，不是通过下一层的read函数实现（如：uart_write），n_tty_read()函数是从缓冲区中读取数据的，函数实现比较长，为了尽可能多地详细解析该函数，下面将该函数截取成多段进行解析；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">ssize_t</span> <span class="title">n_tty_read</span><span class="params">(struct tty_struct *tty, struct file *file,</span></span></span><br><span class="line"><span class="function"><span class="params">             <span class="keyword">unsigned</span> <span class="keyword">char</span> __user *buf, <span class="keyword">size_t</span> nr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span> = <span class="title">tty</span>-&gt;<span class="title">disc_data</span>;</span></span><br><span class="line">    <span class="keyword">unsigned</span> <span class="keyword">char</span> __user *b = buf;</span><br><span class="line">    DEFINE_WAIT_FUNC(wait, woken_wake_function);</span><br><span class="line">    <span class="keyword">int</span> c;</span><br><span class="line">    <span class="keyword">int</span> minimum, time;</span><br><span class="line">    <span class="keyword">ssize_t</span> retval = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">long</span> timeout;</span><br><span class="line">    <span class="keyword">int</span> packet;</span><br><span class="line">    <span class="keyword">size_t</span> tail;</span><br><span class="line"></span><br><span class="line">    c = job_control(tty, file);</span><br><span class="line">    <span class="keyword">if</span> (c &lt; <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> c;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     *  Internal serialization of reads.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="keyword">if</span> (file-&gt;f_flags &amp; O_NONBLOCK) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!mutex_trylock(&amp;ldata-&gt;atomic_read_lock))</span><br><span class="line">            <span class="keyword">return</span> -EAGAIN;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (mutex_lock_interruptible(&amp;ldata-&gt;atomic_read_lock))</span><br><span class="line">            <span class="keyword">return</span> -ERESTARTSYS;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    down_read(&amp;tty-&gt;termios_rwsem);</span><br></pre></td></tr></table></figure>
+
+
+<p>n_tty_read()函数的开始部分，用于一些数据的初始化和校验；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line">DEFINE_WAIT_FUNC(wait, woken_wake_function);</span><br><span class="line">   down_read(&amp;tty-&gt;termios_rwsem);</span><br><span class="line"></span><br><span class="line">minimum = time = <span class="number">0</span>;</span><br><span class="line">   timeout = MAX_SCHEDULE_TIMEOUT;</span><br><span class="line">   <span class="keyword">if</span> (!ldata-&gt;icanon) &#123;</span><br><span class="line">       minimum = MIN_CHAR(tty);</span><br><span class="line">       <span class="keyword">if</span> (minimum) &#123;</span><br><span class="line">           time = (HZ / <span class="number">10</span>) * TIME_CHAR(tty);</span><br><span class="line">           <span class="keyword">if</span> (time)</span><br><span class="line">               ldata-&gt;minimum_to_wake = <span class="number">1</span>;</span><br><span class="line">           <span class="keyword">else</span> <span class="keyword">if</span> (!waitqueue_active(&amp;tty-&gt;read_wait) ||</span><br><span class="line">                (ldata-&gt;minimum_to_wake &gt; minimum))</span><br><span class="line">               ldata-&gt;minimum_to_wake = minimum;</span><br><span class="line">       &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">           timeout = (HZ / <span class="number">10</span>) * TIME_CHAR(tty);</span><br><span class="line">           ldata-&gt;minimum_to_wake = minimum = <span class="number">1</span>;</span><br><span class="line">       &#125;</span><br><span class="line">   &#125;</span><br><span class="line"></span><br><span class="line">   packet = tty-&gt;packet;</span><br><span class="line">   tail = ldata-&gt;read_tail;</span><br><span class="line"></span><br><span class="line">   add_wait_queue(&amp;tty-&gt;read_wait, &amp;wait);</span><br></pre></td></tr></table></figure>
+
+
+<p>当输入缓冲区中的数据超过了最低限度数据量minimum_to_wake时，要唤醒正在等待从该设备读取数据的进程；minimum_to_wake的值一般都是1，即缓冲区中的数据量超过1个，就要唤醒读取进程；</p>
+<h4 id="3-单次读取限制"><a href="#3-单次读取限制" class="headerlink" title="3. 单次读取限制"></a>3. 单次读取限制</h4><p>minimum = MIN_CHAR(tty)操作，获取termios.c_cc[VMIN]数组的值，作为本次读取操作能够读取到的最大数据量；termios.c_cc[VMIN]数组的值，可以在打开控制台之后通过设置termios参数进行设置；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// linux/tty.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> MIN_CHAR(tty) ((tty)-&gt;termios.c_cc[VMIN])</span></span><br></pre></td></tr></table></figure>
+
+
+<p>从同一个终端设备读取的操作应该是互斥的，所以要放在临界区中；还要在当前进程的系统堆栈中准备一个wait_queue_t数据结构wait，并挂入到目标终端的读取等待队列read_wait中，使终端设备的驱动程序在有数据可以读取时可以唤醒这个进程；如果终端设备的输入缓冲区中已经有数据，不需要进入睡眠，可以在读取到了数据之后再把它从队列里去掉即可；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">while</span> (nr) &#123;</span><br><span class="line">    <span class="comment">/* First test for status change. */</span></span><br><span class="line">    <span class="keyword">if</span> (packet &amp;&amp; tty-&gt;link-&gt;ctrl_status) &#123;</span><br><span class="line">        <span class="keyword">unsigned</span> <span class="keyword">char</span> cs;</span><br><span class="line">        <span class="keyword">if</span> (b != buf)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        spin_lock_irq(&amp;tty-&gt;link-&gt;ctrl_lock);</span><br><span class="line">        cs = tty-&gt;link-&gt;ctrl_status;</span><br><span class="line">        tty-&gt;link-&gt;ctrl_status = <span class="number">0</span>;</span><br><span class="line">        spin_unlock_irq(&amp;tty-&gt;link-&gt;ctrl_lock);</span><br><span class="line">        <span class="keyword">if</span> (tty_put_user(tty, cs, b++)) &#123;</span><br><span class="line">            retval = -EFAULT;</span><br><span class="line">            b--;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        nr--;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>伪终端设备可以通过ioctl()系统调用将主从的通信方式设置为“packet”模式，此时packet值为1；此种情况和控制台没有什么关系，我也不懂，所以这部分跳过；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">unsigned</span> <span class="keyword">char</span> __user *b = buf;</span><br><span class="line">......</span><br><span class="line">	<span class="keyword">if</span> (((minimum - (b - buf)) &lt; ldata-&gt;minimum_to_wake) &amp;&amp;</span><br><span class="line">           ((minimum - (b - buf)) &gt;= <span class="number">1</span>))</span><br><span class="line">           ldata-&gt;minimum_to_wake = (minimum - (b - buf));</span><br></pre></td></tr></table></figure>
+
+
+<p>指针b定义时指向的是用户空间的buf缓存，用来保存读取到的数据，随着字符的读出而向后递增；（b-buf）是已经读出的字符数；ldata-&gt;minimum_to_wake的值在读取过程中会趋近于1；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (!input_available_p(tty, <span class="number">0</span>)) &#123;</span><br><span class="line">    up_read(&amp;tty-&gt;termios_rwsem);</span><br><span class="line">    tty_buffer_flush_work(tty-&gt;port);</span><br><span class="line">    down_read(&amp;tty-&gt;termios_rwsem);</span><br><span class="line">    <span class="keyword">if</span> (!input_available_p(tty, <span class="number">0</span>)) &#123;</span><br><span class="line">        <span class="keyword">if</span> (test_bit(TTY_OTHER_CLOSED, &amp;tty-&gt;flags)) &#123;</span><br><span class="line">            retval = -EIO;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (tty_hung_up_p(file))</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">if</span> (!timeout)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">if</span> (file-&gt;f_flags &amp; O_NONBLOCK) &#123;</span><br><span class="line">            retval = -EAGAIN;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (signal_pending(current)) &#123;</span><br><span class="line">            retval = -ERESTARTSYS;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        up_read(&amp;tty-&gt;termios_rwsem);</span><br><span class="line"></span><br><span class="line">        timeout = wait_woken(&amp;wait, TASK_INTERRUPTIBLE,</span><br><span class="line">                timeout);</span><br><span class="line"></span><br><span class="line">        down_read(&amp;tty-&gt;termios_rwsem);</span><br><span class="line">        <span class="keyword">continue</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在input_available_p()函数中会检查输入缓冲区中是否有数据，在“规范模式”下，检查的是经过加工后的数据数量，在原始模式下则是检查原始字符的数量；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">input_available_p</span><span class="params">(struct tty_struct *tty, <span class="keyword">int</span> poll)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span> = <span class="title">tty</span>-&gt;<span class="title">disc_data</span>;</span></span><br><span class="line">    <span class="keyword">int</span> amt = poll &amp;&amp; !TIME_CHAR(tty) &amp;&amp; MIN_CHAR(tty) ? MIN_CHAR(tty) : <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ldata-&gt;icanon &amp;&amp; !L_EXTPROC(tty))</span><br><span class="line">        <span class="keyword">return</span> ldata-&gt;canon_head != ldata-&gt;read_tail;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">return</span> ldata-&gt;commit_head - ldata-&gt;read_tail &gt;= amt;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>如果缓冲区中没有数据可以读取，当前进程要休眠等待，直到缓冲区有数据可以读取时才会被唤醒；</p>
+<p>为了能够讲述这部分环境，假定此时缓冲区中没有数据，当前进程进入休眠；之后缓冲区有数据时，当前进程被唤醒并调度运行；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (ldata-&gt;icanon &amp;&amp; !L_EXTPROC(tty)) &#123;</span><br><span class="line">    retval = canon_copy_from_read_buf(tty, &amp;b, &amp;nr);</span><br><span class="line">    <span class="keyword">if</span> (retval)</span><br><span class="line">        <span class="keyword">break</span>;</span><br></pre></td></tr></table></figure>
+
+
+<p>当前进程被唤醒时，此时缓冲区中应该有可以读取的数据；在规范模式下，缓冲区中的字符是经过加工了的，要累积到一个缓冲行才会唤醒等待读出的进程（缓冲行，即碰到’\n’字符）；此时的读取操作在canon_copy_from_read_buf()函数中完成；canon_copy_from_read_buf()函数的实现在下文讲述；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">int</span> uncopied;</span><br><span class="line"></span><br><span class="line">    uncopied = copy_from_read_buf(tty, &amp;b, &amp;nr);</span><br><span class="line">    uncopied += copy_from_read_buf(tty, &amp;b, &amp;nr);</span><br><span class="line">    <span class="keyword">if</span> (uncopied) &#123;</span><br><span class="line">        retval = -EFAULT;</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在非规范模式下，缓冲区中的字符是未经加工的，不存在缓冲行的概念，在原始模式可以把字符’\0’复制到用户空间，这里使用copy_from_read_buf()函数进行成片的拷贝；由于缓冲区是环形的，缓冲的字符可能跨越环形缓冲区的结尾，被分割成两部分，所以要使用copy_from_read_buf()函数两次；copy_from_read_buf()函数的实现在后面讲述；</p>
+<h4 id="4-读取缓冲区"><a href="#4-读取缓冲区" class="headerlink" title="4. 读取缓冲区"></a>4. 读取缓冲区</h4><p>在控制台的线路规程中，使用struct n_tty_data结构体表示该设备的数据；其中包含的read_buf成员作为读取的缓冲区使用；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> &#123;</span></span><br><span class="line">    <span class="comment">/* producer-published */</span></span><br><span class="line">    <span class="keyword">size_t</span> read_head;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* shared by producer and consumer */</span></span><br><span class="line">    <span class="keyword">char</span> read_buf[N_TTY_BUF_SIZE];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/* consumer-published */</span></span><br><span class="line">    <span class="keyword">size_t</span> read_tail;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>read_buf是一个N_TTY_BUF_SIZE字节的数组；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// linux/tty.h</span></span><br><span class="line"><span class="meta">#<span class="meta-keyword">define</span> N_TTY_BUF_SIZE 4096</span></span><br></pre></td></tr></table></figure>
+
+<p>定义的read_buf缓冲区是线性数组，但是却是作为环形缓冲区使用的；read_head成员是环形缓冲区空闲位置的开始，产生数据的进程从read_head位置开始往缓冲区写入数据；read_tail成员是环形缓冲区保存数据位置的开始，读取数据的进程从read_tail位置开始从缓冲区读取数据；</p>
+<p>以下针对具体的读取操作进行说明；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">tty-&gt;read_buf[]	<span class="comment">// 环形缓冲区；</span></span><br><span class="line">tty-&gt;read_tail	<span class="comment">// 指向缓冲区当前可以读取的第一个字符；</span></span><br><span class="line">tty-&gt;read_head	<span class="comment">// 指向缓冲区当前可以写入的第一个地址；</span></span><br></pre></td></tr></table></figure>
+
+<p>read_cnt是通过缓冲区的read_head-read_tail计算得到，表示缓冲行中的已保存字符个数；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">size_t</span> <span class="title">read_cnt</span><span class="params">(struct n_tty_data *ldata)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> ldata-&gt;read_head - ldata-&gt;read_tail;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>n_tty_data结构体在线路规程被打开时申请结构体空间，并进行初始化；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// n_tty.c</span></span><br><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">n_tty_open</span><span class="params">(struct tty_struct *tty)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span>;</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/* Currently a malloc failure here can panic */</span></span><br><span class="line">    ldata = vzalloc(<span class="keyword">sizeof</span>(*ldata));</span><br><span class="line">    <span class="keyword">if</span> (!ldata)</span><br><span class="line">        <span class="keyword">return</span> -ENOMEM;</span><br><span class="line"></span><br><span class="line">    ldata-&gt;overrun_time = jiffies;</span><br><span class="line">    mutex_init(&amp;ldata-&gt;atomic_read_lock);</span><br><span class="line">    mutex_init(&amp;ldata-&gt;output_lock);</span><br><span class="line"></span><br><span class="line">    tty-&gt;disc_data = ldata;</span><br><span class="line">    tty-&gt;closing = <span class="number">0</span>; </span><br><span class="line">    <span class="comment">/* indicate buffer work may resume */</span></span><br><span class="line">    clear_bit(TTY_LDISC_HALTED, &amp;tty-&gt;flags);</span><br><span class="line">    n_tty_set_termios(tty, <span class="literal">NULL</span>);</span><br><span class="line">    tty_unthrottle(tty);</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="5-缓冲区阀门"><a href="#5-缓冲区阀门" class="headerlink" title="5. 缓冲区阀门"></a>5. 缓冲区阀门</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">n_tty_check_unthrottle(tty);</span><br></pre></td></tr></table></figure>
+
+
+<p>缓冲区是环形的，空间也是有限的；如果缓冲区数据来的太快，应用程序来不及从缓冲区读取数据；为了防止环形缓冲区中的数据被覆盖，底层的驱动程序可能因为缓冲区已满而暂时关闭了“阀门”，禁止数据继续进入缓冲区；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">void</span> <span class="title">n_tty_check_unthrottle</span><span class="params">(struct tty_struct *tty)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (tty-&gt;driver-&gt;type == TTY_DRIVER_TYPE_PTY) &#123;</span><br><span class="line">        <span class="keyword">if</span> (chars_in_buffer(tty) &gt; TTY_THRESHOLD_UNTHROTTLE)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        <span class="keyword">if</span> (!tty-&gt;count)</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        n_tty_kick_worker(tty);</span><br><span class="line">        tty_wakeup(tty-&gt;link);</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (<span class="number">1</span>) &#123;</span><br><span class="line">        <span class="keyword">int</span> unthrottled;</span><br><span class="line">        tty_set_flow_change(tty, TTY_UNTHROTTLE_SAFE);</span><br><span class="line">        <span class="keyword">if</span> (chars_in_buffer(tty) &gt; TTY_THRESHOLD_UNTHROTTLE)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">if</span> (!tty-&gt;count)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        n_tty_kick_worker(tty);</span><br><span class="line">        unthrottled = tty_unthrottle_safe(tty);</span><br><span class="line">        <span class="keyword">if</span> (!unthrottled)</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    __tty_set_flow_change(tty, <span class="number">0</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>在读取过程中，通过chars_in_buffer()检查缓冲区，如果缓冲区中剩余的字符数量减少到了关闭阀门的要求以下（数量小于TTY_THRESHOLD_UNTHROTTLE），则在n_tty_check_unthrottle()函数中通过调用tty_unthrottle_safe()函数重新打开“阀门”，数据就可以重新进入缓冲区；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (b - buf &gt;= minimum)</span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    <span class="keyword">if</span> (time)</span><br><span class="line">        timeout = time;</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">if</span> (tail != ldata-&gt;read_tail)</span><br><span class="line">    n_tty_kick_worker(tty);</span><br><span class="line">up_read(&amp;tty-&gt;termios_rwsem);</span><br><span class="line"></span><br><span class="line">remove_wait_queue(&amp;tty-&gt;read_wait, &amp;wait);</span><br><span class="line"><span class="keyword">if</span> (!waitqueue_active(&amp;tty-&gt;read_wait))</span><br><span class="line">    ldata-&gt;minimum_to_wake = minimum;</span><br><span class="line"></span><br><span class="line">mutex_unlock(&amp;ldata-&gt;atomic_read_lock);</span><br></pre></td></tr></table></figure>
+
+
+<p>当前进程已经读取到了所要求的输入，需要放在临界区的操作已完成，读取操作已经完成，将当前进程从等待read_wait中移除；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">if</span> (b - buf)</span><br><span class="line">        retval = b - buf;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> retval;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>指针buf指向用户空间的缓冲区，指针b指向该缓冲区中的下一个空闲位置，（b-buf）是已经读入buf缓冲区中的字符数量；如果(b - buf &gt;= minimum)，则本次读取结束；</p>
+<p>n_tty_read()函数的参数nr是表示用户空间缓冲区的大小，是读取字符数量的上限；n_tty_read()函数以读取到的字符数量为返回值；</p>
+<h4 id="6-数据读取"><a href="#6-数据读取" class="headerlink" title="6. 数据读取"></a>6. 数据读取</h4><p>以下针对具体的读取操作进行说明；</p>
+<h5 id="1-规范模式下的读取"><a href="#1-规范模式下的读取" class="headerlink" title="1) 规范模式下的读取"></a>1) 规范模式下的读取</h5><p>canon_copy_from_read_buf()函数只有在规范模式下会被调用，该函数按缓冲行将数据从tty缓冲区中读取到用户空间；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">canon_copy_from_read_buf</span><span class="params">(struct tty_struct *tty,</span></span></span><br><span class="line"><span class="function"><span class="params">                    <span class="keyword">unsigned</span> <span class="keyword">char</span> __user **b,</span></span></span><br><span class="line"><span class="function"><span class="params">                    <span class="keyword">size_t</span> *nr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span> = <span class="title">tty</span>-&gt;<span class="title">disc_data</span>;</span></span><br><span class="line">    <span class="keyword">size_t</span> n, <span class="built_in">size</span>, more, c;</span><br><span class="line">    <span class="keyword">size_t</span> eol;</span><br><span class="line">    <span class="keyword">size_t</span> tail;</span><br><span class="line">    <span class="keyword">int</span> ret, found = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/* N.B. avoid overrun if nr == 0 */</span></span><br><span class="line">    <span class="keyword">if</span> (!*nr)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    n = <span class="built_in">min</span>(*nr + <span class="number">1</span>, smp_load_acquire(&amp;ldata-&gt;canon_head) - ldata-&gt;read_tail);</span><br><span class="line"></span><br><span class="line">    tail = ldata-&gt;read_tail &amp; (N_TTY_BUF_SIZE - <span class="number">1</span>);</span><br><span class="line">    <span class="built_in">size</span> = <span class="keyword">min_t</span>(<span class="keyword">size_t</span>, tail + n, N_TTY_BUF_SIZE);</span><br><span class="line"></span><br><span class="line">    n_tty_trace(<span class="string">"%s: nr:%zu tail:%zu n:%zu size:%zu\n"</span>,</span><br><span class="line">            __func__, *nr, tail, n, <span class="built_in">size</span>);</span><br><span class="line"></span><br><span class="line">    eol = find_next_bit(ldata-&gt;read_flags, <span class="built_in">size</span>, tail);</span><br><span class="line">    more = n - (<span class="built_in">size</span> - tail);</span><br><span class="line">    <span class="keyword">if</span> (eol == N_TTY_BUF_SIZE &amp;&amp; more) &#123;</span><br><span class="line">        <span class="comment">/* scan wrapped without finding set bit */</span></span><br><span class="line">        eol = find_next_bit(ldata-&gt;read_flags, more, <span class="number">0</span>);</span><br><span class="line">        <span class="keyword">if</span> (eol != more)</span><br><span class="line">            found = <span class="number">1</span>;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (eol != <span class="built_in">size</span>)</span><br><span class="line">        found = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">size</span> = N_TTY_BUF_SIZE - tail;</span><br><span class="line">    n = eol - tail;</span><br><span class="line">    <span class="keyword">if</span> (n &gt; N_TTY_BUF_SIZE)</span><br><span class="line">        n += N_TTY_BUF_SIZE;</span><br><span class="line">    c = n + found;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!found || read_buf(ldata, eol) != __DISABLED_CHAR) &#123;</span><br><span class="line">        c = <span class="built_in">min</span>(*nr, c);</span><br><span class="line">        n = c;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    n_tty_trace(<span class="string">"%s: eol:%zu found:%d n:%zu c:%zu size:%zu more:%zu\n"</span>,</span><br><span class="line">            __func__, eol, found, n, c, <span class="built_in">size</span>, more);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (n &gt; <span class="built_in">size</span>) &#123;</span><br><span class="line">        ret = tty_copy_to_user(tty, *b, read_buf_addr(ldata, tail), <span class="built_in">size</span>);</span><br><span class="line">        <span class="keyword">if</span> (ret)</span><br><span class="line">            <span class="keyword">return</span> -EFAULT;</span><br><span class="line">        ret = tty_copy_to_user(tty, *b + <span class="built_in">size</span>, ldata-&gt;read_buf, n - <span class="built_in">size</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span></span><br><span class="line">        ret = tty_copy_to_user(tty, *b, read_buf_addr(ldata, tail), n);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (ret)</span><br><span class="line">        <span class="keyword">return</span> -EFAULT;</span><br><span class="line">    *b += n;</span><br><span class="line">    *nr -= n;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (found)</span><br><span class="line">        clear_bit(eol, ldata-&gt;read_flags);</span><br><span class="line">    smp_store_release(&amp;ldata-&gt;read_tail, ldata-&gt;read_tail + c);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (found) &#123;</span><br><span class="line">        <span class="keyword">if</span> (!ldata-&gt;push)</span><br><span class="line">            ldata-&gt;line_start = ldata-&gt;read_tail;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            ldata-&gt;push = <span class="number">0</span>;</span><br><span class="line">        tty_audit_push(tty);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+<p>最终通过tty_copy_to_user()函数中的copy_to_user()函数完成数据的拷贝；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">inline</span> <span class="keyword">int</span> <span class="title">tty_copy_to_user</span><span class="params">(struct tty_struct *tty,</span></span></span><br><span class="line"><span class="function"><span class="params">                    <span class="keyword">void</span> __user *to,</span></span></span><br><span class="line"><span class="function"><span class="params">                    <span class="keyword">const</span> <span class="keyword">void</span> *from,</span></span></span><br><span class="line"><span class="function"><span class="params">                    <span class="keyword">unsigned</span> <span class="keyword">long</span> n)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span> = <span class="title">tty</span>-&gt;<span class="title">disc_data</span>;</span></span><br><span class="line"></span><br><span class="line">    tty_audit_add_data(tty, from, n, ldata-&gt;icanon);</span><br><span class="line">    <span class="keyword">return</span> copy_to_user(to, from, n);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h5 id="2-非规范模式下的读取"><a href="#2-非规范模式下的读取" class="headerlink" title="2) 非规范模式下的读取"></a>2) 非规范模式下的读取</h5><p>copy_from_read_buf()函数在非规范模式下，将数据从tty缓冲区中直接读取到用户空间，该函数会被调用两次，第一次是从tty-&gt;disc_data-&gt;read_tail指针指向的位置到缓冲区结尾，第二次是从缓冲区开头，到tty-&gt;disc_data-&gt;read_head指针指向的位置；该函数的读取操作需要在ldata-&gt;atomic_read_lock信号锁的保护下进行；</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">copy_from_read_buf</span><span class="params">(struct tty_struct *tty,</span></span></span><br><span class="line"><span class="function"><span class="params">                      <span class="keyword">unsigned</span> <span class="keyword">char</span> __user **b,</span></span></span><br><span class="line"><span class="function"><span class="params">                      <span class="keyword">size_t</span> *nr)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">n_tty_data</span> *<span class="title">ldata</span> = <span class="title">tty</span>-&gt;<span class="title">disc_data</span>;</span></span><br><span class="line">    <span class="keyword">int</span> retval;</span><br><span class="line">    <span class="keyword">size_t</span> n;</span><br><span class="line">    <span class="keyword">bool</span> is_eof;</span><br><span class="line">    <span class="keyword">size_t</span> head = smp_load_acquire(&amp;ldata-&gt;commit_head);</span><br><span class="line">    <span class="keyword">size_t</span> tail = ldata-&gt;read_tail &amp; (N_TTY_BUF_SIZE - <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    retval = <span class="number">0</span>;</span><br><span class="line">    n = <span class="built_in">min</span>(head - ldata-&gt;read_tail, N_TTY_BUF_SIZE - tail);</span><br><span class="line">    n = <span class="built_in">min</span>(*nr, n);</span><br><span class="line">    <span class="keyword">if</span> (n) &#123;</span><br><span class="line">        retval = copy_to_user(*b, read_buf_addr(ldata, tail), n);</span><br><span class="line">        n -= retval;</span><br><span class="line">        is_eof = n == <span class="number">1</span> &amp;&amp; read_buf(ldata, tail) == EOF_CHAR(tty);</span><br><span class="line">        tty_audit_add_data(tty, read_buf_addr(ldata, tail), n,</span><br><span class="line">                ldata-&gt;icanon);</span><br><span class="line">        smp_store_release(&amp;ldata-&gt;read_tail, ldata-&gt;read_tail + n);</span><br><span class="line">        <span class="comment">/* Turn single EOF into zero-length read */</span></span><br><span class="line">        <span class="keyword">if</span> (L_EXTPROC(tty) &amp;&amp; ldata-&gt;icanon &amp;&amp; is_eof &amp;&amp;</span><br><span class="line">            (head == ldata-&gt;read_tail))</span><br><span class="line">            n = <span class="number">0</span>;</span><br><span class="line">        *b += n;</span><br><span class="line">        *nr -= n;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> retval;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+
+<h4 id="7-总结"><a href="#7-总结" class="headerlink" title="7. 总结"></a>7. 总结</h4><p>一般情况下，典型的读取终端过程可以分为以下三部分：</p>
+<ol>
+<li><p>当前进程准备从终端缓冲区读取数据，但是缓冲区还没有足够字符可以读取，进入睡眠；</p>
+</li>
+<li><p>如果有输入字符，底层驱动将足够的字符写入缓冲区之后，把睡眠的进程唤醒；</p>
+</li>
+<li><p>睡眠的读取进程被唤醒后，开始完成读取操作；</p>
+</li>
+</ol>
+<h4 id="8-参考资料"><a href="#8-参考资料" class="headerlink" title="8. 参考资料"></a>8. 参考资料</h4><p>《Linux内核情景分析》—-控制台驱动</p>
+<p><a href="目录">回到目录</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/tty/" rel="tag"># tty</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/08/02/linux-kernel%E4%B8%AD%E7%9A%84tty%E9%A9%B1%E5%8A%A8/" rel="prev" title="linux-kernel中的tty驱动">
+      <i class="fa fa-chevron-left"></i> linux-kernel中的tty驱动
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+    <div class="comments" id="gitalk-container"></div>
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-4"><a class="nav-link" href="#0-简述"><span class="nav-text">0. 简述</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#1-tty-read"><span class="nav-text">1. tty_read</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-控制台读取"><span class="nav-text">2. 控制台读取</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-单次读取限制"><span class="nav-text">3. 单次读取限制</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-读取缓冲区"><span class="nav-text">4. 读取缓冲区</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#5-缓冲区阀门"><span class="nav-text">5. 缓冲区阀门</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-数据读取"><span class="nav-text">6. 数据读取</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-规范模式下的读取"><span class="nav-text">1) 规范模式下的读取</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-非规范模式下的读取"><span class="nav-text">2) 非规范模式下的读取</span></a></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#7-总结"><span class="nav-text">7. 总结</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#8-参考资料"><span class="nav-text">8. 参考资料</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">micro虾米</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">20</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-name">tags</span>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2020</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">micro虾米</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+
+  <script src='https://unpkg.com/mermaid@7.1.2/dist/mermaid.min.js'></script>
+  <script>
+    if (window.mermaid) {
+      mermaid.initialize({theme: 'forest'});
+    }
+  </script>
+
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+<script>
+if (document.querySelectorAll('pre.mermaid').length) {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/mermaid@8/dist/mermaid.min.js', () => {
+    mermaid.initialize({
+      theme    : 'forest',
+      logLevel : 3,
+      flowchart: { curve     : 'linear' },
+      gantt    : { axisFormat: '%m/%d/%Y' },
+      sequence : { actorMargin: 50 }
+    });
+  }, window.mermaid);
+}
+</script>
+
+
+  
+
+  
+
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : '1ec7eee73ee4f91e15a1',
+      clientSecret: '971b3c9439c2a8fa2fcb12307657ad50aee6ed0c',
+      repo        : 'mshrimp_blog_talk',
+      owner       : 'mshrimp',
+      admin       : ['mshrimp'],
+      id          : '8a89ee1f29dfafb9e0f160f3b3e86684',
+        language: '',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
+
+</body>
+</html>
